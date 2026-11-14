@@ -84,6 +84,22 @@ footer{max-width:1700px;margin:0 auto;padding:0 16px 18px;font-size:12px;color:v
 #toast.show{opacity:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .gray-tiles{filter:grayscale(1) brightness(1.05) contrast(.9)}
+#map.dark{background:#0b0e13}#map.light{background:#e9e8e4}
+#layersPanel{position:absolute;left:54px;top:8px;z-index:700;width:290px;max-height:calc(100% - 16px);overflow-y:auto;background:rgba(32,35,41,.96);color:#e8e8e8;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:12.5px;display:none}
+#layersPanel.open{display:block}
+#layersPanel .lh{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#2b6ea3,#1f5a88);color:#fff;font-weight:600;padding:7px 10px;position:sticky;top:0;z-index:1}
+#layersPanel .lh button{background:none;border:0;color:#fff;font-size:16px;cursor:pointer;line-height:1}
+#layersPanel .opt{display:flex;align-items:center;gap:9px;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer}
+#layersPanel .opt:hover{background:rgba(255,255,255,.06)}
+#layersPanel .opt.on{background:rgba(43,110,163,.35)}
+#layersPanel .opt.na{opacity:.45}
+#layersPanel .opt img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex:none;border:2px solid rgba(255,255,255,.25);background:#444}
+#layersPanel .opt.on img{border-color:#7cc4ff}
+#layersPanel .opt .t{flex:1;line-height:1.25}#layersPanel .opt .t small{display:block;color:#aab;font-size:11px}
+#layersPanel .opt .ck{width:16px;text-align:center;color:#7cc4ff;font-weight:700}
+#layersPanel .sub{padding:6px 10px;color:#c8c8c8;font-size:11.5px;background:rgba(255,255,255,.04)}
+#layersPanel .sub input[type=range]{width:120px;vertical-align:middle}
+#layersPanel .warnna{background:#c9a227;color:#1d1f24;font-weight:700;font-size:11px;text-align:center;padding:2px 6px}
 .note{font-size:12px;color:var(--muted)}
 input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px}
 @media (max-width:1150px){.g-map,.g2,.g4{grid-template-columns:1fr}.hits{margin-left:0}}
@@ -160,12 +176,14 @@ body.side.collapsed #paneTab{display:flex}
         <div class="mapbar">
           <span id="mapLabel">full range</span>
           <button id="mapReset" class="btn small" style="display:none" title="Show full range">×</button>
+          <button id="layersBtn" class="btn small" title="Map background and satellite imagery">🗺 Layers</button>
           <div class="seg" id="mapModeSeg"><button data-v="auto" class="on">Auto</button><button data-v="heat">Density</button><button data-v="points">Points</button><button data-v="team" id="teamModeBtn" style="display:none" title="Aggregated cells delivered by the data team (Tabelle B)">Team cells</button></div>
           <span class="teamctl" id="teamCtl"><select id="teamGrid" title="Grid of the team table"></select><select id="teamPeriod" title="Time window"></select></span>
           <div class="seg" id="colorSeg" title="Colour of single points"><button data-v="sensor" class="on">Sensor</button><button data-v="conf">Confidence</button><button data-v="frp">FRP</button></div>
           <label class="fg" title="Density colour scale">Scale <input id="heatMax" type="range" min="0.1" max="3" step="0.05" value="1" style="width:70px"></label>
         </div>
         <div class="maplegend" id="mapLegend"></div>
+        <div id="layersPanel" role="dialog" aria-label="Map layers"></div>
       </div>
       <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;font-size:12px;align-items:center">
         <span class="note">Box:</span>
@@ -558,18 +576,119 @@ $('apiBtn').addEventListener('click', () => ApiProvider.m && useProvider(ApiProv
 /* ---------- map ---------- */
 let zoomTimer = null;
 const map = L.map('map', { zoomControl: true, worldCopyJump: true, preferCanvas: true }).setView([0, 0], 2);
-const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
-const grayBase = L.tileLayer(ESRI + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { attribution: 'Basemap &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16 }).addTo(map);
-const grayLabels = L.tileLayer(ESRI + 'World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, pane: 'shadowPane' }).addTo(map);
-let tileErrors = 0;
-grayBase.on('tileerror', () => { if (++tileErrors !== 4) return; map.removeLayer(grayBase); map.removeLayer(grayLabels); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19, className: 'gray-tiles' }).addTo(map); });
+const store = { get(k, d) { try { const v = localStorage.getItem('firecal.' + k); return v === null ? d : v; } catch { return d; } },
+                set(k, v) { try { localStorage.setItem('firecal.' + k, v); } catch {} } };
+
+/* ---------- map backgrounds (no API keys needed) and NASA GIBS daily satellite imagery ---------- */
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const ESRI_ATTR = 'Basemap &copy; Esri and its data partners';
+const GIBS = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/';
+const BASEMAPS = [
+  { id: 'firefly', name: 'Firefly', note: 'dark imagery, fires stand out', dark: true, max: 18,
+    url: 'https://fly.maptiles.arcgis.com/arcgis/rest/services/World_Imagery_Firefly/MapServer/tile/{z}/{y}/{x}', attr: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' },
+  { id: 'satellite', name: 'Satellite', note: 'high-resolution imagery', dark: true, max: 19,
+    url: ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: 'Imagery &copy; Esri, Maxar, Earthstar Geographics, USDA, USGS' },
+  { id: 'bluemarble', name: 'Blue Marble', note: 'NASA, relief and ocean floor', dark: true, max: 19, maxNative: 8,
+    url: GIBS + 'BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg', attr: 'Blue Marble &copy; NASA GIBS' },
+  { id: 'streets', name: 'Streets', note: 'roads, places', dark: false, max: 19, ownLabels: true,
+    url: ESRI + 'World_Street_Map/MapServer/tile/{z}/{y}/{x}', attr: ESRI_ATTR },
+  { id: 'topo', name: 'Topographic', note: 'terrain, rivers, places', dark: false, max: 19, ownLabels: true,
+    url: ESRI + 'World_Topo_Map/MapServer/tile/{z}/{y}/{x}', attr: ESRI_ATTR },
+  { id: 'dark', name: 'Dark gray', note: 'calm dark background', dark: true, max: 16,
+    url: ESRI + 'Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', labels: ESRI + 'Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', attr: ESRI_ATTR },
+  { id: 'light', name: 'Light gray', note: 'calm light background', dark: false, max: 16,
+    url: ESRI + 'Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', labels: ESRI + 'Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', attr: ESRI_ATTR },
+];
+// daily true-colour mosaics; the date follows the period shown on the map
+const DAILY = [
+  { id: 'VIIRS_NOAA20_CorrectedReflectance_TrueColor', name: 'VIIRS NOAA-20 true color', sat: 'NOAA-20', from: '2017-11-30' },
+  { id: 'VIIRS_NOAA21_CorrectedReflectance_TrueColor', name: 'VIIRS NOAA-21 true color', sat: 'NOAA-21', from: '2024-01-17' },
+  { id: 'VIIRS_SNPP_CorrectedReflectance_TrueColor', name: 'VIIRS S-NPP true color', sat: 'S-NPP', from: '2015-11-24', to: '2026-11-02' },
+  { id: 'MODIS_Aqua_CorrectedReflectance_TrueColor', name: 'MODIS Aqua true color', sat: 'Aqua', from: '2002-07-04' },
+  { id: 'MODIS_Terra_CorrectedReflectance_TrueColor', name: 'MODIS Terra true color', sat: 'Terra', from: '2000-02-24' },
+];
+const PLACES = ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+const tileUrl = (u, z, x, y) => u.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+const L_ = { base: null, baseLabels: null, places: null, daily: null };
+const M = { base: store.get('basemap', 'firefly'), daily: store.get('daily', ''), dailyOpacity: +store.get('dailyOpacity', 1), places: store.get('places', '1') === '1', date: null };
+let baseErrors = 0;
+const isDarkMap = () => (BASEMAPS.find(b => b.id === M.base) || BASEMAPS[0]).dark || !!M.daily;
+const failedBases = new Set();
+function setBasemap(id, persist = true) {
+  const b = BASEMAPS.find(x => x.id === id) || BASEMAPS[0]; M.base = b.id; if (persist) store.set('basemap', b.id); baseErrors = 0;
+  if (L_.base) map.removeLayer(L_.base); if (L_.baseLabels) { map.removeLayer(L_.baseLabels); L_.baseLabels = null; }
+  L_.base = L.tileLayer(b.url, { attribution: b.attr, maxZoom: 19, maxNativeZoom: b.maxNative || b.max }).addTo(map); L_.base.bringToBack();
+  L_.base.on('tileerror', () => {   // fall back once per background if its server does not answer
+    if (++baseErrors !== 6) return; failedBases.add(b.id);
+    const next = ['satellite', 'light', 'streets', 'dark'].find(x => !failedBases.has(x));
+    if (next) { toast(`${b.name} tiles do not load, showing ${BASEMAPS.find(x => x.id === next).name}`); setBasemap(next, false); }
+  });
+  if (b.labels) L_.baseLabels = L.tileLayer(b.labels, { maxZoom: 19, maxNativeZoom: b.max, pane: 'shadowPane' }).addTo(map);
+  updatePlaces(); applyMapTheme(); renderLayersPanel();
+}
+function updatePlaces() {
+  const b = BASEMAPS.find(x => x.id === M.base) || BASEMAPS[0], want = M.places && !b.ownLabels && !b.labels;
+  if (want && !L_.places) L_.places = L.tileLayer(PLACES, { maxZoom: 19, maxNativeZoom: 13, pane: 'shadowPane', opacity: .9 }).addTo(map);
+  if (!want && L_.places) { map.removeLayer(L_.places); L_.places = null; }
+}
+function dailyDate() {   // day shown on the map: selected day, or the last day of the selected period
+  const [s0, e0] = S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+  const today = new Date().toISOString().slice(0, 10);
+  return (e0 || today) > today ? today : (e0 || today);
+}
+function setDaily(id) {
+  M.daily = id || ''; store.set('daily', M.daily);
+  if (L_.daily) { map.removeLayer(L_.daily); L_.daily = null; }
+  const d = DAILY.find(x => x.id === M.daily);
+  if (d) {
+    M.date = dailyDate();
+    L_.daily = L.tileLayer(`${GIBS}${d.id}/default/${M.date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
+      { attribution: `${d.name} ${M.date} &copy; NASA GIBS / Worldview`, maxZoom: 19, maxNativeZoom: 9, opacity: M.dailyOpacity }).addTo(map);
+    L_.daily.setZIndex(5);
+  }
+  applyMapTheme(); renderLayersPanel();
+}
+function syncDailyDate() { if (M.daily && dailyDate() !== M.date) setDaily(M.daily); }
+// colours that work on the current background: viridis on light maps, a fire scale on dark maps
+const FIRE = ['#3b0f70', '#8c2981', '#de4968', '#fe9f6d', '#fcfdbf'];
+const heatColors = () => isDarkMap() ? FIRE : VIRIDIS;
+const heatCss = () => `linear-gradient(90deg,${heatColors().join(',')})`;
+function heatGrad() { const g = {}, cs = heatColors(); cs.forEach((c, i) => { g[(0.25 + 0.75 * i / (cs.length - 1)).toFixed(3)] = c; }); return g; }
+function applyMapTheme() {
+  const dark = isDarkMap(); $('map').classList.toggle('dark', dark); $('map').classList.toggle('light', !dark);
+  heat.setOptions({ gradient: heatGrad() });
+  if (S.provider) renderMapLegend();   // the legend helpers exist once the app has started
+}
+function renderLayersPanel() {
+  const P = $('layersPanel'), date = M.date || dailyDate();
+  const thumb = u => tileUrl(u, 2, 2, 1);
+  P.innerHTML = `<div class="lh">Background <button id="layersClose" title="Close">×</button></div>` +
+    BASEMAPS.map(b => `<div class="opt ${M.base === b.id ? 'on' : ''}" data-base="${b.id}"><img alt="" loading="lazy" src="${thumb(b.url)}"><div class="t">${b.name}<small>${b.note}</small></div><span class="ck">${M.base === b.id ? '✓' : ''}</span></div>`).join('') +
+    `<div class="lh">Daily satellite imagery</div><div class="sub">True colour of the day shown on the map: <b>${date}</b>. Click a bar in the timeline or a calendar cell to change the day.</div>` +
+    `<div class="opt ${!M.daily ? 'on' : ''}" data-daily=""><img alt="" src="${thumb((BASEMAPS.find(b => b.id === M.base) || BASEMAPS[0]).url)}"><div class="t">None<small>only the background above</small></div><span class="ck">${!M.daily ? '✓' : ''}</span></div>` +
+    DAILY.map(d => { const na = date < d.from || (d.to && date > d.to);
+      return `<div class="opt ${M.daily === d.id ? 'on' : ''} ${na ? 'na' : ''}" data-daily="${d.id}"><img alt="" loading="lazy" src="${GIBS}${d.id}/default/${date}/GoogleMapsCompatible_Level9/2/1/2.jpg"><div class="t">${d.name}<small>${d.sat}${d.to ? ` · ${d.from} to ${d.to}` : ` · since ${d.from}`}</small></div><span class="ck">${M.daily === d.id ? '✓' : ''}</span></div>` +
+        (na && M.daily === d.id ? `<div class="warnna">NO DATA FOR ${date} · available ${d.from}${d.to ? ' to ' + d.to : ' onward'}</div>` : ''); }).join('') +
+    (M.daily ? `<div class="sub">Opacity <input type="range" id="dailyOp" min="0.2" max="1" step="0.05" value="${M.dailyOpacity}"></div>` : '') +
+    `<div class="lh">Overlays</div><label class="opt" style="cursor:pointer"><input type="checkbox" id="placesCk" ${M.places ? 'checked' : ''}><div class="t">Borders and place names<small>on imagery backgrounds</small></div></label>`;
+}
+$('layersPanel').addEventListener('click', e => {
+  if (e.target.id === 'layersClose') { $('layersPanel').classList.remove('open'); return; }
+  const o = e.target.closest('.opt'); if (!o) return;
+  if (o.dataset.base !== undefined) setBasemap(o.dataset.base);
+  else if (o.dataset.daily !== undefined) setDaily(o.dataset.daily);
+});
+$('layersPanel').addEventListener('input', e => { if (e.target.id === 'dailyOp') { M.dailyOpacity = +e.target.value; store.set('dailyOpacity', M.dailyOpacity); if (L_.daily) L_.daily.setOpacity(M.dailyOpacity); } });
+$('layersPanel').addEventListener('change', e => { if (e.target.id === 'placesCk') { M.places = e.target.checked; store.set('places', M.places ? '1' : '0'); updatePlaces(); } });
+L.DomEvent.disableClickPropagation($('layersPanel')); L.DomEvent.disableScrollPropagation($('layersPanel'));
+$('layersBtn').addEventListener('click', () => { renderLayersPanel(); $('layersPanel').classList.toggle('open'); });
 map.attributionControl.addAttribution('Fire data: NASA LANCE FIRMS');
 L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(map);
-const heatGradient = {}; VIRIDIS.forEach((c, i) => { heatGradient[(0.25 + 0.75 * i / (VIRIDIS.length - 1)).toFixed(3)] = c; });
-const heat = L.heatLayer([], { radius: 14, blur: 16, max: 1, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGradient }).addTo(map);
+const heat = L.heatLayer([], { radius: 14, blur: 16, max: 1, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGrad() }).addTo(map);
 const pointLayer = L.layerGroup().addTo(map);
 const teamLayer = L.layerGroup().addTo(map);
 const teamRenderer = L.canvas({ padding: .3 });
+setBasemap(M.base); if (M.daily) setDaily(M.daily);
 let lastZoom = map.getZoom();
 map.on('moveend', () => { heat.options.maxZoom = map.getZoom(); const z = map.getZoom() !== lastZoom; lastZoom = map.getZoom(); clearTimeout(zoomTimer); zoomTimer = setTimeout(() => refreshMap(z), 250); });
 $('calLegendBar').style.background = viridisCss;
@@ -953,6 +1072,7 @@ async function refreshMap(resetRef) {
   const p = S.provider; if (!p || !S.rangeStart) return;
   const id = ++S.hreq, bbox = viewBbox(), [s, e] = S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
   $('mapLabel').textContent = S.mapPeriod ? plabel(S.mapPeriod) : 'full range';
+  syncDailyDate();
   $('mapReset').style.display = S.mapPeriod ? '' : 'none';
   renderMapLegend();
   if (!bbox) { heat.setLatLngs([]); pointLayer.clearLayers(); teamLayer.clearLayers(); return; }
@@ -970,7 +1090,7 @@ async function refreshMap(resetRef) {
       heat.setLatLngs([]); pointLayer.clearLayers();
       for (const [lat, lon, sensor, sat, frp, cc, date, time, dn, px, lh] of r.rows) {
         const col = S.colorBy === 'sensor' ? (sensor === 'MODIS' ? C.modis : C.viirs) : S.colorBy === 'conf' ? C[cc] : viridis(Math.log10(frp + 1) / 3);
-        L.circleMarker([lat, lon], { radius: Math.max(2, Math.min(10, 2 + Math.log10(frp + 1) * 3)), color: '#333', weight: .4, fillColor: col, fillOpacity: .85 })
+        L.circleMarker([lat, lon], { radius: Math.max(2, Math.min(10, 2 + Math.log10(frp + 1) * 3)), color: isDarkMap() ? '#fff' : '#333', weight: isDarkMap() ? .6 : .4, fillColor: col, fillOpacity: .9 })
           .bindTooltip(`<b>${sensor} · ${sat}</b><br>${date} ${pad(Math.floor(time / 100))}:${pad(time % 100)} UTC · local ${fmt1(lh)} h<br>FRP ${fmt1(frp)} MW · ${cc} confidence · ${dn === 'N' ? 'night' : 'day'}<br>pixel ${fmt1(px)} km²`).addTo(pointLayer); }
       $('mapNote').textContent = `${fmt(r.count)} raw detections in view` + (r.truncated ? ` · showing the ${fmt(r.rows.length)} strongest` : '');
     } else {
@@ -988,7 +1108,7 @@ function renderMapLegend() {
     ? (S.colorBy === 'sensor' ? `<div><span class="dot" style="background:${C.modis}"></span>MODIS (1 km pixel) &nbsp;<span class="dot" style="background:${C.viirs}"></span>VIIRS (375 m)</div>`
       : S.colorBy === 'conf' ? `<div>${['low', 'nominal', 'high'].map(c => `<span class="dot" style="background:${C[c]}"></span>${c}`).join(' &nbsp;')}</div>`
       : `<div>FRP</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>1 MW</span><span>1000 MW</span></div>`) + `<div style="margin-top:3px">Size = FRP. Raw detections, never converted.</div>`
-    : `<div>Density · ${viewName()}</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>low</span><span>high</span></div><div>Zoom in (level ≥ 7) for single hotspots</div>`;
+    : `<div>Density · ${viewName()}</div><div class="bar" style="background:${heatCss()}"></div><div style="display:flex;justify-content:space-between"><span>low</span><span>high</span></div><div>Zoom in (level ≥ 7) for single hotspots</div>`;
 }
 $('mapReset').addEventListener('click', () => { stopPlay(); selectPeriod(S.mapPeriod); });
 $('heatMax').addEventListener('input', e => { S.heatMax = +e.target.value; heat.setOptions({ max: S.heatMax }); });
@@ -1051,8 +1171,6 @@ $('teamPeriod').addEventListener('change', () => refreshMap(true));
 $('teamCheckGrid').addEventListener('change', renderTeamCheck);
 
 /* ---------- layout: page or side panel (statistics on the right, collapsible, resizable) ---------- */
-const store = { get(k, d) { try { const v = localStorage.getItem('firecal.' + k); return v === null ? d : v; } catch { return d; } },
-                set(k, v) { try { localStorage.setItem('firecal.' + k, v); } catch {} } };
 function relayout() {
   clearTimeout(window._rl);
   window._rl = setTimeout(() => {
