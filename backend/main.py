@@ -39,7 +39,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.background import BackgroundTask
 
@@ -50,7 +50,8 @@ from .paths import (CELLS_DAY, CELLS_MONTH, DAY_RES, DIST_MONTH, DIST_RES, FRP_E
 API_VERSION = "2.0"
 app = FastAPI(title="FireCal API", version=API_VERSION,
               description="Harmonized MODIS + VIIRS active fire hotspots (NASA FIRMS), VIIRS level")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"],
+                   expose_headers=["X-Count", "X-Limit", "X-Query-Ms"])
 app.add_middleware(GZipMiddleware, minimum_size=2000)
 
 _db: duckdb.DuckDBPyConnection | None = None
@@ -532,6 +533,160 @@ def satellites_timeline(granularity: Literal["month", "day"] = "month",
     for period, sat, n in c.execute(f"SELECT period, satellite, sum(n) FROM {rel} GROUP BY 1, 2 ORDER BY 1").fetchall():
         out.setdefault(sat, {})[period] = int(n)
     return {"granularity": granularity, "satellites": out, "timeline": _meta.get("satellites")}
+
+
+# ---------------------------------------------------------------- map: count / density / binary points
+# Performance handoff (docs/HANDOFF_Frontend_Performance.md): the map shows density by default and single points
+# only while the points in the current view stay under POINT_LIMIT. Points travel as a compact binary block.
+POINT_LIMIT = int(os.environ.get("FIRECAL_POINT_LIMIT", "1000000"))
+SENSOR_SATS = {"MODIS": ["Terra", "Aqua"], "VIIRS": ["SNPP", "N20", "N21"]}
+SAT_CODE = {"Terra": 0, "Aqua": 1, "SNPP": 2, "N20": 3, "N21": 4}
+
+
+def _sats_for(satellites: str | None, sensor: str | None) -> str | None:
+    """Combine the satellites list with sensor=MODIS|VIIRS|both into one satellites string."""
+    sats = _sats(satellites)
+    if sensor and sensor.upper() in SENSOR_SATS:
+        sats = [s for s in sats if s in SENSOR_SATS[sensor.upper()]]
+    return None if set(sats) == set(ALL_SATS) else ",".join(sats) or "none"
+
+
+def _conf_set(conf: str | None, exclude_low: bool) -> set[str]:
+    if conf:
+        return {c.strip().lower() for c in conf.split(",") if c.strip()}
+    return {"nominal", "high"} if exclude_low else {"low", "nominal", "high"}
+
+
+def _days(start: str | None, end: str | None) -> int:
+    s0, e0 = start or _meta.get("first_date"), end or _meta.get("last_date")
+    return int((np.datetime64(e0) - np.datetime64(s0)).astype(int)) + 1 if s0 and e0 else 10 ** 6
+
+
+def _cell_conf_n(cs: set[str]) -> str:
+    """Count of the chosen confidence classes in a cell row (cells know `low` and n_high)."""
+    parts = []
+    if "low" in cs:
+        parts.append("CASE WHEN low THEN n ELSE 0 END")
+    if "high" in cs:
+        parts.append("CASE WHEN low THEN 0 ELSE n_high END")
+    if "nominal" in cs:
+        parts.append("CASE WHEN low THEN 0 ELSE n - n_high END")
+    return "(" + " + ".join(parts) + ")" if parts else "0"
+
+
+Q_MAP = dict(sensor=Query(None, pattern="^(MODIS|VIIRS|both)$", description="MODIS, VIIRS or both (default)"))
+
+
+@app.get("/api/count")
+def count(bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
+          start: str | None = Q["start"], end: str | None = Q["end"],
+          exclude_low: bool = Q["exclude_low"], vegetation_only: bool = Q["vegetation_only"],
+          satellites: str | None = Q["satellites"], daynight: str = Q["daynight"], conf: str | None = Q["conf"],
+          sensor: str | None = Q_MAP["sensor"]):
+    """Number of raw hotspots in view, period and filters, from the cells (cheap). Decides density vs points.
+    approx = true: cells count by their centre, and periods over 92 days use whole months."""
+    t0 = time.time()
+    c = cur()
+    days = _days(start, end)
+    source = "cells_day" if days <= 92 else "cells_month"
+    rel = selection(c, source, bbox, polygon, start, end, False, vegetation_only,
+                    extra=raw_cond(source, _sats_for(satellites, sensor), daynight))
+    nexpr = _cell_conf_n(_conf_set(conf, exclude_low))
+    by = {s: int(n or 0) for s, n in c.execute(f"SELECT sensor, sum({nexpr}) FROM {rel} GROUP BY 1").fetchall()}
+    total = sum(by.values())
+    return {"count": total, "by_sensor": {"MODIS": by.get("MODIS", 0), "VIIRS": by.get("VIIRS", 0)},
+            "limit": POINT_LIMIT, "points_available": True, "approx": True,
+            "whole_months": source == "cells_month", "ms": round((time.time() - t0) * 1000)}
+
+
+DENSITY_RES = [(3, 2.0), (5, 0.5), (7, 0.1), (99, 0.05)]   # (up to map zoom, cell size in degrees), MapLibre zoom
+
+
+@app.get("/api/density")
+def density(zoom: float = Query(2, ge=0, le=24, description="map zoom (MapLibre / web mercator)"),
+            res: float | None = Query(None, ge=0.01, le=5, description="cell size in degrees (default: from zoom)"),
+            view: Literal["harm", "raw", "modis", "viirs"] = "harm", metric: Literal["count", "frp"] = "count",
+            bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
+            start: str | None = Q["start"], end: str | None = Q["end"],
+            exclude_low: bool = Q["exclude_low"], vegetation_only: bool = Q["vegetation_only"],
+            satellites: str | None = Q["satellites"], daynight: str = Q["daynight"], conf: str | None = Q["conf"],
+            sensor: str | None = Q_MAP["sensor"]):
+    """Aggregated cells for the map, column-wise: lat, lon (cell centres), n (raw count), frp_sum (raw FRP),
+    value (the chosen view and metric). Periods up to 92 days: exact days (cells of 0.25 degree or more from the
+    daily cells, finer ones from the single hotspots). Longer periods: the monthly cells (whole months, >= 0.1 degree)."""
+    t0 = time.time()
+    c = cur()
+    if res is None:
+        res = next(r for z, r in DENSITY_RES if zoom <= z)
+    days = _days(start, end)
+    cs = _conf_set(conf, exclude_low)
+    partial = cs not in ({"nominal", "high"}, {"low", "nominal", "high"})   # cells only know low / not low
+    if (res < DAY_RES - 1e-9 or partial) and days <= 92:     # short periods: exact days from the single hotspots
+        source = "points"
+    elif days <= 92 and res >= DAY_RES - 1e-9:
+        source = "cells_day"
+    else:
+        source, res = "cells_month", max(res, MONTH_RES)
+    s = SOURCES[source]
+    sats = _sats_for(satellites, sensor)
+    rc = raw_cond(source, sats, daynight)
+    if source == "points":
+        rel = selection(c, source, bbox, polygon, start, end, False, vegetation_only, extra=conf_cond(",".join(sorted(cs))))
+        n_e, f_e = f"CASE WHEN {rc} THEN 1 ELSE 0 END", f"CASE WHEN {rc} THEN frp ELSE 0 END"
+        v_e = _value(source, view, metric, rc)
+    else:
+        rel = selection(c, source, bbox, polygon, start, end, False, vegetation_only,
+                        extra=None if "low" in cs else "NOT low")
+        share = f"({_cell_conf_n(cs)}) / greatest(n, 1)"          # scales harmonized values when classes are partial
+        n_e = f"CASE WHEN {rc} THEN {_cell_conf_n(cs)} ELSE 0 END"
+        f_e = f"CASE WHEN {rc} THEN frp * {share} ELSE 0 END"
+        v_e = f"({_value(source, view, metric, rc)}) * {share}"
+    df = c.execute(f"""
+        SELECT floor({s['lat']} / {res}) * {res} + {res / 2} AS lat, floor({s['lon']} / {res}) * {res} + {res / 2} AS lon,
+               sum({n_e}) AS n, sum({f_e}) AS frp_sum, sum({v_e}) AS value
+        FROM {rel} GROUP BY 1, 2 HAVING sum({n_e}) > 0 OR sum({v_e}) > 0""").fetchnumpy()
+    r = lambda a, d: [round(float(x), d) for x in a]
+    p0, p1 = start or _meta.get("first_date"), end or _meta.get("last_date")
+    return {"resolution_deg": res, "source": source, "whole_months": source == "cells_month",
+            "period": f"{p0[:7]}..{p1[:7]}" if source == "cells_month" else f"{p0}..{p1}",
+            "lat": r(df["lat"], 4), "lon": r(df["lon"], 4), "n": r(df["n"], 2), "frp_sum": r(df["frp_sum"], 1),
+            "value": r(df["value"], 3), "approx_classes": bool(partial and source != "points"),
+            "ms": round((time.time() - t0) * 1000)}
+
+
+@app.get("/api/points.bin")
+def points_bin(bbox: str = Query(..., description="west,south,east,north (visible map area)"),
+               polygon: str | None = Q["polygon"], start: str | None = Q["start"], end: str | None = Q["end"],
+               exclude_low: bool = Q["exclude_low"], vegetation_only: bool = Q["vegetation_only"],
+               satellites: str | None = Q["satellites"], daynight: str = Q["daynight"], conf: str | None = Q["conf"],
+               sensor: str | None = Q_MAP["sensor"]):
+    """Single RAW hotspots as one binary block (little endian), at most POINT_LIMIT, otherwise HTTP 413.
+    Layout: 'FCP1', uint32 n, then columns of n values each:
+      float32 lat, float32 lon, float32 frp, int32 date (days since 1970-01-01), uint16 time (HHMM, UTC),
+      uint8 sensor (0 MODIS, 1 VIIRS), uint8 conf (0 low, 1 nominal, 2 high),
+      uint8 satellite (0 Terra, 1 Aqua, 2 SNPP, 3 N20, 4 N21), uint8 daynight (0 day, 1 night)."""
+    t0 = time.time()
+    c = cur()
+    cs = _conf_set(conf, exclude_low)
+    rc = raw_cond("points", _sats_for(satellites, sensor), daynight)
+    rel = selection(c, "points", bbox, polygon, start, end, False, vegetation_only,
+                    extra=f"{rc} AND {conf_cond(','.join(sorted(cs)))}")
+    n = c.execute(f"SELECT count(*) FROM {rel}").fetchone()[0]
+    if n > POINT_LIMIT:
+        return JSONResponse({"count": int(n), "limit": POINT_LIMIT}, status_code=413)
+    d = c.execute(f"""SELECT latitude::FLOAT AS lat, longitude::FLOAT AS lon, frp::FLOAT AS frp,
+              (CAST(acq_date AS DATE) - DATE '1970-01-01')::INTEGER AS day, acq_time::USMALLINT AS t,
+              (sensor = 'VIIRS')::UTINYINT AS s,
+              (CASE conf_class WHEN 'low' THEN 0 WHEN 'high' THEN 2 ELSE 1 END)::UTINYINT AS cf,
+              (CASE satellite {' '.join(f"WHEN '{k}' THEN {v}" for k, v in SAT_CODE.items())} ELSE 9 END)::UTINYINT AS sat,
+              (daynight = 'N')::UTINYINT AS dn
+            FROM {rel}""").fetchnumpy()
+    cols = [("lat", np.float32), ("lon", np.float32), ("frp", np.float32), ("day", np.int32), ("t", np.uint16),
+            ("s", np.uint8), ("cf", np.uint8), ("sat", np.uint8), ("dn", np.uint8)]
+    body = b"FCP1" + np.uint32(n).tobytes() + b"".join(np.asarray(d[k], dtype=t).tobytes() for k, t in cols)
+    ms = round((time.time() - t0) * 1000)
+    return Response(body, media_type="application/octet-stream",
+                    headers={"X-Count": str(n), "X-Limit": str(POINT_LIMIT), "X-Query-Ms": str(ms), "Cache-Control": "no-store"})
 
 
 @app.get("/api/hotspots.csv")

@@ -4,8 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FireCal · Harmonized MODIS + VIIRS burning activity</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
 :root{--bg:#f3f3f1;--panel:#fff;--line:#e0dfda;--text:#1f1f1d;--muted:#6b6a65;--accent:#21708a;--modis:#e69f00;--viirs:#0072b2;--warm:#d55e00;--cool:#1b6fb5}
 *{box-sizing:border-box}
@@ -43,11 +42,11 @@ main{padding:12px 16px;max-width:1700px;margin:0 auto;display:flex;flex-directio
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
 #mapwrap{position:relative;height:520px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
 #map{position:absolute;inset:0}
-.mapbar{position:absolute;top:8px;right:8px;z-index:500;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:75%;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
-.maplegend{position:absolute;left:8px;bottom:24px;z-index:500;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px;max-width:250px}
+.mapbar{position:absolute;top:8px;right:8px;z-index:4;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:75%;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
+.maplegend{position:absolute;right:8px;bottom:34px;z-index:3;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px;max-width:250px}
 .maplegend .bar{height:8px;border-radius:4px;margin:4px 0 2px}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
-.busy{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:600;background:#1d1f24;color:#fff;font-size:12px;padding:3px 10px;border-radius:999px;display:none}
+.busy{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:5;background:#1d1f24;color:#fff;font-size:12px;padding:3px 10px;border-radius:999px;display:none}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .kpi{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .kpi .l{font-size:11.5px;color:var(--muted)}.kpi .v{font-size:20px;font-weight:650;margin-top:1px;font-variant-numeric:tabular-nums}
@@ -90,8 +89,24 @@ footer{max-width:1700px;margin:0 auto;padding:0 16px 18px;font-size:12px;color:v
 #toast.show{opacity:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .gray-tiles{filter:grayscale(1) brightness(1.05) contrast(.9)}
-#map.dark{background:#0b0e13}#map.light{background:#e9e8e4}
-#layersPanel{position:absolute;left:54px;top:8px;z-index:700;width:290px;max-height:calc(100% - 16px);overflow-y:auto;background:rgba(32,35,41,.96);color:#e8e8e8;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:12.5px;display:none}
+#map{background:#0b0e13}
+.budget{position:absolute;left:10px;bottom:30px;z-index:3;width:290px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:11.5px;cursor:pointer;line-height:1.35}
+.budget.small{width:230px;font-size:10.5px;bottom:26px;padding:4px 7px}
+.btext{font-weight:600;font-variant-numeric:tabular-nums}.bsub{color:var(--muted)}
+.btrack{position:relative;height:10px;border-radius:5px;background:#e6e5e0;margin:4px 0}
+.bfill{height:100%;border-radius:5px;background:#0072b2;transition:width .3s;max-width:100%}
+.bmark{position:absolute;right:0;top:-3px;bottom:-3px;width:2px;background:#000}
+.budget.near .bfill{background:repeating-linear-gradient(135deg,#e69f00 0 6px,#f3c66b 6px 10px)}
+.budget.over .bfill{background:repeating-linear-gradient(45deg,#d55e00 0 4px,#8a3200 4px 8px)}
+.budget.over .btext::before{content:'⚠ '}.budget.na{opacity:.6}.budget.na .bfill{background:#999}
+.budget.loading .bfill{opacity:.35}.budget.loading .btext{opacity:.6}.budget.err .bsub{color:#b3261e}
+.budgetpop{position:absolute;left:10px;bottom:118px;z-index:4;width:290px;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:11.5px;display:none;box-shadow:0 3px 12px rgba(0,0,0,.2)}
+.drawtools{position:absolute;left:10px;top:88px;z-index:3;display:flex;flex-direction:column;background:#fff;border-radius:4px;box-shadow:0 0 0 2px rgba(0,0,0,.1)}
+.drawtools button{width:29px;height:29px;border:0;border-bottom:1px solid #ddd;background:none;cursor:pointer;font-size:15px;line-height:1}
+.drawtools button:last-child{border-bottom:0}.drawtools button.on{background:var(--accent);color:#fff}
+.drawhint{position:absolute;left:50px;top:92px;z-index:3;background:#1d1f24;color:#fff;font-size:12px;padding:3px 8px;border-radius:6px}.drawhint:empty{display:none}
+.cmpwrap{position:relative}
+#layersPanel{position:absolute;left:50px;top:8px;z-index:6;width:290px;max-height:calc(100% - 16px);overflow-y:auto;background:rgba(32,35,41,.96);color:#e8e8e8;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.35);font-size:12.5px;display:none}
 #layersPanel.open{display:block}
 #layersPanel .lh{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#2b6ea3,#1f5a88);color:#fff;font-weight:600;padding:7px 10px;position:sticky;top:0;z-index:1}
 #layersPanel .lh button{background:none;border:0;color:#fff;font-size:16px;cursor:pointer;line-height:1}
@@ -126,9 +141,11 @@ body.dark table.calib tr.hl{background:#1d3540}
 body.dark .tbadge{background:#15303a;color:#a9d5e4;border-color:#24505f}
 body.dark .info{background:#22262d;color:#a9d5e4;border-color:#3d6a78}
 body.dark .mapbar,body.dark .maplegend{background:rgba(26,29,34,.95);color:var(--text);border-color:var(--line)}
-body.dark .leaflet-bar a,body.dark .leaflet-draw-toolbar a{background-color:#22262d;color:#ddd;border-bottom-color:#3a4049}
-body.dark .leaflet-control-attribution{background:rgba(26,29,34,.85)!important;color:#aaa}body.dark .leaflet-control-attribution a{color:#8cc8de}
-body.dark .leaflet-control-scale-line{background:rgba(26,29,34,.8);color:#ddd;border-color:#bbb}
+body.dark .maplibregl-ctrl-group,body.dark .drawtools{background:#22262d}body.dark .maplibregl-ctrl-group button+button{border-top-color:#3a4049}
+body.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon{filter:invert(1)}body.dark .drawtools button{color:#ddd;border-color:#3a4049}
+body.dark .maplibregl-ctrl-attrib{background:rgba(26,29,34,.85);color:#aaa}body.dark .maplibregl-ctrl-attrib a{color:#8cc8de}
+body.dark .maplibregl-ctrl-scale{background:rgba(26,29,34,.8);color:#ddd;border-color:#bbb}
+body.dark .budget,body.dark .budgetpop{background:rgba(26,29,34,.95);color:var(--text);border-color:var(--line)}body.dark .btrack{background:#30353d}body.dark .bmark{background:#eee}
 body.dark td.ok{color:#5fd38a}body.dark td.off{color:#ff8a7a}
 body.dark .legendrow .sw{filter:brightness(.8)}
 #themeBtn{min-width:34px;justify-content:center}
@@ -217,7 +234,7 @@ body.side.collapsed #paneTab{display:flex}
   <div class="grid g-map">
     <div class="card">
       <div class="head"><h3>Map</h3><span class="tbadge" id="tb_map" title="Time span this view uses"></span><span class="grow"></span><span class="note" id="mapNote"></span></div>
-      <p class="how">Draw a rectangle or polygon (toolbar on the left) to analyse an area. Zoomed out: density of hotspots. Zoomed in (or “Points”): the real detections, never converted.</p>
+      <p class="how">Draw a rectangle or polygon (buttons on the left) to analyse an area. The map shows the density of hotspots and switches to the single detections (never converted) as soon as the view holds fewer than 1,000,000 of them; the bar at the bottom left shows how close you are.</p>
       <div id="mapwrap">
         <div id="map" role="region" aria-label="Map"></div>
         <div class="busy" id="busy">Loading…</div>
@@ -225,12 +242,22 @@ body.side.collapsed #paneTab{display:flex}
           <span id="mapLabel">full range</span>
           <button id="mapReset" class="btn small" style="display:none" title="Show full range">×</button>
           <button id="layersBtn" class="btn small" title="Map background and satellite imagery">🗺 Layers</button>
-          <div class="seg" id="mapModeSeg"><button data-v="auto" class="on">Auto</button><button data-v="heat">Density</button><button data-v="points">Points</button><button data-v="team" id="teamModeBtn" style="display:none" title="Aggregated cells delivered by the data team (Tabelle B)">Team cells</button></div>
+          <div class="seg" id="mapModeSeg" title="Auto: single points while the view holds fewer than 1,000,000 hotspots, otherwise density"><button data-v="auto" class="on">Auto</button><button data-v="heat">Density</button><button data-v="points">Points</button><button data-v="team" id="teamModeBtn" style="display:none" title="Aggregated cells delivered by the data team (Tabelle B)">Team cells</button></div>
           <span class="teamctl" id="teamCtl"><select id="teamGrid" title="Grid of the team table"></select><select id="teamPeriod" title="Time window"></select></span>
           <span class="mapconf" id="mapConf" title="Confidence classes shown on the map (map only)"></span>
           <div class="seg" id="colorSeg" title="Colour of single points"><button data-v="sensor" class="on">Sensor</button><button data-v="conf">Confidence</button><button data-v="frp">FRP</button></div>
-          <label class="fg" title="Density colour scale">Scale <input id="heatMax" type="range" min="0.1" max="3" step="0.05" value="1" style="width:70px"></label>
+          <div class="seg" id="styleSeg" title="How the density is drawn: sharp grid cells or a soft glow"><button data-v="cells" class="on">Cells</button><button data-v="glow">Glow</button></div>
+          <label class="fg" title="Density colour scale">Scale <input id="heatMax" type="range" min="0.2" max="3" step="0.05" value="1" style="width:70px"></label>
         </div>
+        <div class="drawtools" role="group" aria-label="Draw an area"><button id="drawRect" title="Draw a rectangle (drag)">▭</button><button id="drawPoly" title="Draw a polygon (click the corners)">⬠</button></div>
+        <div class="drawhint" id="drawHint"></div>
+        <div class="budget" id="budget" role="progressbar" tabindex="0" aria-label="Points in view compared with the limit for single points" aria-valuemin="0" aria-valuemax="1000000" aria-valuenow="0"
+             title="Click: which filters change the number of points">
+          <div class="btext">Points in view: –</div>
+          <div class="btrack"><div class="bfill" style="width:0"></div><div class="bmark" title="From this number on only the density is shown"></div></div>
+          <div class="bsub"></div>
+        </div>
+        <div class="budgetpop" id="budgetPop" role="status"></div>
         <div class="maplegend" id="mapLegend"></div>
         <div id="layersPanel" role="dialog" aria-label="Map layers"></div>
       </div>
@@ -282,6 +309,7 @@ body.side.collapsed #paneTab{display:flex}
     </div>
     <div class="mapbar cmpbar" id="cmpBar">
       <div class="seg" id="cmpModeSeg" title="Auto: density when zoomed out, single hotspots from zoom 7"><button data-v="auto" class="on">Auto</button><button data-v="heat">Density</button><button data-v="points">Points</button></div>
+      <div class="seg" id="cmpStyleSeg" title="How the density is drawn"><button data-v="cells" class="on">Cells</button><button data-v="glow">Glow</button></div>
       <div class="seg" id="cmpColorSeg" title="Colour of single hotspots"><button data-v="sensor" class="on">Sensor</button><button data-v="conf">Confidence</button><button data-v="frp">FRP</button></div>
       <span class="mapconf" id="cmpConf" title="Confidence classes on the compare maps"></span>
       <label class="fg" title="Density colour scale">Scale <input id="cmpScale" type="range" min="0.2" max="3" step="0.05" value="1" style="width:80px"></label>
@@ -289,8 +317,8 @@ body.side.collapsed #paneTab{display:flex}
       <label class="fg" title="Borders and place names"><input type="checkbox" id="cmpPlaces" checked> places</label>
     </div>
     <div class="grid g2" style="margin-top:6px">
-      <div><div class="cmplbl" id="cmpLblA">A</div><div id="cmpMapA" class="cmpmap"></div></div>
-      <div><div class="cmplbl" id="cmpLblB">B</div><div id="cmpMapB" class="cmpmap"></div></div>
+      <div><div class="cmplbl" id="cmpLblA">A</div><div class="cmpwrap"><div id="cmpMapA" class="cmpmap"></div><div class="budget small" id="budgetA" role="progressbar" aria-label="Points in view compared with the limit" aria-valuemin="0" aria-valuemax="1000000" aria-valuenow="0"><div class="btext">Points in view: –</div><div class="btrack"><div class="bfill" style="width:0"></div><div class="bmark"></div></div><div class="bsub"></div></div></div></div>
+      <div><div class="cmplbl" id="cmpLblB">B</div><div class="cmpwrap"><div id="cmpMapB" class="cmpmap"></div><div class="budget small" id="budgetB" role="progressbar" aria-label="Points in view compared with the limit" aria-valuemin="0" aria-valuemax="1000000" aria-valuenow="0"><div class="btext">Points in view: –</div><div class="btrack"><div class="bfill" style="width:0"></div><div class="bmark"></div></div><div class="bsub"></div></div></div></div>
     </div>
     <div class="note" id="cmpLegend" style="margin-top:6px"></div>
     <p class="note" id="cmpNote" style="margin-top:4px"></p>
@@ -353,9 +381,8 @@ body.side.collapsed #paneTab{display:flex}
 <div id="helpPop" role="tooltip"></div>
 <div id="toast" role="status"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/deck.gl@9.1.15/dist.min.js"></script>
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
@@ -406,7 +433,7 @@ const S = {
   metric:'count', view:'harm', perDay:false, sats:new Set(SATS), dn:'all', incLow:false, veg:false,
   rows:{}, sat:{}, periods:[], rangeP:[], mapPeriod:null, mapMode:'auto', colorBy:'sensor',
   heatMax:1, heatRef:null, anomMode:'pct', mSort:'total', mNorm:'global', matrix:null, dist:null,
-  req:0, rreq:0, hreq:0, treq:0, freq:0, creq:0, team:null, distFrp:null, mapConf:null, cmp:false, playing:false
+  req:0, rreq:0, hreq:0, treq:0, freq:0, creq:0, team:null, distFrp:null, mapConf:null, cmp:false, dstyle:'cells', playing:false
 };
 
 /* ---------- helpers ---------- */
@@ -469,7 +496,7 @@ function F() {
 const apiF = f => ({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, satellites: f.satellites, daynight: f.daynight, conf: f.conf });
 
 /* ---------- API provider ---------- */
-async function getJSON(url) { const r = await fetch(url); if (!r.ok) throw new Error(await r.text()); return r.json(); }
+async function getJSON(url, signal) { const r = await fetch(url, { signal }); if (!r.ok) throw new Error(await r.text()); return r.json(); }
 const ApiProvider = {
   name: 'api', m: null,
   async init() { const r = await fetch(`${API}/api/meta`, { cache: 'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }); if (!r.ok) throw 0; const m = await r.json();
@@ -485,6 +512,9 @@ const ApiProvider = {
   async distributions(f, start, end) { return getJSON(`${API}/api/distributions?${qs({ ...apiF(f), start, end })}`); },
   async matrix(f, gran, view, metric, start, end, top) { return getJSON(`${API}/api/matrix?${qs({ ...apiF(f), granularity: gran, view, metric, start, end, top })}`); },
   async team() { try { return await getJSON(`${API}/api/team`); } catch { return { grids: [] }; } },
+  async count(f, start, end, signal) { return getJSON(`${API}/api/count?${qs({ ...apiF(f), sensor: f.sensor, start, end })}`, signal); },
+  async density(f, start, end, zoom, view, metric, signal) { return getJSON(`${API}/api/density?${qs({ ...apiF(f), sensor: f.sensor, start, end, zoom, view, metric })}`, signal); },
+  async pointsGL(f, bbox, start, end, signal) { return pointLoader.load(`${API}/api/points.bin?${qs({ ...apiF(f), sensor: f.sensor, bbox, start, end })}`, signal); },
   async teamCells(grid, period, view, metric, bbox, polygon) { return getJSON(`${API}/api/team/cells?${qs({ grid, period, view, metric, bbox, polygon, limit: 30000 })}`); },
   downloadPoints(f, start, end, view) { const a = document.createElement('a'); a.href = `${API}/api/hotspots.csv?${qs({ ...apiF(f), start, end, view })}`; document.body.appendChild(a); a.click(); a.remove(); toast('Export started'); }
 };
@@ -534,6 +564,32 @@ const LocalProvider = {
       const c = cells.get(k); if (c) c[2] += v; else cells.set(k, [la, lo, v]);
     }
     return [...cells.values()];
+  },
+  _inView(f, start, end) {
+    const [w, so, ea, n] = (f.bbox || '-180,-90,180,90').split(',').map(Number);
+    return this._sel(f, start, end, true).filter(p => p.lon >= w && p.lon <= ea && p.lat >= so && p.lat <= n && (!f.sensor || p.sensor === f.sensor));
+  },
+  async count(f, start, end) { const sel = this._inView(f, start, end), by = { MODIS: 0, VIIRS: 0 }; for (const p of sel) by[p.sensor]++;
+    return { count: sel.length, by_sensor: by, limit: POINT_LIMIT, points_available: true, approx: false }; },
+  async density(f, start, end, zoom, view, metric) {
+    const res = zoom <= 3 ? 2 : zoom <= 5 ? .5 : zoom <= 7 ? .1 : .05, [w, so, ea, n] = (f.bbox || '-180,-90,180,90').split(',').map(Number), cells = new Map();
+    for (const p of this._sel(f, start, end)) {
+      if (p.lon < w || p.lon > ea || p.lat < so || p.lat > n) continue;
+      const v = pointValue(p, f, view, metric), ok = rawOk(p, f); if (!v && !ok) continue;
+      const la = Math.floor(p.lat / res) * res + res / 2, lo = Math.floor(p.lon / res) * res + res / 2, k = la + ',' + lo;
+      const c = cells.get(k) || (cells.set(k, { la, lo, n: 0, f: 0, v: 0 }), cells.get(k)); if (ok) { c.n++; c.f += p.frp; } c.v += v;
+    }
+    const a = [...cells.values()];
+    return { resolution_deg: res, lat: a.map(c => c.la), lon: a.map(c => c.lo), n: a.map(c => c.n), frp_sum: a.map(c => c.f), value: a.map(c => c.v), whole_months: false, period: `${start}..${end}` };
+  },
+  async pointsGL(f, bbox, start, end) {
+    const sel = this._inView({ ...f, bbox }, start, end), n = sel.length;
+    if (n > POINT_LIMIT) return { over: { count: n, limit: POINT_LIMIT } };
+    const pos = new Float32Array(2 * n), lat = new Float32Array(n), lon = new Float32Array(n), frp = new Float32Array(n), day = new Int32Array(n), t = new Uint16Array(n),
+      s = new Uint8Array(n), cf = new Uint8Array(n), sat = new Uint8Array(n), dn = new Uint8Array(n);
+    sel.forEach((p, i) => { pos[2 * i] = lon[i] = p.lon; pos[2 * i + 1] = lat[i] = p.lat; frp[i] = p.frp; day[i] = Math.floor(Date.parse(p.date) / 864e5); t[i] = p.time;
+      s[i] = p.sensor === 'VIIRS' ? 1 : 0; cf[i] = Math.max(0, CONF_BY_CODE.indexOf(p.cc)); sat[i] = Math.max(0, SAT_BY_CODE.indexOf(p.sat)); dn[i] = p.dn === 'N' ? 1 : 0; });
+    return { n, pos, lat, lon, frp, day, t, s, cf, sat, dn, bytes: 22 * n };
   },
   async points(f, bbox, start, end, limit) {
     const [w, s, e, n] = bbox.split(',').map(Number);
@@ -663,11 +719,13 @@ $('file').addEventListener('change', async e => {
 $('demoBtn').addEventListener('click', () => useProvider(LocalProvider.load(makeDemo(), 'Demo data (synthetic, 2001–2026)', true)));
 $('apiBtn').addEventListener('click', () => ApiProvider.m && useProvider(ApiProvider));
 
-/* ---------- map ---------- */
-let zoomTimer = null;
-const map = L.map('map', { zoomControl: true, worldCopyJump: true, preferCanvas: true }).setView([0, 0], 2);
-// leaflet.heat draws with getImageData, which throws while the map has no size (hidden tab, collapsed panel)
-if (L.HeatLayer) { const _rd = L.HeatLayer.prototype._redraw; L.HeatLayer.prototype._redraw = function () { const z = this._map && this._map.getSize(); if (!z || z.x < 1 || z.y < 1) return; if (this._canvas && (!this._canvas.width || !this._canvas.height)) { this._reset(); if (!this._canvas.width || !this._canvas.height) return; } return _rd.call(this); }; }
+/* ---------- map: WebGL (MapLibre GL + deck.gl) ----------
+   docs/HANDOFF_Frontend_Performance.md: density is the default view; single points only while the number of
+   points in the current view, period and filters stays under POINT_LIMIT. Points travel as one binary block,
+   decoded in a Web Worker and drawn on the GPU. A budget bar shows how close the view is to the limit. */
+const POINT_LIMIT = +(new URLSearchParams(location.search).get('point_limit') || 1000000);   // one constant (?point_limit= only for testing)
+const POINT_SENSORS = ['VIIRS', 'MODIS'];    // sensors allowed as single points (open decision, see the handoff)
+const HYSTERESIS = 0.95;                     // density -> points only below 95 % of the limit (no flicker)
 const store = { get(k, d) { try { const v = localStorage.getItem('firecal.' + k); return v === null ? d : v; } catch { return d; } },
                 set(k, v) { try { localStorage.setItem('firecal.' + k, v); } catch {} } };
 
@@ -701,63 +759,321 @@ const DAILY = [
 ];
 const PLACES = ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
 const tileUrl = (u, z, x, y) => u.replace('{z}', z).replace('{x}', x).replace('{y}', y);
-const L_ = { base: null, baseLabels: null, places: null, daily: null };
 const M = { base: store.get('basemap', 'firefly'), daily: store.get('daily', ''), dailyOpacity: +store.get('dailyOpacity', 1), places: store.get('places', '1') === '1', date: null };
-let baseErrors = 0;
-const isDarkMap = () => (BASEMAPS.find(b => b.id === M.base) || BASEMAPS[0]).dark || !!M.daily;
+const baseOf = id => BASEMAPS.find(b => b.id === id) || BASEMAPS[0];
+const isDarkMap = () => baseOf(M.base).dark || !!M.daily;
+const FIRE = ['#3b0f70', '#8c2981', '#de4968', '#fe9f6d', '#fcfdbf'];
+const paletteFor = dark => dark ? FIRE : VIRIDIS;
+const heatCss = (dark = isDarkMap()) => `linear-gradient(90deg,${paletteFor(dark).join(',')})`;
+function palColor(t, dark, alpha = 255) {   // t 0..1 -> [r, g, b, a] on the viridis (light) or fire (dark) scale
+  const cs = paletteFor(dark), x = Math.max(0, Math.min(1, t)) * (cs.length - 1), i = Math.min(cs.length - 2, Math.floor(x)), f = x - i;
+  const a = hex(cs[i]), b = hex(cs[i + 1]); return [Math.round(a[0] + (b[0] - a[0]) * f), Math.round(a[1] + (b[1] - a[1]) * f), Math.round(a[2] + (b[2] - a[2]) * f), alpha];
+}
+const rgb = c => { const h = hex(c); return [h[0], h[1], h[2]]; };
+
+/* ---------- binary points: decoded in a Web Worker (see /api/points.bin for the layout) ---------- */
+function decodePoints(buf) {
+  const n = new DataView(buf).getUint32(4, true); let o = 8;
+  const lat = new Float32Array(buf, o, n); o += 4 * n; const lon = new Float32Array(buf, o, n); o += 4 * n;
+  const frp = new Float32Array(buf, o, n); o += 4 * n; const day = new Int32Array(buf, o, n); o += 4 * n;
+  const t = new Uint16Array(buf, o, n); o += 2 * n; const s = new Uint8Array(buf, o, n); o += n;
+  const cf = new Uint8Array(buf, o, n); o += n; const sat = new Uint8Array(buf, o, n); o += n; const dn = new Uint8Array(buf, o, n);
+  const pos = new Float32Array(2 * n); for (let i = 0; i < n; i++) { pos[2 * i] = lon[i]; pos[2 * i + 1] = lat[i]; }
+  return { n, pos, lat, lon, frp, day, t, s, cf, sat, dn, bytes: buf.byteLength };
+}
+const pointLoader = (() => {
+  const src = `${decodePoints.toString()}
+const ctl = {};
+self.onmessage = async e => {
+  const m = e.data;
+  if (m.abort) { if (ctl[m.abort]) ctl[m.abort].abort(); return; }
+  const ac = new AbortController(); ctl[m.id] = ac; const t0 = performance.now();
+  try {
+    const r = await fetch(m.url, { signal: ac.signal });
+    if (r.status === 413) { self.postMessage({ id: m.id, over: await r.json() }); return; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const buf = await r.arrayBuffer(), t1 = performance.now(), d = decodePoints(buf);
+    self.postMessage({ id: m.id, ...d, fetchMs: t1 - t0, ms: performance.now() - t0 }, [buf, d.pos.buffer]);
+  } catch (err) { if (err.name !== 'AbortError') self.postMessage({ id: m.id, error: String(err) }); }
+  finally { delete ctl[m.id]; }
+};`;
+  let w = null;
+  try { w = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' }))); } catch (e) { w = null; }
+  const pending = new Map(); let seq = 0;
+  if (w) w.onmessage = e => { const p = pending.get(e.data.id); if (!p) return; pending.delete(e.data.id); e.data.error ? p.reject(new Error(e.data.error)) : p.resolve(e.data); };
+  return {
+    async load(url, signal) {
+      url = new URL(url, location.href).href;
+      if (!w) {   // fallback without worker
+        const t0 = performance.now(), r = await fetch(url, { signal });
+        if (r.status === 413) return { over: await r.json() };
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return { ...decodePoints(await r.arrayBuffer()), ms: performance.now() - t0 };
+      }
+      const id = ++seq;
+      return new Promise((resolve, reject) => {
+        pending.set(id, { resolve, reject });
+        if (signal) signal.addEventListener('abort', () => { w.postMessage({ abort: id }); pending.delete(id); reject(new DOMException('aborted', 'AbortError')); }, { once: true });
+        w.postMessage({ id, url });
+      });
+    }
+  };
+})();
+
+/* ---------- one WebGL map: background, density, points, budget bar, region, drawing ---------- */
+const SAT_BY_CODE = ['Terra', 'Aqua', 'SNPP', 'N20', 'N21'], CONF_BY_CODE = ['low', 'nominal', 'high'];
+class FireMap {
+  constructor(el, o) {
+    this.o = o; this.el = $(el);
+    this.map = new maplibregl.Map({ container: this.el, center: [10, 10], zoom: 1, minZoom: 0, maxZoom: 15, renderWorldCopies: false,
+      dragRotate: false, pitchWithRotate: false, touchPitch: false, attributionControl: o.attribution ? { compact: true, customAttribution: 'Fire data: NASA LANCE FIRMS' } : false,
+      style: { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#0b0e13' } }] } });
+    this.map.touchZoomRotate.disableRotation();
+    this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+    this.map.addControl(new maplibregl.ScaleControl({ unit: 'metric', maxWidth: 100 }), 'bottom-right');
+    this.overlay = new deck.MapboxOverlay({ interleaved: false, layers: [], getTooltip: info => this.tooltip(info) });
+    this.map.addControl(this.overlay);
+    this.st = { mode: 'density', cnt: null, cells: null, pts: null, ptsKey: null, region: [], draw: [] };
+    this.cache = new Map(); this.req = 0; this.ac = null; this.perf = {}; this.baseErr = 0;
+    this.ready = new Promise(r => this.map.on('load', r));
+    this.map.on('moveend', () => { this.capZoom(); this.schedule(); });
+    this.map.on('movestart', () => { this.frames = 0; this.t0 = performance.now(); const tick = () => { if (this.t0) { this.frames++; requestAnimationFrame(tick); } }; requestAnimationFrame(tick); });
+    this.map.on('moveend', () => { if (this.t0) { const dt = performance.now() - this.t0; if (dt > 150) this.perf.fps = Math.round(this.frames / dt * 1000); this.t0 = 0; } });
+    this.map.on('error', e => { if (e && e.sourceId === 'base' && ++this.baseErr === 6 && o.onBaseError) o.onBaseError(this); });
+    new ResizeObserver(() => this.map.resize()).observe(this.el);
+  }
+  setBase(b, places, daily) {
+    this.baseErr = 0;
+    this.ready.then(() => {
+      const m = this.map;
+      for (const id of ['labels', 'daily', 'base']) { if (m.getLayer(id)) m.removeLayer(id); if (m.getSource(id)) m.removeSource(id); }
+      m.setPaintProperty('bg', 'background-color', b.dark || daily ? '#0b0e13' : '#e9e8e4');
+      m.addSource('base', { type: 'raster', tiles: [b.url], tileSize: 256, maxzoom: b.maxNative || b.max, attribution: b.attr });
+      m.addLayer({ id: 'base', type: 'raster', source: 'base' });
+      if (daily) { m.addSource('daily', { type: 'raster', tiles: [daily.url], tileSize: 256, maxzoom: 9, attribution: daily.attr });
+        m.addLayer({ id: 'daily', type: 'raster', source: 'daily', paint: { 'raster-opacity': daily.opacity } }); }
+      const lab = b.labels || (places && !b.ownLabels ? PLACES : null);
+      if (lab) { m.addSource('labels', { type: 'raster', tiles: [lab], tileSize: 256, maxzoom: b.labels ? b.max : 13 });
+        m.addLayer({ id: 'labels', type: 'raster', source: 'labels', paint: { 'raster-opacity': .9 } }); }
+    });
+  }
+  setDailyOpacity(v) { this.ready.then(() => { if (this.map.getLayer('daily')) this.map.setPaintProperty('daily', 'raster-opacity', v); }); }
+  // the scale bar never goes below 200 m: metres per pixel = 78271.5 * cos(lat) / 2^zoom (512 px tiles), bar <= 100 px
+  capZoom() { const lat = this.map.getCenter().lat, z = Math.max(3, Math.min(17, Math.floor(Math.log2(78271.517 * Math.cos(lat * Math.PI / 180) / 2))));
+    if (this.map.getMaxZoom() !== z) this.map.setMaxZoom(z); }
+  fit(bbox) { const [w, s, e, n] = bbox; if (e - w > 200) this.map.jumpTo({ center: [10, 10], zoom: 1 }); else this.map.fitBounds([[w, s], [e, n]], { padding: 30, maxZoom: 6, duration: 0 }); }
+  bbox() {
+    const b = this.map.getBounds(); let w = b.getWest(), e = b.getEast();
+    if (e - w >= 360) { w = -180; e = 180; }
+    let v = [Math.max(-180, w), Math.max(-85, b.getSouth()), Math.min(180, e), Math.min(85, b.getNorth())];
+    const R = this.o.region && this.o.region(); if (R) v = [Math.max(v[0], R.minLon), Math.max(v[1], R.minLat), Math.min(v[2], R.maxLon), Math.min(v[3], R.maxLat)];
+    return v[0] < v[2] && v[1] < v[3] ? v.map(x => +x.toFixed(3)).join(',') : null;
+  }
+  async cached(key, fn) {
+    if (this.cache.has(key)) { const v = this.cache.get(key); this.cache.delete(key); this.cache.set(key, v); return v; }
+    const v = await fn(); this.cache.set(key, v); if (this.cache.size > 40) this.cache.delete(this.cache.keys().next().value); return v;
+  }
+  schedule(ms = 300) { clearTimeout(this._t); this._t = setTimeout(() => this.update(), ms); }
+  async update() {
+    const o = this.o, p = S.provider, span = o.span(); if (!p || !span || !span[0]) return;
+    if (this.ac) this.ac.abort();
+    const ac = this.ac = new AbortController(), id = ++this.req, st = o.settings(), [s, e] = span, bbox = this.bbox();
+    if (st.mode === 'team') { this.st.mode = 'team'; this.budget({ team: true }); return o.team ? o.team(this, id) : null; }
+    if (!bbox) { this.st.cells = null; this.st.pts = null; this.render(); return; }
+    const f = { ...o.filters(), bbox }, zoom = Math.round(this.map.getZoom() * 2) / 2, key = JSON.stringify([f, s, e]);
+    this.budget({ loading: true });
+    try {
+      let t = performance.now();
+      const pf = sensorPick(f);   // the point budget counts only the sensors allowed as single points
+      const cnt = await this.cached('c' + key, () => p.count(pf, s, e, ac.signal)); if (id !== this.req) return;
+      this.perf.count_ms = Math.round(performance.now() - t);
+      const c = cnt.count, canPts = cnt.points_available !== false;
+      let want = 'density';
+      if (canPts && st.mode === 'points') want = c <= POINT_LIMIT ? 'points' : 'density';
+      if (canPts && st.mode === 'auto') want = this.st.mode === 'points' ? (c > POINT_LIMIT ? 'density' : 'points') : (c <= HYSTERESIS * POINT_LIMIT ? 'points' : 'density');
+      this.budget({ cnt, want });
+      const havePts = this.st.pts && this.st.ptsKey === key;
+      if (want === 'density' || !havePts) {   // density first; it stays visible until the points are there
+        t = performance.now();
+        const d = await this.cached('d' + JSON.stringify([f, s, e, zoom, st.view, st.metric]), () => p.density(f, s, e, zoom, st.view, st.metric, ac.signal));
+        if (id !== this.req) return;
+        this.perf.density_ms = Math.round(performance.now() - t); this.perf.density_cells = d.lat.length;
+        this.st.cells = d; this.st.cellDays = Math.max(1, dayDiff(s, e) + 1);
+        if (want === 'density') { this.st.mode = 'density'; this.st.pts = null; this.st.ptsKey = null; this.render(); return; }
+        this.st.mode = 'density'; this.render();
+      }
+      if (!havePts) {
+        t = performance.now();
+        const pts = await p.pointsGL(pf, bbox, s, e, ac.signal); if (id !== this.req) return;
+        if (pts.over) { this.st.mode = 'density'; this.budget({ cnt: { ...cnt, count: pts.over.count }, want: 'density' }); this.render(); return; }
+        this.perf.points_ms = Math.round(performance.now() - t); this.perf.points_mb = +(pts.bytes / 1e6).toFixed(1); this.perf.points_n = pts.n;
+        this.st.pts = pts; this.st.ptsKey = key;
+      }
+      this.st.mode = 'points'; const tr = performance.now(); this.render();
+      requestAnimationFrame(() => { this.perf.first_frame_ms = Math.round(performance.now() - tr); this.o.onPerf && this.o.onPerf(this); });
+    } catch (err) { if (err.name !== 'AbortError') { console.error(err); this.budget({ error: true }); } }
+    finally { if (id === this.req) { this.o.onPerf && this.o.onPerf(this); console.info('[map perf]', this.o.name || '', JSON.stringify(this.perf)); } }
+  }
+  vmax() {   // colour scale of the density: 98th percentile of the values per day (shared between compare maps)
+    if (this.o.vmax) return this.o.vmax(this);
+    const d = this.st.cells; if (!d || !d.value.length) return 1;
+    return (quantile(d.value.map(v => v / this.st.cellDays), .98) || 1);
+  }
+  densityLayers(st, dark) {
+    const d = this.st.cells; if (!d || !d.lat.length) return [];
+    if (!d._rows) d._rows = d.lat.map((la, i) => ({ la, lo: d.lon[i], v: d.value[i], n: d.n[i], f: d.frp_sum[i] }));
+    const days = this.st.cellDays, vmax = this.vmax() / (st.scale || 1), lm = Math.log1p(vmax), h = d.resolution_deg / 2;
+    const col = r => { const tt = Math.log1p(r.v / days) / lm; return palColor(tt, dark, Math.round(90 + 160 * Math.min(1, tt))); };
+    if (st.style === 'glow') return [new deck.HeatmapLayer({ id: 'glow', data: d._rows, getPosition: r => [r.lo, r.la], getWeight: r => r.v / days, radiusPixels: 28, intensity: 1.2, threshold: .04,
+      colorRange: paletteFor(dark).map(rgb), aggregation: 'SUM', updateTriggers: { getWeight: [days] } })];
+    return [new deck.SolidPolygonLayer({ id: 'cells', data: d._rows, pickable: true,
+      getPolygon: r => { const s = Math.max(-85, r.la - h), n = Math.min(85, r.la + h), w = r.lo - h, e = r.lo + h; return [[w, s], [e, s], [e, n], [w, n], [w, s]]; },
+      getFillColor: col, updateTriggers: { getFillColor: [vmax, dark, days] } })];
+  }
+  pointLayer(st, dark) {
+    const P = this.st.pts, n = P.n, ck = st.colorBy + dark;
+    if (P._ck !== ck) {
+      const colr = new Uint8Array(4 * n), rad = new Float32Array(n), cm = rgb(C.modis), cv = rgb(C.viirs), cc = [rgb(C.low), rgb(C.nominal), rgb(C.high)];
+      for (let i = 0; i < n; i++) {
+        const c = st.colorBy === 'sensor' ? (P.s[i] ? cv : cm) : st.colorBy === 'conf' ? cc[P.cf[i]] : palColor(Math.log10(P.frp[i] + 1) / 3, false);
+        colr[4 * i] = c[0]; colr[4 * i + 1] = c[1]; colr[4 * i + 2] = c[2]; colr[4 * i + 3] = 235;
+        rad[i] = Math.min(7, 1.6 + Math.log10(P.frp[i] + 1) * 1.6);
+      }
+      P._col = colr; P._rad = rad; P._ck = ck;
+    }
+    const few = n <= 200000;
+    return new deck.ScatterplotLayer({ id: 'pts', data: { length: n, attributes: { getPosition: { value: P.pos, size: 2 }, getFillColor: { value: P._col, size: 4 }, getRadius: { value: P._rad, size: 1 } } },
+      radiusUnits: 'pixels', radiusMinPixels: 1.2, stroked: n <= 150000, getLineColor: dark ? [255, 255, 255, 170] : [30, 30, 30, 150], lineWidthUnits: 'pixels', getLineWidth: .6,
+      pickable: few, autoHighlight: few, highlightColor: [255, 255, 255, 220], updateTriggers: { getFillColor: ck, getLineColor: dark } });
+  }
+  render() {
+    const st = this.o.settings(), dark = this.o.dark(), layers = [];
+    if (this.st.mode === 'team') layers.push(...(this.st.team || []));
+    else {
+      if (this.st.cells && (this.st.mode === 'density' || !this.st.pts)) layers.push(...this.densityLayers(st, dark));
+      if (this.st.mode === 'points' && this.st.pts) layers.push(this.pointLayer(st, dark));
+    }
+    layers.push(...this.st.region, ...this.st.draw);
+    this.overlay.setProps({ layers });
+    if (this.o.onRender) this.o.onRender(this);
+  }
+  tooltip(info) {
+    if (!info || !info.layer || info.index < 0) return null;
+    const style = { fontSize: '12px', background: '#1d1f24', color: '#fff', borderRadius: '6px', padding: '5px 8px' };
+    if (info.layer.id === 'pts') {
+      const P = this.st.pts, i = info.index, d = new Date(P.day[i] * 864e5).toISOString().slice(0, 10), tt = P.t[i], lh = ((Math.floor(tt / 100) + tt % 100 / 60 + P.lon[i] / 15) % 24 + 24) % 24;
+      return { html: `<b>${P.s[i] ? 'VIIRS' : 'MODIS'} · ${SAT_BY_CODE[P.sat[i]] || '?'}</b><br>${d} ${pad(Math.floor(tt / 100))}:${pad(tt % 100)} UTC · local ${fmt1(lh)} h<br>FRP ${fmt1(P.frp[i])} MW · ${CONF_BY_CODE[P.cf[i]]} confidence · ${P.dn[i] ? 'night' : 'day'}`, style };
+    }
+    if (info.layer.id === 'cells' && info.object) {
+      const r = info.object, d = this.st.cells;
+      return { html: `cell ${r.la.toFixed(2)}°, ${r.lo.toFixed(2)}° (${d.resolution_deg}°)<br>${viewName()}: <b>${fmt(r.v)}</b>${S.metric === 'frp' ? ' MW' : ''} · ${fmt1(r.v / this.st.cellDays)} per day<br>raw hotspots ${fmt(r.n)} · FRP ${fmt(r.f)} MW`, style };
+    }
+    if (info.layer.id === 'team' && info.object) return { html: info.object.tip, style };
+    return null;
+  }
+  budget(x) {
+    const el = this.o.budgetEl && $(this.o.budgetEl); if (!el) return;
+    const fill = el.querySelector('.bfill'), txt = el.querySelector('.btext'), sub = el.querySelector('.bsub');
+    el.classList.remove('ok', 'near', 'over', 'na', 'loading', 'err');
+    if (x.team) { el.style.display = 'none'; return; } el.style.display = '';
+    if (x.loading) { el.classList.add('loading'); sub.textContent = 'Counting the hotspots in view …'; return; }
+    if (x.error) { el.classList.add('err'); sub.textContent = 'Could not count the hotspots in view.'; return; }
+    const c = x.cnt.count, r = Math.min(c / POINT_LIMIT, 1), avail = x.cnt.points_available !== false;
+    fill.style.width = (r * 100).toFixed(1) + '%';
+    el.setAttribute('aria-valuenow', Math.min(c, POINT_LIMIT)); el.setAttribute('aria-valuemax', POINT_LIMIT);
+    txt.textContent = `Points in view: ${fmt(c)} / ${fmt(POINT_LIMIT)}`;
+    let state, msg;
+    if (!avail) { state = 'na'; msg = 'Only density is available for this period.'; }
+    else if (c > POINT_LIMIT) { state = 'over'; msg = `Too many points (${fmt(c)}). Showing density. Zoom in or shorten the period to see single points.`; }
+    else if (x.want === 'density') { state = r >= .7 ? 'near' : 'ok'; msg = this.o.settings().mode === 'density' ? 'Density view chosen (switch to Auto or Points for single points).' : 'Showing density (just below the limit: zoom in a little for single points).'; }
+    else if (r >= .7) { state = 'near'; msg = 'Close to the limit. With a smaller area or period the single points stay visible.'; }
+    else { state = 'ok'; msg = 'Single points are shown.'; }
+    el.classList.add(state); sub.textContent = msg + (x.cnt.whole_months ? ' Count from whole months.' : '');
+    el.setAttribute('aria-valuetext', `${txt.textContent}. ${msg}`);
+    el._cnt = x.cnt;
+  }
+  setRegionShape(R) {
+    if (!R) { this.st.region = []; this.render(); return; }
+    const ring = R.poly ? [...R.poly.map(([la, lo]) => [lo, la]), [R.poly[0][1], R.poly[0][0]]]
+      : [[R.minLon, R.minLat], [R.maxLon, R.minLat], [R.maxLon, R.maxLat], [R.minLon, R.maxLat], [R.minLon, R.minLat]];
+    this.st.region = [new deck.PathLayer({ id: 'region', data: [{ p: ring }], getPath: d => d.p, getColor: [33, 160, 200, 255], getWidth: 2, widthUnits: 'pixels' })];
+    this.render();
+  }
+  // drawing a rectangle (drag) or a polygon (click points, double-click or click the first point to finish)
+  startDraw(kind, done) {
+    this.stopDraw(); const m = this.map, pts = []; let start = null;
+    m.getCanvas().style.cursor = 'crosshair'; m.dragPan.disable(); m.doubleClickZoom.disable(); m.boxZoom.disable();
+    const show = (ring, closed) => { this.st.draw = [new deck.PathLayer({ id: 'draw', data: [{ p: ring }], getPath: d => d.p, getColor: [255, 200, 40, 255], getWidth: 2, widthUnits: 'pixels', getDashArray: [4, 3] }),
+      new deck.ScatterplotLayer({ id: 'drawpts', data: closed ? [] : ring.slice(0, -1), getPosition: d => d, getRadius: 4, radiusUnits: 'pixels', getFillColor: [255, 200, 40, 255] })]; this.render(); };
+    const finish = R => { this.stopDraw(); if (R) done(R); };
+    const H = this._draw = {};
+    if (kind === 'rect') {
+      H.mousedown = e => { start = e.lngLat; };
+      H.mousemove = e => { if (!start) return; const a = start, b = e.lngLat; show([[a.lng, a.lat], [b.lng, a.lat], [b.lng, b.lat], [a.lng, b.lat], [a.lng, a.lat]], true); };
+      H.mouseup = e => { if (!start) return; const a = start, b = e.lngLat;
+        if (Math.abs(a.lng - b.lng) < 1e-4 || Math.abs(a.lat - b.lat) < 1e-4) { start = null; return; }
+        finish({ minLat: Math.max(-90, Math.min(a.lat, b.lat)), maxLat: Math.min(90, Math.max(a.lat, b.lat)), minLon: Math.max(-180, Math.min(a.lng, b.lng)), maxLon: Math.min(180, Math.max(a.lng, b.lng)), poly: null }); };
+    } else {
+      const close = () => { if (pts.length < 3) return; const la = pts.map(p => p[1]), lo = pts.map(p => p[0]);
+        finish({ minLat: Math.min(...la), maxLat: Math.max(...la), minLon: Math.min(...lo), maxLon: Math.max(...lo), poly: pts.map(([lo2, la2]) => [la2, lo2]) }); };
+      H.click = e => { const q = [e.lngLat.lng, e.lngLat.lat];
+        if (pts.length >= 3) { const a = m.project(pts[0]), b = m.project(q); if (Math.hypot(a.x - b.x, a.y - b.y) < 10) { close(); return; } }
+        pts.push(q); show([...pts, q], false); };
+      H.mousemove = e => { if (pts.length) show([...pts, [e.lngLat.lng, e.lngLat.lat]], false); };
+      H.dblclick = e => { e.preventDefault(); close(); };
+    }
+    H.key = e => { if (e.key === 'Escape') finish(null); };
+    for (const k of Object.keys(H)) if (k !== 'key') m.on(k, H[k]);
+    document.addEventListener('keydown', H.key);
+    if (this.o.onDrawState) this.o.onDrawState(kind);
+  }
+  stopDraw() {
+    const m = this.map, H = this._draw; if (!H) return;
+    for (const k of Object.keys(H)) if (k !== 'key') m.off(k, H[k]);
+    document.removeEventListener('keydown', H.key); this._draw = null;
+    m.getCanvas().style.cursor = ''; m.dragPan.enable(); m.doubleClickZoom.enable(); m.boxZoom.enable();
+    this.st.draw = []; this.render(); if (this.o.onDrawState) this.o.onDrawState(null);
+  }
+}
+
+/* ---------- the main map ---------- */
+const mainSpan = () => S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+const modeOf = m => m === 'heat' ? 'density' : m;
+const fm = new FireMap('map', {
+  name: 'main', attribution: true, budgetEl: 'budget', span: mainSpan, region: () => S.region, dark: () => isDarkMap(),
+  filters: () => mapF(F()),
+  settings: () => ({ mode: modeOf(S.mapMode), style: S.dstyle, colorBy: S.colorBy, scale: S.heatMax, view: S.view, metric: S.metric }),
+  onRender: () => renderMapLegend(), onPerf: m => showPerf(m), team: (m, id) => drawTeamCells(m, id),
+  onBaseError: () => { failedBases.add(M.base); const next = ['satellite', 'light', 'streets', 'dark'].find(x => !failedBases.has(x));
+    if (next) { toast(`${baseOf(M.base).name} tiles do not load, showing ${baseOf(next).name}`); setBasemap(next, false); } },
+  onDrawState: k => { $('drawRect').classList.toggle('on', k === 'rect'); $('drawPoly').classList.toggle('on', k === 'poly');
+    $('drawHint').textContent = k === 'rect' ? 'Drag a rectangle · Esc to cancel' : k === 'poly' ? 'Click the corners · double-click (or click the first point) to finish · Esc to cancel' : ''; },
+});
+// POINT_SENSORS: if only one sensor may appear as single points, the points request is limited to it
+function sensorPick(f) { return POINT_SENSORS.length === 1 ? { ...f, sensor: POINT_SENSORS[0] } : f; }
 const failedBases = new Set();
-function setBasemap(id, persist = true) {
-  const b = BASEMAPS.find(x => x.id === id) || BASEMAPS[0]; M.base = b.id; if (persist) store.set('basemap', b.id); baseErrors = 0;
-  if (L_.base) map.removeLayer(L_.base); if (L_.baseLabels) { map.removeLayer(L_.baseLabels); L_.baseLabels = null; }
-  L_.base = L.tileLayer(b.url, { attribution: b.attr, maxZoom: 19, maxNativeZoom: b.maxNative || b.max }).addTo(map); L_.base.bringToBack();
-  L_.base.on('tileerror', () => {   // fall back once per background if its server does not answer
-    if (++baseErrors !== 6) return; failedBases.add(b.id);
-    const next = ['satellite', 'light', 'streets', 'dark'].find(x => !failedBases.has(x));
-    if (next) { toast(`${b.name} tiles do not load, showing ${BASEMAPS.find(x => x.id === next).name}`); setBasemap(next, false); }
-  });
-  if (b.labels) L_.baseLabels = L.tileLayer(b.labels, { maxZoom: 19, maxNativeZoom: b.max, pane: 'shadowPane' }).addTo(map);
-  updatePlaces(); applyMapTheme(); renderLayersPanel();
+function dailySpec() {
+  const d = DAILY.find(x => x.id === M.daily); if (!d) return null;
+  return { url: `${GIBS}${d.id}/default/${M.date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`, opacity: M.dailyOpacity, attr: `${d.name} ${M.date} &copy; NASA GIBS / Worldview` };
 }
-function updatePlaces() {
-  const b = BASEMAPS.find(x => x.id === M.base) || BASEMAPS[0], want = M.places && !b.ownLabels && !b.labels;
-  if (want && !L_.places) L_.places = L.tileLayer(PLACES, { maxZoom: 19, maxNativeZoom: 13, pane: 'shadowPane', opacity: .9 }).addTo(map);
-  if (!want && L_.places) { map.removeLayer(L_.places); L_.places = null; }
-}
+function applyBases() { fm.setBase(baseOf(M.base), M.places, dailySpec()); applyMapTheme(); renderLayersPanel(); }
+function setBasemap(id, persist = true) { M.base = baseOf(id).id; if (persist) store.set('basemap', M.base); applyBases(); }
+function updatePlaces() { applyBases(); }
 function dailyDate() {   // day shown on the map: selected day, or the last day of the selected period
   const [s0, e0] = S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
   const today = new Date().toISOString().slice(0, 10);
   return (e0 || today) > today ? today : (e0 || today);
 }
-function setDaily(id) {
-  M.daily = id || ''; store.set('daily', M.daily);
-  if (L_.daily) { map.removeLayer(L_.daily); L_.daily = null; }
-  const d = DAILY.find(x => x.id === M.daily);
-  if (d) {
-    M.date = dailyDate();
-    L_.daily = L.tileLayer(`${GIBS}${d.id}/default/${M.date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
-      { attribution: `${d.name} ${M.date} &copy; NASA GIBS / Worldview`, maxZoom: 19, maxNativeZoom: 9, opacity: M.dailyOpacity }).addTo(map);
-    L_.daily.setZIndex(5);
-  }
-  applyMapTheme(); renderLayersPanel();
-}
+function setDaily(id) { M.daily = id || ''; store.set('daily', M.daily); M.date = dailyDate(); applyBases(); }
 function syncDailyDate() { if (M.daily && dailyDate() !== M.date) setDaily(M.daily); }
-// colours that work on the current background: viridis on light maps, a fire scale on dark maps
-const FIRE = ['#3b0f70', '#8c2981', '#de4968', '#fe9f6d', '#fcfdbf'];
-const heatColors = () => isDarkMap() ? FIRE : VIRIDIS;
-const heatCss = () => `linear-gradient(90deg,${heatColors().join(',')})`;
-function heatGrad() { const g = {}, cs = heatColors(); cs.forEach((c, i) => { g[(0.25 + 0.75 * i / (cs.length - 1)).toFixed(3)] = c; }); return g; }
-function applyMapTheme() {
-  const dark = isDarkMap(); $('map').classList.toggle('dark', dark); $('map').classList.toggle('light', !dark);
-  heat.setOptions({ gradient: heatGrad() });
-  if (S.provider) renderMapLegend();   // the legend helpers exist once the app has started
-}
+function applyMapTheme() { $('mapwrap').classList.toggle('darkmap', isDarkMap()); if (S.provider) fm.render(); }
 function renderLayersPanel() {
   const P = $('layersPanel'), date = M.date || dailyDate();
   const thumb = u => tileUrl(u, 2, 2, 1);
   P.innerHTML = `<div class="lh">Background <button id="layersClose" title="Close">×</button></div>` +
     BASEMAPS.map(b => `<div class="opt ${M.base === b.id ? 'on' : ''}" data-base="${b.id}"><img alt="" loading="lazy" src="${thumb(b.url)}"><div class="t">${b.name}<small>${b.note}</small></div><span class="ck">${M.base === b.id ? '✓' : ''}</span></div>`).join('') +
     `<div class="lh">Daily satellite imagery</div><div class="sub">True colour of the day shown on the map: <b>${date}</b>. Click a bar in the timeline or a calendar cell to change the day.</div>` +
-    `<div class="opt ${!M.daily ? 'on' : ''}" data-daily=""><img alt="" src="${thumb((BASEMAPS.find(b => b.id === M.base) || BASEMAPS[0]).url)}"><div class="t">None<small>only the background above</small></div><span class="ck">${!M.daily ? '✓' : ''}</span></div>` +
+    `<div class="opt ${!M.daily ? 'on' : ''}" data-daily=""><img alt="" src="${thumb(baseOf(M.base).url)}"><div class="t">None<small>only the background above</small></div><span class="ck">${!M.daily ? '✓' : ''}</span></div>` +
     DAILY.map(d => { const na = date < d.from || (d.to && date > d.to);
       return `<div class="opt ${M.daily === d.id ? 'on' : ''} ${na ? 'na' : ''}" data-daily="${d.id}"><img alt="" loading="lazy" src="${GIBS}${d.id}/default/${date}/GoogleMapsCompatible_Level9/2/1/2.jpg"><div class="t">${d.name}<small>${d.sat}${d.to ? ` · ${d.from} to ${d.to}` : ` · since ${d.from}`}</small></div><span class="ck">${M.daily === d.id ? '✓' : ''}</span></div>` +
         (na && M.daily === d.id ? `<div class="warnna">NO DATA FOR ${date} · available ${d.from}${d.to ? ' to ' + d.to : ' onward'}</div>` : ''); }).join('') +
@@ -770,47 +1086,49 @@ $('layersPanel').addEventListener('click', e => {
   if (o.dataset.base !== undefined) setBasemap(o.dataset.base);
   else if (o.dataset.daily !== undefined) setDaily(o.dataset.daily);
 });
-$('layersPanel').addEventListener('input', e => { if (e.target.id === 'dailyOp') { M.dailyOpacity = +e.target.value; store.set('dailyOpacity', M.dailyOpacity); if (L_.daily) L_.daily.setOpacity(M.dailyOpacity); } });
+$('layersPanel').addEventListener('input', e => { if (e.target.id === 'dailyOp') { M.dailyOpacity = +e.target.value; store.set('dailyOpacity', M.dailyOpacity); fm.setDailyOpacity(M.dailyOpacity); } });
 $('layersPanel').addEventListener('change', e => { if (e.target.id === 'placesCk') { M.places = e.target.checked; store.set('places', M.places ? '1' : '0'); updatePlaces(); } });
-L.DomEvent.disableClickPropagation($('layersPanel')); L.DomEvent.disableScrollPropagation($('layersPanel'));
 $('layersBtn').addEventListener('click', () => { renderLayersPanel(); $('layersPanel').classList.toggle('open'); });
-map.attributionControl.addAttribution('Fire data: NASA LANCE FIRMS');
-L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(map);
-const heat = L.heatLayer([], { radius: 14, blur: 16, max: 1, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGrad() }).addTo(map);
-const pointLayer = L.layerGroup().addTo(map);
-const teamLayer = L.layerGroup().addTo(map);
-const teamRenderer = L.canvas({ padding: .3 });
-setBasemap(M.base); if (M.daily) setDaily(M.daily);
-let lastZoom = map.getZoom();
-map.on('moveend', () => { heat.options.maxZoom = map.getZoom(); const z = map.getZoom() !== lastZoom; lastZoom = map.getZoom(); clearTimeout(zoomTimer); zoomTimer = setTimeout(() => refreshMap(z), 250); });
+M.date = M.daily ? dailyDate() : null; applyBases();
 $('calLegendBar').style.background = viridisCss;
+S.dstyle = store.get('dstyle', 'cells'); setSeg('styleSeg', S.dstyle);
 
-const drawn = new L.FeatureGroup().addTo(map);
-const shape = { color: '#21708a', weight: 2, fillOpacity: 0.05 };
-map.addControl(new L.Control.Draw({ position: 'topleft', draw: { polyline: false, circle: false, circlemarker: false, marker: false, polygon: { shapeOptions: shape, allowIntersection: false }, rectangle: { shapeOptions: shape } }, edit: { featureGroup: drawn, edit: false, remove: false } }));
-map.on(L.Draw.Event.CREATED, e => { drawn.clearLayers(); drawn.addLayer(e.layer); setRegion(e.layer, e.layerType === 'polygon'); });
-function setRegion(layer, isPoly) {
-  const b = layer.getBounds(); let poly = null;
-  if (isPoly) { const ll = layer.getLatLngs(); poly = (Array.isArray(ll[0]) ? ll[0] : ll).map(p => [p.lat, p.lng]); }
-  S.region = { minLat: Math.max(-90, b.getSouth()), maxLat: Math.min(90, b.getNorth()), minLon: Math.max(-180, b.getWest()), maxLon: Math.min(180, b.getEast()), poly };
-  ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(k => $(k).value = S.region[k].toFixed(2));
-  updateAreaInfo(); refresh();
+/* ---------- area: draw a rectangle or polygon, or type a box ---------- */
+$('drawRect').addEventListener('click', () => fm._draw ? fm.stopDraw() : fm.startDraw('rect', R => setRegion(R)));
+$('drawPoly').addEventListener('click', () => fm._draw ? fm.stopDraw() : fm.startDraw('poly', R => setRegion(R)));
+function setRegion(R) {
+  S.region = R; ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(k => $(k).value = S.region[k].toFixed(2));
+  fm.setRegionShape(R); updateAreaInfo(); refresh();
 }
 function updateAreaInfo() {
   const R = S.region;
   $('areaInfo').innerHTML = R ? `Area: ${R.poly ? `polygon (${R.poly.length} pts)` : `${R.minLat.toFixed(1)}…${R.maxLat.toFixed(1)}°, ${R.minLon.toFixed(1)}…${R.maxLon.toFixed(1)}°`} · region ${regionOf((R.minLat + R.maxLat) / 2, (R.minLon + R.maxLon) / 2)} <a href="#" id="areaClear" title="Clear area">×</a>` : 'Area: whole dataset';
   const a = $('areaClear'); if (a) a.onclick = ev => { ev.preventDefault(); clearRegion(); refresh(); };
 }
-function applyBox(v) { const rect = L.rectangle([[v[0], v[2]], [v[1], v[3]]], shape); drawn.clearLayers(); drawn.addLayer(rect); map.fitBounds(rect.getBounds(), { padding: [20, 20] }); setRegion(rect, false); }
+function applyBox(v) { const R = { minLat: v[0], maxLat: v[1], minLon: v[2], maxLon: v[3], poly: null }; fm.map.fitBounds([[v[2], v[0]], [v[3], v[1]]], { padding: 30, duration: 0 }); setRegion(R); }
 $('applyBox').addEventListener('click', () => {
   const v = ['minLat', 'maxLat', 'minLon', 'maxLon'].map(id => parseFloat($(id).value));
   if (v.some(x => !isFinite(x)) || v[0] >= v[1] || v[2] >= v[3] || v[0] < -90 || v[1] > 90 || v[2] < -180 || v[3] > 180) { toast('Enter a valid box: min < max, lat −90…90, lon −180…180'); return; }
   applyBox(v);
 });
-function clearRegion() { drawn.clearLayers(); S.region = null; ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(id => $(id).value = ''); updateAreaInfo(); }
+function clearRegion() { S.region = null; fm.setRegionShape(null); ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(id => $(id).value = ''); updateAreaInfo(); }
 $('clearRegion').addEventListener('click', () => { clearRegion(); refresh(); });
 function pip(lat, lon, poly) { let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const yi = poly[i][0], xi = poly[i][1], yj = poly[j][0], xj = poly[j][1]; if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside; } return inside; }
 function inRegion(p, R) { if (!R) return true; if (p.lat < R.minLat || p.lat > R.maxLat || p.lon < R.minLon || p.lon > R.maxLon) return false; return R.poly ? pip(p.lat, p.lon, R.poly) : true; }
+
+/* ---------- budget bar: click shows which filter has the biggest lever ---------- */
+$('budget').addEventListener('click', async () => {
+  const el = $('budget'), c = el._cnt, pop = $('budgetPop'); if (!c) return;
+  if (pop.style.display === 'block') { pop.style.display = 'none'; return; }
+  pop.style.display = 'block'; pop.innerHTML = 'Checking the filters …';
+  const [s, e] = mainSpan(), bbox = fm.bbox(), base = { ...fm.o.filters(), bbox }, p = S.provider;
+  try {
+    const hi = await p.count({ ...base, conf: 'high', exclude_low: false }, s, e);
+    const half = s < e ? await p.count(base, addDays(e, -Math.max(0, Math.floor(dayDiff(s, e) / 2))), e) : null;
+    pop.innerHTML = `<b>What changes the number of points?</b><br>Without MODIS: ${fmt(c.by_sensor.VIIRS)} · without VIIRS: ${fmt(c.by_sensor.MODIS)}<br>
+      Only high confidence: ${fmt(hi.count)}${half ? `<br>Second half of the period only: ${fmt(half.count)}` : ''}<br>Limit: ${fmt(POINT_LIMIT)} points.`;
+  } catch (err) { pop.textContent = 'Could not check the filters.'; }
+});
 
 /* ---------- provider switch ---------- */
 function useProvider(p) {
@@ -823,7 +1141,7 @@ function useProvider(p) {
   setGran(dayDiff(first, last) <= 92 ? 'day' : 'month', false);
   clearRegion();
   const [w, s, e, n] = S.meta.bbox;
-  if (e - w > 200) map.setView([10, 10], 2); else map.fitBounds([[s, w], [n, e]], { padding: [20, 20], maxZoom: 6 });
+  fm.fit([w, s, e, n]);
   renderFooter(); loadTeam(); refresh();
 }
 
@@ -1208,72 +1526,63 @@ function renderCalib() {
     <div class="note" style="margin-top:6px">* too few cells, global factor used. Regions are placeholder boxes until real regions are delivered. The count factor is much larger than the FRP factor: VIIRS finds many small fires, so FRP is the more robust quantity.</div>`;
 }
 
-/* ---------- map: density or single points ---------- */
-const mapUsesPoints = () => S.mapMode === 'points' || (S.mapMode === 'auto' && map.getZoom() >= 7);
-function heatRes() { const t = 360 / (256 * 2 ** map.getZoom()) * 8; return [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 4].find(r => r >= t * .75) || 4; }
-function viewBbox() {
-  const b = map.getBounds().pad(.2); let v = [Math.max(-180, b.getWest()), Math.max(-90, b.getSouth()), Math.min(180, b.getEast()), Math.min(90, b.getNorth())];
-  if (b.getEast() - b.getWest() >= 360) v = [-180, v[1], 180, v[3]];
-  const R = S.region; if (R) v = [Math.max(v[0], R.minLon), Math.max(v[1], R.minLat), Math.min(v[2], R.maxLon), Math.min(v[3], R.maxLat)];
-  return v[0] < v[2] && v[1] < v[3] ? v.map(x => +x.toFixed(4)).join(',') : null;
-}
-async function refreshMap(resetRef) {
-  const p = S.provider; if (!p || !S.rangeStart) return;
-  const id = ++S.hreq, bbox = viewBbox(), [s, e] = S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+/* ---------- map: refresh, legend, performance readout ---------- */
+function refreshMap() {
+  if (!S.provider || !S.rangeStart) return;
   $('mapLabel').textContent = S.mapPeriod ? plabel(S.mapPeriod) : 'full range';
-  syncDailyDate();
   $('mapReset').style.display = S.mapPeriod ? '' : 'none';
-  renderMapLegend();
-  if (!bbox) { heat.setLatLngs([]); pointLayer.clearLayers(); teamLayer.clearLayers(); return; }
-  const f = mapF({ ...F(), bbox });
-  try {
-    if (S.mapMode === 'team') {
-      const r = await p.teamCells($('teamGrid').value, $('teamPeriod').value, S.view, S.metric, bbox, F().polygon); if (id !== S.hreq) return;
-      heat.setLatLngs([]); pointLayer.clearLayers(); teamLayer.clearLayers(); drawTeamCells(r);
-      $('mapNote').textContent = `team cells (Tabelle B) · grid ${$('teamGrid').value} · ${fmt(r.count)} cells` + (r.truncated ? ` · showing the ${fmt(r.rows.length)} largest` : '');
-      return;
-    }
-    teamLayer.clearLayers();
-    if (mapUsesPoints()) {
-      const r = await p.points(f, bbox, s, e, 15000); if (id !== S.hreq) return;
-      heat.setLatLngs([]); drawPoints(pointLayer, r.rows, S.colorBy, isDarkMap());
-      $('mapNote').textContent = `${fmt(r.count)} raw detections in view` + (r.truncated ? ` · showing the ${fmt(r.rows.length)} strongest` : '');
-    } else {
-      const n = S.mapPeriod ? 1 : S.rangeP.length, res = heatRes(), cells = await p.heat(f, s, e, S.view, S.metric, res); if (id !== S.hreq) return;
-      pointLayer.clearLayers();
-      if (resetRef || !S.heatRef) S.heatRef = quantile(cells.map(c => c[2] / n), .99) || 1;
-      heat.setOptions({ max: S.heatMax, maxZoom: map.getZoom() }); heat.setLatLngs(cells.map(([a, b, v]) => [a, b, v / n / S.heatRef]));
-      $('mapNote').textContent = `density · ${viewName().toLowerCase()} · grid ${res}° (~${Math.round(res * 111)} km)`;
-    }
-  } catch (err) { console.error(err); }
+  syncDailyDate(); fm.schedule(0);
 }
 function renderMapLegend() {
-  if (S.mapMode === 'team') { $('mapLegend').innerHTML = `<div>Team cells · ${viewName()}${S.perDay ? ' per day' : ''}</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>low</span><span id="teamLegMax">high</span></div><div>Log colour. Values as delivered by the data team.</div>`; return; }
-  $('mapLegend').innerHTML = mapUsesPoints()
-    ? (S.colorBy === 'sensor' ? `<div><span class="dot" style="background:${C.modis}"></span>MODIS (1 km pixel) &nbsp;<span class="dot" style="background:${C.viirs}"></span>VIIRS (375 m)</div>`
-      : S.colorBy === 'conf' ? `<div>${['low', 'nominal', 'high'].map(c => `<span class="dot" style="background:${C[c]}"></span>${c}`).join(' &nbsp;')}</div>`
-      : `<div>FRP</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>1 MW</span><span>1000 MW</span></div>`) + `<div style="margin-top:3px">Size = FRP. Raw detections, never converted.</div>`
-    : `<div>Density · ${viewName()}</div><div class="bar" style="background:${heatCss()}"></div><div style="display:flex;justify-content:space-between"><span>low</span><span>high</span></div><div>Zoom in (level ≥ 7) for single hotspots</div>`;
+  const st = fm.st, dark = isDarkMap();
+  if (S.mapMode === 'team') { $('mapLegend').innerHTML = `<div>Team cells · ${viewName()}${S.perDay ? ' per day' : ''}</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>low</span><span id="teamLegMax">${st.teamMax || 'high'}</span></div><div>Log colour. Values as delivered by the data team.</div>`; return; }
+  if (st.mode === 'points' && st.pts) {
+    $('mapLegend').innerHTML = (S.colorBy === 'sensor' ? `<div><span class="dot" style="background:${C.modis}"></span>MODIS (1 km pixel) &nbsp;<span class="dot" style="background:${C.viirs}"></span>VIIRS (375 m)</div>`
+      : S.colorBy === 'conf' ? `<div>${CONF.map(c => `<span class="dot" style="background:${C[c]}"></span>${c}`).join(' &nbsp;')}</div>`
+      : `<div>FRP</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>1 MW</span><span>1000 MW</span></div>`) +
+      `<div style="margin-top:3px">${fmt(st.pts.n)} single hotspots (raw) · size = FRP${st.pts.n > 200000 ? ' · hover off above 200,000 points' : ''}</div>`;
+    return;
+  }
+  const d = st.cells; if (!d) { $('mapLegend').innerHTML = ''; return; }
+  const vmax = fm.vmax() / (S.heatMax || 1), u = S.metric === 'frp' ? 'MW' : 'hotspots';
+  $('mapLegend').innerHTML = `<div>Density · ${viewName()} · ${S.dstyle === 'glow' ? 'glow' : `cells of ${d.resolution_deg}° (~${Math.round(d.resolution_deg * 111)} km)`}</div>
+    <div class="bar" style="background:${heatCss(dark)}"></div><div style="display:flex;justify-content:space-between"><span>&lt; 1</span><span>≥ ${fmt(vmax)} ${u}/day per cell</span></div>
+    <div>Log colour${d.whole_months ? ' · density uses whole months (' + d.period + ')' : ''}${d.approx_classes ? ' · confidence classes estimated per cell' : ''}</div>`;
+}
+function showPerf(m) {
+  const p = m.perf, parts = [];
+  if (p.count_ms !== undefined) parts.push(`count ${p.count_ms} ms`);
+  if (m.st.mode === 'points' && p.points_ms !== undefined) parts.push(`points ${fmt(p.points_n)} in ${(p.points_ms / 1000).toFixed(1)} s (${p.points_mb} MB)`);
+  else if (p.density_ms !== undefined) parts.push(`density ${fmt(p.density_cells)} cells in ${p.density_ms} ms`);
+  if (p.first_frame_ms !== undefined && m.st.mode === 'points') parts.push(`first frame ${p.first_frame_ms} ms`);
+  if (p.fps) parts.push(`${p.fps} fps while panning`);
+  $('mapNote').textContent = parts.join(' · ');
+  $('mapNote').title = 'Measured in this browser: ' + JSON.stringify(p);
 }
 $('mapReset').addEventListener('click', () => { stopPlay(); selectPeriod(S.mapPeriod); });
-$('heatMax').addEventListener('input', e => { S.heatMax = +e.target.value; heat.setOptions({ max: S.heatMax }); });
+$('heatMax').addEventListener('input', e => { S.heatMax = +e.target.value; fm.render(); });
 
-/* ---------- data team table (Tabelle B): map cells and cross-check ---------- */
+/* ---------- data team table (Tabelle B) as a map layer ---------- */
 function cellBounds(lat, lon, cell) {
   if (cell.deg) { const h = cell.deg / 2; return [[lat - h, lon - h], [lat + h, lon + h]]; }
   const dlat = (cell.km || 2) / 111.32 / 2, dlon = dlat / Math.max(.05, Math.cos(lat * Math.PI / 180));
   return [[lat - dlat, lon - dlon], [lat + dlat, lon + dlon]];
 }
-function drawTeamCells(r) {
-  const k = S.perDay ? 3 : 2, vals = r.rows.map(x => x[k]), mx = quantile(vals, .99) || 1, lm = Math.log10(mx + 1);
-  const unit = S.metric === 'frp' ? ' MW' : '';
-  for (const row of r.rows) {
-    const [lat, lon, v, vd, region, cal] = row, t = Math.log10(row[k] + 1) / lm;
-    L.rectangle(cellBounds(lat, lon, r.cell), { renderer: teamRenderer, weight: 0, fillColor: viridis(t), fillOpacity: .55 + .35 * Math.min(1, t) })
-      .bindTooltip(`<b>${region}</b> · cell ${lat.toFixed(3)}, ${lon.toFixed(3)}<br>${viewName()}: ${fmt(v)}${unit} (${fmt1(vd)}${unit} per day over ${r.days} days)<br>${cal ? 'converted from MODIS' : 'native VIIRS'}`).addTo(teamLayer);
-  }
-  const lg = $('teamLegMax'); if (lg) lg.textContent = fmt(mx) + unit;
+async function drawTeamCells(m, id) {
+  const p = S.provider; if (!p.teamCells) return;
+  try {
+    const r = await p.teamCells($('teamGrid').value, $('teamPeriod').value, S.view, S.metric, m.bbox() || '-180,-85,180,85', F().polygon);
+    if (id !== m.req) return;
+    const k = S.perDay ? 3 : 2, mx = quantile(r.rows.map(x => x[k]), .99) || 1, lm = Math.log10(mx + 1), unit = S.metric === 'frp' ? ' MW' : '', dark = isDarkMap();
+    const data = r.rows.map(row => { const [lat, lon, v, vd, region, cal] = row, [[s, w], [n, e]] = cellBounds(lat, lon, r.cell), t = Math.log10(row[k] + 1) / lm;
+      return { poly: [[w, s], [e, s], [e, n], [w, n], [w, s]], c: palColor(t, dark, Math.round(120 + 120 * Math.min(1, t))),
+        tip: `<b>${region}</b> · cell ${lat.toFixed(3)}, ${lon.toFixed(3)}<br>${viewName()}: ${fmt(v)}${unit} (${fmt1(vd)}${unit} per day over ${r.days} days)<br>${cal ? 'converted from MODIS' : 'native VIIRS'}` }; });
+    m.st.team = [new deck.SolidPolygonLayer({ id: 'team', data, getPolygon: d => d.poly, getFillColor: d => d.c, pickable: true })];
+    m.st.teamMax = fmt(mx) + unit; m.render();
+    $('mapNote').textContent = `team cells (Tabelle B) · grid ${$('teamGrid').value} · ${fmt(r.count)} cells` + (r.truncated ? ` · showing the ${fmt(r.rows.length)} largest` : '');
+  } catch (err) { console.error(err); }
 }
+
 async function loadTeam() {
   const p = S.provider; S.team = p.team ? await p.team() : { grids: [] };
   const grids = S.team.grids || [], has = grids.length > 0;
@@ -1299,7 +1608,7 @@ function relayout() {
   clearTimeout(window._rl);
   window._rl = setTimeout(() => {
     document.querySelectorAll('.js-plotly-plot').forEach(el => { if (el.offsetParent) Plotly.Plots.resize(el); });
-    map.invalidateSize(); drawMatrix();
+    drawMatrix();   // the WebGL maps resize themselves (ResizeObserver)
   }, 60);
 }
 function setStickyTop() { document.documentElement.style.setProperty('--stickyTop', $('filters').offsetHeight + 'px'); }
@@ -1363,25 +1672,6 @@ function setTheme(dark, save = true) {
 $('themeBtn').addEventListener('click', () => setTheme(!DARK()));
 setTheme(DARK(), false);
 
-/* ---------- zoom limit: the scale bar never goes below 200 m ---------- */
-// Web Mercator: metres per pixel = 156543 * cos(latitude) / 2^zoom. The scale bar is up to 100 px wide,
-// so 2 m per pixel or more keeps it at 200 m or more.
-function capZoom() {
-  const lat = map.getCenter().lat, z = Math.floor(Math.log2(156543.03 * Math.cos(lat * Math.PI / 180) / 2));
-  const max = Math.max(3, Math.min(18, z)); if (map.getMaxZoom() !== max) map.setMaxZoom(max);
-}
-map.on('moveend', capZoom); capZoom();
-
-/* ---------- single hotspots as circles (main map and compare maps) ---------- */
-function drawPoints(group, rows, colorBy, dark) {
-  group.clearLayers();
-  for (const [lat, lon, sensor, sat, frp, cc, date, time, dn, px, lh] of rows) {
-    const col = colorBy === 'sensor' ? (sensor === 'MODIS' ? C.modis : C.viirs) : colorBy === 'conf' ? C[cc] : viridis(Math.log10(frp + 1) / 3);
-    L.circleMarker([lat, lon], { radius: Math.max(2.5, Math.min(10, 2.5 + Math.log10(frp + 1) * 3)), color: dark ? '#fff' : '#333', weight: dark ? .7 : .5, fillColor: col, fillOpacity: .92 })
-      .bindTooltip(`<b>${sensor} · ${sat}</b><br>${date} ${pad(Math.floor(time / 100))}:${pad(time % 100)} UTC · local ${fmt1(lh)} h<br>FRP ${fmt1(frp)} MW · ${cc} confidence · ${dn === 'N' ? 'night' : 'day'}<br>pixel ${fmt1(px)} km²`).addTo(group);
-  }
-}
-
 /* ---------- map: confidence classes (map only) ---------- */
 const CONF = ['low', 'nominal', 'high'];
 const mapConfSet = () => S.mapConf || new Set(S.incLow ? CONF : ['nominal', 'high']);
@@ -1415,12 +1705,12 @@ document.addEventListener('fullscreenchange', () => {
   const fs = document.fullscreenElement, host = fs || document.body;
   ['tip', 'helpPop', 'toast'].forEach(id => host.appendChild($(id)));   // tooltips must live inside the full-screen element
   document.querySelectorAll('.fsbtn').forEach(b => { b.textContent = b.closest('.card') === fs ? '✕' : '⛶'; });
-  setTimeout(() => { relayout(); if (S.cmp) cmpMaps.forEach(m => m && m.invalidateSize()); }, 120);
+  setTimeout(relayout, 120);
 });
 
 /* ---------- compare mode: two time spans side by side ---------- */
 const CA = '#009e73', CB = '#882255';
-let cmpMaps = [null, null], cmpHeat = [null, null], cmpSync = false;
+let cmpMaps = [null, null], cmpSync = false;
 const shiftYears = (d, y) => { const [a, m, dd] = d.split('-').map(Number); const t = new Date(Date.UTC(a - y, m - 1, Math.min(dd, 28 + (m === 2 ? 0 : 3)))); return isoDay(t); };
 function cmpSpans() {
   const a1 = $('cmpA1').value, a2 = $('cmpA2').value, mode = $('cmpBmode').value, n = dayDiff(a1, a2) + 1;
@@ -1453,92 +1743,64 @@ function cmpSum(rows, periods, s, e, gran) {
   }
   o.days = Math.max(1, days); return o;
 }
-const SC = { mode: 'auto', colorBy: 'sensor', conf: null, scale: 1, base: null, places: true };   // compare map settings
+const SC = { mode: 'auto', colorBy: 'sensor', conf: null, scale: 1, base: null, places: true, style: 'cells' };   // compare map settings
 const cmpConfSet = () => SC.conf || new Set(S.incLow ? CONF : ['nominal', 'high']);
-const cmpDark = () => (BASEMAPS.find(b => b.id === SC.base) || BASEMAPS[0]).dark;
-const cmpUsesPoints = () => SC.mode === 'points' || (SC.mode === 'auto' && cmpMaps[0] && cmpMaps[0].getZoom() >= 7);
-let cmpBaseL = [null, null], cmpPlacesL = [null, null], cmpPts = [null, null];
-function cmpSetBase() {
-  const b = BASEMAPS.find(x => x.id === SC.base) || BASEMAPS[0];
-  cmpMaps.forEach((m, i) => {
-    if (cmpBaseL[i]) m.removeLayer(cmpBaseL[i]);
-    cmpBaseL[i] = L.tileLayer(b.url, { maxZoom: 19, maxNativeZoom: b.maxNative || b.max }).addTo(m); cmpBaseL[i].bringToBack();
-    if (cmpPlacesL[i]) { m.removeLayer(cmpPlacesL[i]); cmpPlacesL[i] = null; }
-    const lab = b.labels || (!b.ownLabels && SC.places ? PLACES : null);
-    if (lab && (b.labels || SC.places)) cmpPlacesL[i] = L.tileLayer(lab, { maxZoom: 19, maxNativeZoom: 13, pane: 'shadowPane', opacity: .9 }).addTo(m);
-    m.getContainer().style.background = b.dark ? '#0b0e13' : '#e9e8e4';
-  });
+const cmpDark = () => baseOf(SC.base).dark;
+function cmpFilters() {
+  const def = new Set(S.incLow ? CONF : ['nominal', 'high']), cs = cmpConfSet();
+  return { ...F(), ...(cs.size === def.size && [...cs].every(c => def.has(c)) ? {} : { conf: CONF.filter(c => cs.has(c)).join(','), exclude_low: false }) };
 }
+function cmpShared() {   // one colour scale for A and B: 98th percentile of both maps' values per day
+  const vals = cmpMaps.filter(m => m && m.st.cells).flatMap(m => m.st.cells.value.map(v => v / m.st.cellDays));
+  return quantile(vals, .98) || 1;
+}
+function cmpSetBase() { cmpMaps.forEach(m => m && m.setBase(baseOf(SC.base), SC.places, null)); }
 function renderCmpControls() {
   const on = cmpConfSet();
   $('cmpConf').innerHTML = '<span class="note">Conf.</span>' + CONF.map(c => `<span class="chip ${on.has(c) ? 'on' : 'off'}" data-c="${c}">${c}</span>`).join('');
   if (!$('cmpBase').options.length) $('cmpBase').innerHTML = BASEMAPS.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
   $('cmpBase').value = SC.base; $('cmpScale').value = SC.scale; $('cmpPlaces').checked = SC.places;
 }
-function renderCmpLegend(npts) {
-  $('cmpLegend').innerHTML = cmpUsesPoints()
+function renderCmpLegend() {
+  const [a, b] = cmpMaps; if (!a || !b) return;
+  const pts = a.st.mode === 'points' || b.st.mode === 'points';
+  const nA = a.st.pts ? a.st.pts.n : null, nB = b.st.pts ? b.st.pts.n : null;
+  $('cmpLegend').innerHTML = (pts
     ? (SC.colorBy === 'sensor' ? `Single hotspots (raw): <span class="dot" style="background:${C.modis}"></span>MODIS <span class="dot" style="background:${C.viirs}"></span>VIIRS`
       : SC.colorBy === 'conf' ? 'Single hotspots (raw): ' + CONF.map(c => `<span class="dot" style="background:${C[c]}"></span>${c}`).join(' ')
-      : `Single hotspots, FRP <span class="bar" style="background:${viridisCss}"></span>1 → 1000 MW`) + ` · size = FRP${npts ? ' · ' + npts : ''}`
-    : `Density per day · ${viewName()} <span class="bar" style="background:${cmpDark() ? `linear-gradient(90deg,${FIRE.join(',')})` : viridisCss}"></span>low → high, same scale for A and B · zoom in (level ≥ 7) for single hotspots`;
+      : `Single hotspots, FRP <span class="bar" style="background:${viridisCss}"></span>1 → 1000 MW`) + ` · size = FRP${nA !== null || nB !== null ? ` · A: ${nA !== null ? fmt(nA) : 'density'}, B: ${nB !== null ? fmt(nB) : 'density'} points` : ''}`
+    : `Density per day · ${viewName()} <span class="bar" style="background:${heatCss(cmpDark())}"></span>&lt; 1 → ≥ ${fmt(cmpShared() / SC.scale)} ${S.metric === 'frp' ? 'MW' : 'hotspots'}/day per cell, same scale for A and B`) +
+    ' · each map shows single points when its view holds fewer than ' + fmt(POINT_LIMIT) + ' hotspots';
 }
 function initCmpMaps() {
   if (cmpMaps[0]) return;
-  if (!SC.base) { SC.base = M.base; SC.places = M.places; SC.mode = S.mapMode === 'team' ? 'auto' : S.mapMode; SC.colorBy = S.colorBy; SC.conf = S.mapConf ? new Set(S.mapConf) : null;
-    setSeg('cmpModeSeg', SC.mode); setSeg('cmpColorSeg', SC.colorBy); }
-  cmpMaps = ['cmpMapA', 'cmpMapB'].map(id => L.map(id, { zoomControl: true, attributionControl: false, worldCopyJump: true, preferCanvas: true })
-    .setView(map.getCenter(), Math.max(1, map.getZoom() - 1)));
-  cmpSetBase();
-  cmpHeat = cmpMaps.map(m => L.heatLayer([], { radius: 13, blur: 12, max: 1, minOpacity: 0.2, gradient: heatGrad() }).addTo(m));
-  cmpPts = cmpMaps.map(m => L.layerGroup().addTo(m));
-  L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(cmpMaps[1]);
-  cmpMaps.forEach((m, i) => m.on('moveend', () => {   // keep both maps on the same view, same 200 m zoom limit as the main map
-    const lat = m.getCenter().lat, z = Math.max(3, Math.min(18, Math.floor(Math.log2(156543.03 * Math.cos(lat * Math.PI / 180) / 2))));
-    if (m.getMaxZoom() !== z) m.setMaxZoom(z);
-    if (cmpSync) return; cmpSync = true; cmpMaps[1 - i].setView(m.getCenter(), m.getZoom(), { animate: false }); cmpSync = false;
-    clearTimeout(window._cmh); window._cmh = setTimeout(cmpMapData, 250);
-  }));
-  renderCmpControls();
+  if (!SC.base) { SC.base = M.base; SC.places = M.places; SC.mode = S.mapMode === 'team' ? 'auto' : S.mapMode; SC.colorBy = S.colorBy; SC.style = S.dstyle;
+    SC.conf = S.mapConf ? new Set(S.mapConf) : null; setSeg('cmpModeSeg', SC.mode); setSeg('cmpColorSeg', SC.colorBy); setSeg('cmpStyleSeg', SC.style); }
+  const mk = (el, k, budget) => new FireMap(el, { name: 'compare ' + 'AB'[k], budgetEl: budget, span: () => cmpSpans()[k], region: () => S.region, dark: () => cmpDark(),
+    filters: cmpFilters, vmax: cmpShared,
+    settings: () => ({ mode: modeOf(SC.mode), style: SC.style, colorBy: SC.colorBy, scale: SC.scale, view: S.view, metric: S.metric }),
+    onRender: m => { if (m.st.cells !== m._seen) { m._seen = m.st.cells; const o = cmpMaps[1 - k]; if (o && o.st.cells) o.render(); } renderCmpLegend(); } });
+  cmpMaps = [mk('cmpMapA', 0, 'budgetA'), mk('cmpMapB', 1, 'budgetB')];
+  cmpMaps.forEach((m, i) => {
+    m.map.jumpTo({ center: fm.map.getCenter(), zoom: fm.map.getZoom() });
+    m.map.on('move', () => { if (cmpSync) return; cmpSync = true; cmpMaps[1 - i].map.jumpTo({ center: m.map.getCenter(), zoom: m.map.getZoom() }); cmpSync = false; });
+    m.setRegionShape(S.region);
+  });
+  cmpSetBase(); renderCmpControls();
 }
 seg('cmpModeSeg', v => { SC.mode = v; cmpMapData(); });
-seg('cmpColorSeg', v => { SC.colorBy = v; cmpMapData(); });
+seg('cmpColorSeg', v => { SC.colorBy = v; cmpMaps.forEach(m => m && m.render()); });
+seg('cmpStyleSeg', v => { SC.style = v; cmpMaps.forEach(m => m && m.render()); });
 $('cmpConf').addEventListener('click', e => {
   const ch = e.target.closest('.chip'); if (!ch) return;
   const set = new Set(cmpConfSet()); if (set.has(ch.dataset.c)) { if (set.size === 1) { toast('Keep at least one class'); return; } set.delete(ch.dataset.c); } else set.add(ch.dataset.c);
   SC.conf = set; renderCmpControls(); cmpMapData();
 });
-$('cmpScale').addEventListener('input', e => { SC.scale = +e.target.value; cmpHeat.forEach(h => h && h.setOptions({ max: SC.scale })); });
-$('cmpBase').addEventListener('change', e => { SC.base = e.target.value; cmpSetBase(); cmpMapData(); });
+$('cmpScale').addEventListener('input', e => { SC.scale = +e.target.value; cmpMaps.forEach(m => m && m.render()); });
+$('cmpBase').addEventListener('change', e => { SC.base = e.target.value; cmpSetBase(); cmpMaps.forEach(m => m && m.render()); });
 $('cmpPlaces').addEventListener('change', e => { SC.places = e.target.checked; cmpSetBase(); });
-async function cmpMapData() {
-  const id = ++S.creq, [[a1, a2], [b1, b2]] = cmpSpans(), m = cmpMaps[0]; if (!m) return;
-  const bb = m.getBounds().pad(.2), bbox = [Math.max(-180, bb.getWest()), Math.max(-90, bb.getSouth()), Math.min(180, bb.getEast()), Math.min(90, bb.getNorth())].map(x => +x.toFixed(3)).join(',');
-  const def = new Set(S.incLow ? CONF : ['nominal', 'high']), cs = cmpConfSet();
-  const f = { ...F(), bbox, ...(cs.size === def.size && [...cs].every(c => def.has(c)) ? {} : { conf: CONF.filter(c => cs.has(c)).join(','), exclude_low: false }) };
-  const p = S.provider, dark = cmpDark();
-  try {
-    if (cmpUsesPoints()) {
-      const [ra, rb] = await Promise.all([p.points(f, bbox, a1, a2, 8000), p.points(f, bbox, b1, b2, 8000)]);
-      if (id !== S.creq) return;
-      cmpHeat.forEach(h => h.setLatLngs([]));
-      drawPoints(cmpPts[0], ra.rows, SC.colorBy, dark); drawPoints(cmpPts[1], rb.rows, SC.colorBy, dark);
-      renderCmpLegend(`A: ${fmt(ra.count)}, B: ${fmt(rb.count)} hotspots in view${ra.truncated || rb.truncated ? ' (the 8,000 strongest each are drawn)' : ''}`);
-      return;
-    }
-    const t = 360 / (256 * 2 ** m.getZoom()) * 8, res = [0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 4].find(r => r >= t * .75) || 4;
-    const [ca, cb] = await Promise.all([p.heat(f, a1, a2, S.view, S.metric, res), p.heat(f, b1, b2, S.view, S.metric, res)]);
-    if (id !== S.creq) return;
-    cmpPts.forEach(g => g.clearLayers());
-    const na = dayDiff(a1, a2) + 1, nb = dayDiff(b1, b2) + 1;   // per day, so spans of different length compare
-    const ref = quantile([...ca.map(c => c[2] / na), ...cb.map(c => c[2] / nb)], .98) || 1;
-    // leaflet.heat weakens points by 2^(maxZoom - zoom): set maxZoom to the current zoom, as on the main map
-    const grad = {}, cs2 = dark ? FIRE : VIRIDIS; cs2.forEach((c, k) => { grad[(0.25 + 0.75 * k / (cs2.length - 1)).toFixed(3)] = c; });
-    cmpHeat.forEach((h, i) => h.setOptions({ gradient: grad,
-      maxZoom: cmpMaps[i].getZoom(), max: SC.scale, radius: res >= 1 ? 14 : 11, blur: res >= 1 ? 12 : 9 }));
-    cmpHeat[0].setLatLngs(ca.map(([x, y, v]) => [x, y, Math.min(1, v / na / ref)])); cmpHeat[1].setLatLngs(cb.map(([x, y, v]) => [x, y, Math.min(1, v / nb / ref)]));
-    renderCmpLegend();
-  } catch (e) { console.error(e); }
-}
+function cmpMapData() { cmpMaps.forEach(m => m && m.schedule(0)); }
+
 async function cmpLoad() {
   if (!S.cmp || !S.provider || !$('cmpA1').value) return;
   const id = ++S.creq, f = F(), p = S.provider, [[a1, a2], [b1, b2]] = cmpSpans();
@@ -1557,7 +1819,7 @@ async function cmpLoad() {
     const outside = [a1, b1].some(d => d < S.meta.first_date) || [a2, b2].some(d => d > S.meta.last_date);
     $('cmpNote').textContent = (gran === 'month' ? 'Spans longer than 400 days are compared with whole months. ' : '') +
       (outside ? `Part of a span lies outside the data (${S.meta.first_date} to ${S.meta.last_date}); missing days count as 0.` : '');
-    initCmpMaps(); cmpMaps.forEach(m => m.invalidateSize()); cmpMapData();
+    initCmpMaps(); cmpMapData();
   } catch (e) { console.error(e); toast('Compare: could not load data'); }
 }
 function span_(a, b) { return span(a, b); }
@@ -1612,7 +1874,8 @@ seg('metricSeg', v => { S.metric = v; rerender(); if (S.cmp) cmpLoad(); });
 seg('viewSeg', v => { S.view = v; rerender(); if (S.cmp) cmpLoad(); });
 seg('dnSeg', v => { S.dn = v; refresh(); });
 seg('mapModeSeg', v => { S.mapMode = v; $('teamCtl').style.display = v === 'team' ? 'inline-flex' : 'none'; refreshMap(true); });
-seg('colorSeg', v => { S.colorBy = v; refreshMap(false); });
+seg('colorSeg', v => { S.colorBy = v; fm.render(); });
+seg('styleSeg', v => { S.dstyle = v; store.set('dstyle', v); fm.render(); });
 seg('anomSeg', v => { S.anomMode = v; renderAnomaly(); });
 seg('mSortSeg', v => { S.mSort = v; drawMatrix(); });
 seg('mNormSeg', v => { S.mNorm = v; drawMatrix(); });
