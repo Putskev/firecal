@@ -1,0 +1,52 @@
+name: Update FIRMS data
+
+on:
+  schedule:
+    - cron: "17 6 * * *"        # daily at 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      recalibrate:
+        description: "Recompute the fixed harmonization factors"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: firms-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Update data
+        env:
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+        run: |
+          if [ "${{ inputs.recalibrate }}" = "true" ]; then
+            python update.py --recalibrate
+          else
+            python update.py
+          fi
+
+      - name: Commit changes
+        run: |
+          git config user.name "firecal-bot"
+          git config user.email "firecal-bot@users.noreply.github.com"
+          git add data/hotspots.csv data/nrt_cache.csv data/meta.json data/harmonization.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Update FIRMS data $(date -u +%Y-%m-%d)"
+            git push
+          fi

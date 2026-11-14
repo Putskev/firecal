@@ -1,0 +1,5 @@
+{
+  "area": "-65,-22,-45,-7",
+  "sources": ["MODIS_NRT", "VIIRS_SNPP_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"],
+  "max_catchup_days": 60
+}
