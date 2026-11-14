@@ -220,7 +220,9 @@ Zwei Zeitspannen mit gleichem Gebiet und gleichen Filtern. **A** = betrachteter 
   umgerechnet) als Differenz in Prozentpunkten.
 * Verlauf: beide Reihen ab dem ersten Tag (bzw. Monat) der jeweiligen Spanne übereinandergelegt.
 * FRP-Klassen: Anteil der Hotspots je Klasse für A und B.
-* Karten: Dichte **pro Tag** (Summe ÷ Tage der Spanne) mit derselben Farbskala, beide Karten bewegen sich gemeinsam.
+* Karten: eigene Leiste wie bei der Hauptkarte (Auto/Dichte/Punkte, Farbe nach Sensor/Konfidenz/FRP, Konfidenz-Chips, Skala,
+  Hintergrund, Ortsnamen). Dichte **pro Tag** (Summe ÷ Tage der Spanne), gemeinsame Farbskala (95. Perzentil beider Karten);
+  ab Zoom 7 einzelne Hotspots (je Karte die 8.000 stärksten). Beide Karten bewegen sich gemeinsam.
 * Spannen bis 400 Tage werden tageweise verglichen, längere monatsweise (ganze Monate).
 
 ### Konfidenz auf der Karte
