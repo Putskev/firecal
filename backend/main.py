@@ -52,7 +52,7 @@ app = FastAPI(title="FireCal API", version=API_VERSION,
               description="Harmonized MODIS + VIIRS active fire hotspots (NASA FIRMS), VIIRS level")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"],
                    expose_headers=["X-Count", "X-Limit", "X-Query-Ms"])
-app.add_middleware(GZipMiddleware, minimum_size=2000)
+app.add_middleware(GZipMiddleware, minimum_size=2000, compresslevel=5)   # level 9 is ~10x slower on binary points for the same size
 
 _db: duckdb.DuckDBPyConnection | None = None
 _meta: dict = {}

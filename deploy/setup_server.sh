@@ -253,10 +253,18 @@ http://$IP {
 }
 EOF
   [ -f /etc/caddy/Caddyfile ] || printf '# Caddy main config\n' > /etc/caddy/Caddyfile
+  # HTTP/3 (QUIC) in Caddy is slow with Linux' default UDP buffers (measured: ~2 Mbit/s for the binary points).
+  # quic-go asks for 7.5 MB buffers; restart Caddy once so the new limit applies to its sockets.
+  if [ ! -f /etc/sysctl.d/60-firecal-quic.conf ]; then
+    printf 'net.core.rmem_max=7500000\nnet.core.wmem_max=7500000\n' > /etc/sysctl.d/60-firecal-quic.conf
+    sysctl -q -p /etc/sysctl.d/60-firecal-quic.conf || true
+    CADDY_RESTART=1
+  fi
   cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.before-firecal
   grep -qs 'import /etc/caddy/firecal.caddy' /etc/caddy/Caddyfile || printf '\nimport /etc/caddy/firecal.caddy\n' >> /etc/caddy/Caddyfile
   if caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/tmp/caddy-validate.log 2>&1; then
-    systemctl enable -q caddy; systemctl reload caddy 2>/dev/null || systemctl restart caddy
+    systemctl enable -q caddy
+    if [ -n "${CADDY_RESTART:-}" ]; then systemctl restart caddy; else systemctl reload caddy 2>/dev/null || systemctl restart caddy; fi
     for h in ${HOSTS//,/ }; do URLS+=("https://$h"); done
     URLS+=("http://$IP")
   else

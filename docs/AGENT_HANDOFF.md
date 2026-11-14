@@ -187,3 +187,46 @@ python -m uvicorn backend.main:app      # http://localhost:8000
    `SNPP+N20`, `SNPP+N20+N21`) als zusätzliche Spalte in Tabelle C?
 3. Kommt `month` in Tabelle C, und wenn ja, mit Rückfall auf den Jahresfaktor bei wenigen Zellen?
 4. Liefert ihr Standardprodukte (SP) für die Historie und NRT nur für die letzten Wochen?
+
+## 8. Antwort auf `HANDOFF_Frontend_Performance.md` (Stand 14.11.2026)
+
+Umgesetzt wie beschrieben: MapLibre GL 4.7 + deck.gl 9.1, Dichte als Standard, Einzelpunkte nur unter
+`POINT_LIMIT = 1.000.000` (Hysterese 0,95), Budget-Balken mit Zuständen, `role="progressbar"` und Aufschlüsselung
+per Klick, binäre Punkte im Web Worker, Abbrechen (AbortController) und Cache (40 Einträge). Neue Endpunkte:
+`/api/count`, `/api/density`, `/api/points.bin` (Layout `FCP1`, 22 Byte/Punkt, 413 über dem Limit). Download bleibt
+`/api/hotspots.csv` bzw. `/api/export`. Zum Testen: `?point_limit=200000` in der URL setzt das Limit herunter.
+
+### Messwerte auf reicht.anohji.dev (317 Mio. Hotspots, Browser in Deutschland)
+
+| Situation | Messung | Ziel |
+|---|---|---|
+| Weltansicht, ganzer Zeitraum 2011–2026: `/count` | 0,46–0,79 s (Server 0,40 s), 285 Mio. Hotspots | – |
+| Weltansicht, ganzer Zeitraum: `/density` (6.113 Zellen, Monatswürfel) | 0,85–1,38 s | Dichte < 2 s ✔ |
+| Welt, ein Jahr: `/count` / `/density` | 0,13 s / 0,23 s | ✔ |
+| Südliches Afrika, Aug. 2026, Zoom 4–5: `/count` / `/density` | 0,09 s / 0,09–0,15 s | ✔ |
+| Einzelpunkte an der Grenze: 913.360 Punkte, 20,1 MB (8,1 MB gzip) | Abfrage 0,36 s, **Übertragung 28 s** | ≈ 5 s ✘ |
+
+Ursache für die 28 s ist nicht DuckDB, sondern die Leitung: der Browser holt über HTTP/3 (QUIC) und kommt nur auf
+≈ 2 Mbit/s (dieselbe Verbindung lädt vom CDN mit > 100 Mbit/s). Caddy/quic-go braucht größere UDP-Puffer:
+
+    printf 'net.core.rmem_max=7500000\nnet.core.wmem_max=7500000\n' > /etc/sysctl.d/60-firecal-quic.conf
+    sysctl -p /etc/sysctl.d/60-firecal-quic.conf && systemctl restart caddy
+
+(`deploy/setup_server.sh` macht das jetzt bei neuen Installationen.) Falls es danach nicht schneller wird: HTTP/3 im
+Caddyfile abschalten (`{ servers { protocols h1 h2 } }`). Außerdem gzip im API von Stufe 9 auf 5 gesenkt
+(gleiche Größe, Kompression ≈ 10× schneller, spart ≈ 1 s pro großer Punktabfrage).
+Bildrate beim Schwenken: zeigt die App in der Zeile über der Karte; hier nicht messbar, weil der Testbrowser im
+Hintergrund lief. Lokal (RX 5700 XT) flüssig mit 200.000 Punkten.
+
+### Entscheidungen zu Abschnitt 10
+
+1. **MODIS als Einzelpunkte:** erlaubt (`POINT_SENSORS = ['MODIS', 'VIIRS']`), solange unter dem Limit.
+2. **Zeitauflösung der Dichte:** Monate reichen. Bis 92 Tage rechnet das API tagesgenau (Tageszellen bzw. Rohpunkte),
+   darüber ganze Monate; die Legende sagt das. Kein Wochenwürfel nötig.
+3. **Rohpunkte:** für den ganzen Zeitraum vorhanden, `/count` liefert `points_available: true`. Das Frontend liest
+   das Feld und zeigt sonst nur Dichte.
+4. **Vektor-Kacheln:** vorerst nicht. Die Dichte-Abfragen liegen unter 1,4 s, der Cache im Browser reicht.
+5. **Limit:** bleibt 1 Mio. Wenn die Leitung nach dem QUIC-Fix unter ≈ 5 s für 1 Mio. bleibt, passt es; sonst auf
+   500.000 senken (eine Konstante, `FIRECAL_POINT_LIMIT` im Server und `POINT_LIMIT` in `index.html`).
+
+Hinweis: Die Texte im Handoff (Balken, Warnungen) sind auf Englisch umgesetzt, weil die ganze Oberfläche Englisch ist.

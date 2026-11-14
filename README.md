@@ -33,7 +33,7 @@ Alle Ansichten hängen an **einer Auswahl** aus Gebiet (Karte), Zeitraum (Zeitle
 |---|---|---|
 | Filterleiste | Kennzahl (Anzahl/FRP, pro Tag), Werte (harmonisiert/roh/MODIS/VIIRS), Satelliten, Tag/Nacht, Konfidenz, Vegetation, Monat/Tag, Trefferzahl | wirkt auf alles |
 | Zeitleiste | ganzer Zeitraum, umgerechnete Perioden schraffiert, neue Satelliten gepunktet | Zeitraum mit dem Schieber wählen, Balken anklicken |
-| Karte | Dichte (herausgezoomt) oder echte Einzelpunkte (ab Zoom 7), Farbe nach Sensor/Konfidenz/FRP, Größe nach FRP | Rechteck/Polygon zeichnen, Box per Lat/Lon, Maßstab in km |
+| Karte (WebGL) | Dichte (Zellen oder Glow) oder echte Einzelpunkte, sobald der Ausschnitt unter 1 Mio. Hotspots liegt; Budget-Balken zeigt den Stand | Rechteck/Polygon zeichnen, Box per Lat/Lon, Maßstab in km |
 | Kennzahlen + Erkenntnisse | harmonisierte Anzahl und FRP mit Unsicherheit, Rohzahlen je Sensor, Nacht- und High-Confidence-Anteil, aktueller Monat gegen Median; automatische Sätze zu Spitzen, Trend, Saison, Sensoren | – |
 | Brandkalender | Jahr × Monat oder Woche × Tag, umgerechnete Monate schraffiert | Klick zeigt Periode auf der Karte |
 | Anomalie | Abweichung vom Median desselben Monats in allen anderen Jahren (% oder absolut) | – |
@@ -103,7 +103,10 @@ Gemeinsame Filter: `bbox`, `polygon`, `start`, `end`, `exclude_low`, `vegetation
 | `GET /api/meta` | Zeitraum, Version, Satelliten-Zeitleiste, Methode, Kalibriertabelle |
 | `GET /api/timeseries` | je Monat/Tag: Rohwerte je Sensor, Nacht, High-Conf, harmonisiert mit Band, MODIS × Faktor |
 | `GET /api/heatmap` | Rasterzellen für die Karte |
-| `GET /api/points` | Einzelpunkte (roh) im Kartenausschnitt, die stärksten zuerst |
+| `GET /api/count` | Hotspots im Ausschnitt (für Dichte vs. Punkte und den Budget-Balken) |
+| `GET /api/density` | Dichte-Zellen spaltenweise, Zellgröße nach Zoom |
+| `GET /api/points.bin` | Einzelpunkte als Binärblock (max. 1 Mio., sonst 413) |
+| `GET /api/points` | Einzelpunkte (roh, JSON), die stärksten zuerst |
 | `GET /api/distributions` | FRP-Klassen, Ortszeit, Konfidenz, Satellit, Tag/Nacht je Sensor |
 | `GET /api/matrix` | aktivste Zellen × Perioden |
 | `GET /api/satellites` | Rohdetektionen je Satellit und Periode |

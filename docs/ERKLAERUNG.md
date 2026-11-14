@@ -185,7 +185,7 @@ Jede Karte im Dashboard hat ein Zeit-Abzeichen 🕒 neben dem Titel. Es zeigt ge
 | Ansicht | Zeitraum | Berechnung |
 |---|---|---|
 | **Zeitleiste** | alle geladenen Perioden | Wert je Monat/Tag (siehe Values). Mit den Griffen wählt man die **Auswahl** für alle anderen Ansichten. |
-| **Karte** | Auswahl, oder die angeklickte Periode | Herausgezoomt: Dichte = Summe pro Rasterzelle ÷ Anzahl Perioden, Farbe relativ zum 99. Perzentil. Rastergröße nach Zoom: `360 / (256 · 2^Zoom) · 8` Grad, gerundet auf 0,01–4°. Ab Zoom 7: echte Hotspots (die 15.000 stärksten nach FRP), Größe ∝ log(FRP). Nie umgerechnet. |
+| **Karte** | Auswahl, oder die angeklickte Periode | Dichte oder Einzelpunkte je nach Punktzahl im Ausschnitt, siehe 7b. Einzelpunkte nie umgerechnet, Größe ∝ log(FRP). |
 | **Kennzahlen** | Auswahl | Harmonisiert = Σ über die Perioden; „pro Tag“ = Summe ÷ Tage; „% from MODIS“ = Σ weight(MODIS) ÷ Σ weight; Nachtanteil = Nacht-Hotspots ÷ alle; High confidence = high ÷ alle. Letzte Periode vs. Median: siehe Anomalie. |
 | **Brandkalender** | Auswahl | Ein Kästchen je Monat (bzw. Tag). Farbe relativ zum 95. Perzentil. Schraffiert, wenn > 50 % des harmonisierten Werts aus umgerechnetem MODIS kommen. |
 | **Anomalie** | Auswahl; Vergleich: Monat → gleicher Kalendermonat in **allen anderen Jahren**; Tag → andere Tage der Auswahl | `Anomalie % = (Wert − Median) / Median × 100`, absolut: `Wert − Median`. Das eigene Jahr ist nie im Median. Ab 3 Vergleichswerten. |
@@ -232,6 +232,28 @@ vom Standard ab, rechnet die Dichte aus den Einzelpunkten, weil die Zellsummen n
 ### Vollbild
 Jede Ansicht hat oben rechts ⛶ (Vollbild, Esc zum Verlassen).
 
+## 7b. Karte: Dichte und Einzelpunkte (WebGL)
+
+Umgesetzt nach `docs/HANDOFF_Frontend_Performance.md`. Die Karte läuft auf **MapLibre GL + deck.gl** (alles auf der GPU).
+
+* **Zählen:** Bei jeder Änderung von Ausschnitt, Zoom, Zeitraum oder Filter (300 ms Pause, alte Anfragen werden
+  abgebrochen) fragt die App `/api/count`: Hotspots im sichtbaren Ausschnitt, Zeitraum und mit den Kartenfiltern,
+  aus den Zellsummen (Zelle zählt nach Mittelpunkt; über 92 Tage ganze Monate).
+* **Entscheidung:** `POINT_LIMIT = 1.000.000`. Auto-Modus: Einzelpunkte, wenn `count ≤ 0,95 × Limit` (aus der Dichte
+  kommend) bzw. `count ≤ Limit` (schon im Punktmodus) — die Lücke verhindert Flackern. Sonst Dichte.
+* **Dichte** (`/api/density`): Zellgröße nach Zoom: bis Zoom 3 → 2°, bis 5 → 0,5°, bis 7 → 0,1°, darüber 0,05°.
+  Zeiträume bis 92 Tage tagesgenau (0,25°-Tageszellen bzw. Einzelpunkte für feinere Zellen), längere aus den
+  Monatszellen (ganze Monate, mindestens 0,1°; die Legende sagt das). Farbe: `log(1 + Wert pro Tag) / log(1 + vmax)`,
+  `vmax` = 98. Perzentil der Zellen ÷ Schieber „Scale“. Darstellung als scharfe **Zellen** (Standard) oder **Glow**.
+* **Einzelpunkte** (`/api/points.bin`): ein Binärblock mit 22 Byte pro Punkt (Lage, FRP, Datum, Uhrzeit, Sensor,
+  Konfidenz, Satellit, Tag/Nacht), im Web Worker entpackt und als Typed Arrays an die GPU gegeben. Über dem Limit
+  antwortet der Server mit HTTP 413. Die Dichte bleibt sichtbar, bis die Punkte da sind. Hover-Infos bis 200.000 Punkte.
+* **Budget-Balken** unten links: `Points in view: x / 1,000,000`, Füllung `min(count / Limit, 1)`, Marke bei 100 %.
+  Zustände: unter 70 % blau, 70–100 % orange gestreift, darüber rot schraffiert mit ⚠ und Text, ausgegraut wenn nur
+  Dichte verfügbar ist. Klick zeigt, welche Filter am meisten bewirken (ohne MODIS, nur high, halber Zeitraum).
+* **Messwerte** stehen in der Zeile über der Karte (Dauer `/count`, `/density`, `/points`, MB, erstes Bild, Bilder pro
+  Sekunde beim Schwenken) und in der Browser-Konsole (`[map perf]`).
+
 ## 8. Karte: Hintergründe und Satellitenbilder
 
 * Hintergründe: Firefly, Satellit (Esri), Blue Marble (NASA GIBS), Straßen, Topographie, Dunkel-/Hellgrau.
@@ -243,8 +265,8 @@ Jede Ansicht hat oben rechts ⛶ (Vollbild, Esc zum Verlassen).
 
 ### Zoom-Grenze
 Die Karte zoomt höchstens so weit, dass die Maßstabsleiste mindestens **200 m** zeigt. Web-Mercator:
-`Meter pro Pixel = 156 543 · cos(Breite) / 2^Zoom`; die Leiste ist bis zu 100 px breit, also gilt
-`max. Zoom = floor(log2(156 543 · cos(Breite) / 2))` (am Äquator 16, in Mitteleuropa 15).
+`Meter pro Pixel = 78 271,5 · cos(Breite) / 2^Zoom`; die Leiste ist bis zu 100 px breit, also gilt
+`max. Zoom = floor(log2(78 271,5 · cos(Breite) / 2))` (MapLibre-Zoomstufen mit 512-px-Kacheln; am Äquator 15).
 
 ### Herkunft der Kartenbilder
 | Ebene | Quelle |
