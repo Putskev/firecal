@@ -5,3 +5,4 @@ data/incoming/*.csv
 data/processed/
 data/incoming/*.csv.gz
 data/incoming/*.parquet
+data/incoming/*.zip

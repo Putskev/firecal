@@ -10,6 +10,8 @@ memory up front):
   * timeseries, matrix, satellites: pre-aggregated cells (cells_month 0.1 deg, cells_day 0.25 deg)
   * heatmap: cells when the grid is coarse enough, single hotspots when zoomed in
   * points, distributions, CSV export: single hotspots (only year/month folders in the date range)
+  * team/*: the data team's aggregated table "Tabelle B" (data/team/fire_activity_7d_<grid>.parquet),
+    served as delivered, for the map and for a cross-check against FireCal's own numbers
 
 Filters shared by all analysis endpoints
 ----------------------------------------
@@ -22,6 +24,7 @@ satellites and day + night, because the calibration factors are defined that way
 from __future__ import annotations
 
 import calendar
+import glob
 import math
 import os
 import tempfile
@@ -39,7 +42,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.background import BackgroundTask
 
 from .build import build
-from .paths import CELLS_DAY, CELLS_MONTH, DAY_RES, HOTSPOTS_DIR, MONTH_RES, ROOT
+from .paths import CELLS_DAY, CELLS_MONTH, DAY_RES, HOTSPOTS_DIR, MONTH_RES, ROOT, TEAM
 
 API_VERSION = "2.0"
 app = FastAPI(title="FireCal API", version=API_VERSION,
@@ -49,6 +52,7 @@ app.add_middleware(GZipMiddleware, minimum_size=2000)
 
 _db: duckdb.DuckDBPyConnection | None = None
 _meta: dict = {}
+_team: dict = {}          # grid label -> {"view", "rows", "periods"}
 _lock = threading.Lock()
 ALL_SATS = ["Terra", "Aqua", "SNPP", "N20", "N21"]
 
@@ -63,7 +67,18 @@ def load() -> None:
                         hive_partitioning = true)""")
         con.execute(f"CREATE VIEW cells_month AS SELECT * FROM read_parquet('{CELLS_MONTH}')")
         con.execute(f"CREATE VIEW cells_day AS SELECT * FROM read_parquet('{CELLS_DAY}')")
+        team = {}
+        for f in sorted(glob.glob(os.path.join(TEAM, "fire_activity_*.parquet"))):
+            grid = os.path.basename(f)[len("fire_activity_"):-len(".parquet")].split("_", 1)[-1]  # 7d_0.5deg -> 0.5deg
+            view = "team_" + "".join(ch if ch.isalnum() else "_" for ch in grid)
+            con.execute(f"CREATE VIEW {view} AS SELECT * FROM read_parquet('{f}')")
+            per = con.execute(f"""SELECT CAST(period_start AS VARCHAR), CAST(period_end AS VARCHAR), max(n_days)
+                                  FROM {view} GROUP BY 1, 2 ORDER BY 1""").fetchall()
+            team[grid] = {"view": view, "file": os.path.relpath(f, ROOT),
+                          "rows": con.execute(f"SELECT count(*) FROM {view}").fetchone()[0],
+                          "periods": [{"start": a, "end": b, "n_days": int(n)} for a, b, n in per]}
         old, _db, _meta = _db, con, meta
+        _team.clear(); _team.update(team)
         if old is not None:
             old.close()
 
@@ -435,6 +450,135 @@ def hotspots_csv(view: Literal["harm", "raw", "modis", "viirs"] = "harm",
                   TO '{path}' (HEADER, DELIMITER ',')""")
     name = f"firecal_hotspots_{start or _meta.get('first_date')}_{end or _meta.get('last_date')}.csv"
     return FileResponse(path, media_type="text/csv", filename=name, background=BackgroundTask(os.remove, path))
+
+
+# ---------------------------------------------------------------- data team table (Tabelle B)
+TEAM_VALUES = {
+    ("harm", "count"): "n_harmonized", ("harm", "frp"): "frp_harmonized",
+    ("modis", "count"): "n_modis", ("modis", "frp"): "frp_modis",
+    ("viirs", "count"): "n_viirs", ("viirs", "frp"): "frp_viirs",
+    ("raw", "count"): "coalesce(n_modis, 0) + coalesce(n_viirs, 0)",
+    ("raw", "frp"): "coalesce(frp_modis, 0) + coalesce(frp_viirs, 0)",
+}
+TEAM_SUMS = ["n_modis", "frp_modis", "n_viirs", "frp_viirs", "n_harmonized", "frp_harmonized",
+             "n_modis_calibrated", "frp_modis_calibrated"]
+
+
+def _grid_cell(grid: str) -> dict:
+    """Cell size of a team grid label: '0.5deg' -> {"deg": 0.5}, '2km' -> {"km": 2}."""
+    try:
+        if grid.endswith("deg"):
+            return {"deg": float(grid[:-3])}
+        if grid.endswith("km"):
+            return {"km": float(grid[:-2])}
+    except ValueError:
+        pass
+    return {}
+
+
+def _team_view(grid: str) -> str:
+    cur()
+    if grid not in _team:
+        raise HTTPException(404, f"no team table for grid '{grid}'; available: {list(_team)}")
+    return _team[grid]["view"]
+
+
+def _team_area(c, view: str, bbox, polygon, periods: list[str] | None):
+    """Rows of a team table whose cell centre lies in the area, as a DataFrame."""
+    where = []
+    box = _parse_bbox(bbox)
+    poly = _parse_polygon(polygon)
+    if poly is not None:
+        pb = [poly[:, 1].min(), poly[:, 0].min(), poly[:, 1].max(), poly[:, 0].max()]
+        box = pb if box is None else [max(box[0], pb[0]), max(box[1], pb[1]), min(box[2], pb[2]), min(box[3], pb[3])]
+    if box:
+        where.append(f"lon BETWEEN {_lit(box[0])} AND {_lit(box[2])} AND lat BETWEEN {_lit(box[1])} AND {_lit(box[3])}")
+    if periods:
+        where.append("CAST(period_start AS VARCHAR) IN (" + ",".join(_lit(p) for p in periods) + ")")
+    df = c.execute(f"SELECT * FROM {view}" + (" WHERE " + " AND ".join(where) if where else "")).df()
+    if poly is not None and len(df):
+        df = df[_in_polygon(df["lat"].to_numpy(), df["lon"].to_numpy(), poly)]
+    return df
+
+
+@app.get("/api/team")
+def team_info():
+    """Tables delivered by the data team that are served as-is: grids, periods (time windows), rows."""
+    cur()
+    return {"grids": [{"grid": g, "cell": _grid_cell(g), "rows": t["rows"], "file": t["file"], "periods": t["periods"]}
+                      for g, t in sorted(_team.items(), key=lambda kv: -(_grid_cell(kv[0]).get("deg", 0) or
+                                                                         _grid_cell(kv[0]).get("km", 0) / 111.32))]}
+
+
+@app.get("/api/team/cells")
+def team_cells(grid: str = Query("0.5deg", description="grid label, see /api/team"),
+               period: str | None = Query(None, description="period_start of one window; empty = all windows summed"),
+               view: Literal["harm", "raw", "modis", "viirs"] = "harm", metric: Literal["count", "frp"] = "count",
+               bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
+               limit: int = Query(30000, ge=1, le=200000)):
+    """Cells of the team's 'Tabelle B' for the map: [[lat, lon, value, value_per_day, region, calibrated], ...].
+    Several windows are summed per cell; value_per_day divides by the days of the chosen windows.
+    If more than `limit` cells match, the largest are returned and truncated = true."""
+    tv = _team_view(grid)
+    c = cur()
+    periods = [period] if period else None
+    df = _team_area(c, tv, bbox, polygon, periods)
+    days = sum(p["n_days"] for p in _team[grid]["periods"] if not period or p["start"] == period) or 1
+    if df.empty:
+        return {"grid": grid, "cell": _grid_cell(grid), "days": days, "count": 0, "truncated": False, "rows": []}
+    c.register("tb", df)
+    agg = c.execute(f"""SELECT lat, lon, sum({TEAM_VALUES[(view, metric)]}) AS v, any_value(region) AS region,
+                               bool_or(is_calibrated) AS cal
+                        FROM tb GROUP BY lat, lon HAVING sum({TEAM_VALUES[(view, metric)]}) > 0
+                        ORDER BY v DESC""").df()
+    total = len(agg)
+    agg = agg.head(limit)
+    rows = [[round(a, 5), round(b, 5), round(float(v), 3), round(float(v) / days, 4), r, bool(k)]
+            for a, b, v, r, k in agg.itertuples(index=False, name=None)]
+    return {"grid": grid, "cell": _grid_cell(grid), "days": days, "count": total, "truncated": total > limit,
+            "rows": rows}
+
+
+@app.get("/api/team/check")
+def team_check(grid: str = Query("0.5deg", description="grid label, see /api/team"),
+               bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
+               vegetation_only: bool = Q["vegetation_only"]):
+    """Cross-check: sums of the team's 'Tabelle B' vs FireCal's own numbers for the same time windows and area.
+    Both without low-confidence detections (the team table excludes them). Team cells count if their centre is
+    in the area, FireCal counts the exact hotspots, so small differences at the edge of an area are expected.
+    Per window and in total, also per region (whole windows)."""
+    tv = _team_view(grid)
+    c = cur()
+    out = []
+    tdf = _team_area(c, tv, bbox, polygon, None)
+    tdf = tdf.assign(period_start=tdf["period_start"].astype(str).str[:10]) if len(tdf) else tdf
+    for p in _team[grid]["periods"]:
+        t = tdf[tdf["period_start"] == p["start"]] if len(tdf) else tdf
+        team = {k: round(float(t[k].sum()), 2) if len(t) else 0.0 for k in TEAM_SUMS}
+        rel = selection(c, "points", bbox, polygon, p["start"], p["end"], True, vegetation_only)
+        r = c.execute(f"""SELECT
+              count(*) FILTER (WHERE sensor='MODIS'), coalesce(sum(frp) FILTER (WHERE sensor='MODIS'), 0),
+              count(*) FILTER (WHERE sensor='VIIRS'), coalesce(sum(frp) FILTER (WHERE sensor='VIIRS'), 0),
+              coalesce(sum(weight), 0), coalesce(sum(frp_h), 0), coalesce(sum(weight_cal), 0), coalesce(sum(frp_cal), 0)
+            FROM {rel}""").fetchone()
+        ours = {k: round(float(v), 2) for k, v in zip(TEAM_SUMS, r)}
+        out.append({**p, "team": team, "firecal": ours})
+    regions = []
+    if len(tdf):
+        tr = tdf.groupby("region")[TEAM_SUMS].sum()
+        first, last = _team[grid]["periods"][0]["start"], _team[grid]["periods"][-1]["end"]
+        rel = selection(c, "points", bbox, polygon, first, last, True, vegetation_only)
+        fr = c.execute(f"""SELECT region, count(*) FILTER (WHERE sensor='MODIS') AS n_modis,
+              count(*) FILTER (WHERE sensor='VIIRS') AS n_viirs, coalesce(sum(frp_h), 0) AS frp_harmonized,
+              coalesce(sum(weight_cal), 0) AS n_modis_calibrated FROM {rel} GROUP BY 1""").df().set_index("region")
+        for reg in sorted(set(tr.index) | set(fr.index)):
+            regions.append({"region": reg,
+                            "team": {k: round(float(tr.loc[reg, k]), 2) if reg in tr.index else 0.0
+                                     for k in ["n_modis", "n_viirs", "frp_harmonized", "n_modis_calibrated"]},
+                            "firecal": {k: round(float(fr.loc[reg, k]), 2) if reg in fr.index else 0.0
+                                        for k in ["n_modis", "n_viirs", "frp_harmonized", "n_modis_calibrated"]}})
+    return {"grid": grid, "windows": out, "regions": regions,
+            "note": "low-confidence detections excluded on both sides; team cells by centre, FireCal by exact hotspot"}
 
 
 @app.post("/api/reload")

@@ -48,6 +48,7 @@ Euer Schema aus Abschnitt 4 wird **unverändert** eingelesen (CSV, `.csv.gz` ode
 
 ```bash
 cp harmonisierte_hotspots.csv.gz data/incoming/      # oder mehrere Dateien, z. B. eine pro Jahr
+cp DL_FIRE_*.zip data/incoming/                       # FIRMS-Download-ZIPs (Shapefile oder CSV) gehen auch
 python -m backend.ingest                              # -> data/raw/*.parquet (kanonisches Schema)
 ```
 
@@ -62,7 +63,7 @@ Bitte beachten:
 ### 2b. Tabelle C (Kalibrierung), empfohlen
 
 ```
-data/calibration/calibration.csv
+data/calibration/<name>.csv          (aktuell: calibration_7d_2deg.csv)
 region,factor_frp,factor_n,factor_frp_p25,factor_frp_p75,r_log_frp,n_cells,used_global_fallback[,month][,factor_n_p25,factor_n_p75]
 ```
 
@@ -74,9 +75,18 @@ region,factor_frp,factor_n,factor_frp_p25,factor_frp_p75,r_log_frp,n_cells,used_
 
 ### 2c. Regionen
 
-Aktuell **Platzhalter-Boxen** in `backend/regions.py` (und gleich in `index.html`, `regionOf`) mit euren
-Namen `Afrika, Amerika, Asien, Europa/Westasien, Ozeanien`. Eure genauen Boxen kennen wir nicht.
-Sobald `regions.geojson` kommt, wird `region_of()` durch eine Punkt-in-Polygon-Zuordnung ersetzt.
+**Eure Platzhalter-Boxen**, aus euren Tabellen B abgeleitet und gegen jede Zelle geprüft (0 Abweichungen
+bei 2 km, 0,5° und 5°), in `backend/regions.py` und `index.html` (`regionOf`):
+
+| Region | Regel (Reihenfolge wie im Code) |
+|---|---|
+| Amerika | lon < −30 |
+| Ozeanien | lon ≥ 110 und lat < −10 |
+| Asien | lon ≥ 55 |
+| Afrika | −20 ≤ lon < 55 und lat < 35 |
+| Europa/Westasien | Rest (−30 ≤ lon < 55, nördlich 35° oder westlich −20°) |
+
+Die Grenzen bei −30/−20/110 liegen in Datenlücken, dort ist der genaue Wert nicht bestimmbar. Sobald `regions.geojson` kommt, wird `region_of()` durch eine Punkt-in-Polygon-Zuordnung ersetzt.
 
 ### 2d. Alternativen (falls eure Methode anders aussieht)
 
@@ -85,8 +95,10 @@ Sobald `regions.geojson` kommt, wird `region_of()` durch eine Punkt-in-Polygon-Z
   (Bedeutung in `backend/data.py`). Harmonisierter Wert eines Gebiets = Summe von `weight` bzw. `frp_h`.
 - **Fertige Tabelle:** Tabelle A + diese Spalten nach `data/harmonized/` (wird 1:1 genutzt).
 
-**Nicht nötig** zu liefern: `fire_activity_*` (Tabelle B), `monthly_cube`. Die Aggregate (Monat × 0,1°,
-Tag × 0,25°, mit Sensor, Satellit, Tag/Nacht, Konfidenz) baut `backend/build.py` selbst aus Tabelle A.
+**Tabelle B** (`fire_activity_*`) braucht die App nicht zum Rechnen (die Aggregate baut `backend/build.py` aus
+Tabelle A), sie wird aber **mitgenutzt**: Dateien als Parquet nach `data/team/fire_activity_7d_<raster>.parquet`.
+Die App zeigt sie als Kartenebene „Team cells“ und vergleicht sie im Panel „Cross-check with the data team“ mit
+den eigenen Summen (`/api/team`, `/api/team/cells`, `/api/team/check`). `monthly_cube` ist nicht nötig.
 
 ---
 
@@ -123,10 +135,27 @@ Tag × 0,25°, mit Sensor, Satellit, Tag/Nacht, Konfidenz) baut `backend/build.p
 
 ---
 
+### 4b. Abgleich mit euren Lieferungen vom 14.11. (Tabelle A, B, C, FIRMS-ZIPs)
+
+Eingebaut: Tabelle A (07.–14.11.) + die drei FIRMS-ZIPs (01.–08.11.) → zusammen **1.559.662 Hotspots,
+01.–13.11.** (Überlappung 07./08.11. war Punkt für Punkt identisch und wird entfernt, der 14.11. ist unvollständig).
+
+1. **Exakte Übereinstimmung mit Tabelle B (2 km):** global und je Fenster 0,000 % Abweichung bei MODIS/VIIRS
+   Anzahl und FRP, harmonisiert und MODIS × Faktor. Je Region max. 0,03 % (Punkte vs. Zellmittelpunkt an
+   Regionsgrenzen). Damit ist bestätigt: Tabelle B enthält **keine low-confidence**-Punkte.
+2. **`calibration_7d_2deg.csv` und `calibration_7d_2km.csv` sind byte-identisch.** Die Faktoren passen zum
+   **2-km**-Raster (z. B. Asien factor_n 8,74). In `fire_activity_7d_0.5deg` und `_5deg` stehen **andere**
+   Faktoren (0,5°: Asien 7,00, Amerika 5,72; 5°: Amerika 6,46). Bitte prüfen: ist die 2°-Datei falsch
+   benannt/überschrieben? Welcher Faktor ist der „offizielle“? Mit der gelieferten Tabelle weicht
+   MODIS × Faktor gegenüber eurer 0,5°-Tabelle um +8,5 % (Anzahl) ab, gegenüber 5° um −1,7 %.
+3. **Folge:** Der Faktor hängt deutlich von der Zellgröße ab (Anzahl: 5,7–8,7 je nach Raster). Das sollte in
+   die Methodik und in die Unsicherheit (Band) einfließen.
+
 ## 5. Was die Website von der API erwartet (nicht umbenennen)
 
 Endpunkte (Doku: `/docs` lokal oder `api-docs.html`): `/api/meta`, `/api/timeseries`, `/api/heatmap`,
-`/api/points`, `/api/distributions`, `/api/matrix`, `/api/satellites`, `/api/hotspots.csv`.
+`/api/points`, `/api/distributions`, `/api/matrix`, `/api/satellites`, `/api/hotspots.csv`,
+`/api/team`, `/api/team/cells`, `/api/team/check`.
 Gemeinsame Filter: `bbox, polygon, start, end, exclude_low, vegetation_only, satellites, daynight`.
 **Satelliten- und Tag/Nacht-Filter wirken nur auf Rohwerte und Karte**; harmonisierte Werte nutzen immer
 alle Satelliten, weil die Faktoren so definiert sind.
@@ -152,7 +181,8 @@ python -m uvicorn backend.main:app      # http://localhost:8000
 
 ## 7. Offene Fragen an euch
 
-1. Genaue Grenzen eurer fünf Regionen (oder gleich `regions.geojson`)?
+1. Regionsgrenzen aus Tabelle B abgeleitet (siehe 2c). Stimmt das, und kommt `regions.geojson`?
+5. Welche Kalibriertabelle gilt (2°, 2 km, 0,5°, 5°)? Siehe 4b, Punkt 2.
 2. Wie sieht die Korrektur je Satelliten-Kombination aus: ein Faktor pro Kombination (z. B. `SNPP`,
    `SNPP+N20`, `SNPP+N20+N21`) als zusätzliche Spalte in Tabelle C?
 3. Kommt `month` in Tabelle C, und wenn ja, mit Rückfall auf den Jahresfaktor bei wenigen Zellen?

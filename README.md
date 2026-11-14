@@ -18,8 +18,9 @@ python -m uvicorn backend.main:app --reload
 # API-Doku: http://localhost:8000/docs
 ```
 
-Im Repo liegt eine Woche echter FIRMS-Daten (07.–13.11.2026, global, 849.393 Hotspots; der unvollständige
-14.11. wird automatisch entfernt). Ohne Backend (z. B. GitHub Pages) zeigt die App synthetische Demodaten
+Im Repo liegen knapp zwei Wochen echte FIRMS-Daten (01.–13.11.2026, global, 1.559.662 Hotspots: Tabelle A des
+Datenteams + FIRMS-Download-ZIPs; der unvollständige 14.11. wird automatisch entfernt), dazu die Kalibriertabelle
+und die Zelltabellen (Tabelle B) des Datenteams. Ohne Backend (z. B. GitHub Pages) zeigt die App synthetische Demodaten
 von 2001 bis 2026.
 
 ## Das Dashboard
@@ -41,6 +42,8 @@ Alle Ansichten hängen an **einer Auswahl** aus Gebiet (Karte), Zeitraum (Zeitle
 | Raum-Zeit-Matrix | aktivste Rasterzellen × Perioden, sortierbar, absolut oder je Zeile | Zeile: Zelle wird Gebiet; Kästchen: Periode auf Karte |
 | Satelliten-Zeitleiste | Rohdetektionen je Satellit und Periode | – |
 | Kalibriertabelle | Faktor je Region mit 25–75 %, r, Zellen; Region des Gebiets hervorgehoben | – |
+| Abgleich mit dem Datenteam | Summen aus Tabelle B gegen FireCals eigene Summen, je Zeitfenster und Region | Raster wählbar, folgt dem Gebiet |
+| Karte „Team cells“ | Zellen aus Tabelle B (5°, 0,5°, 2 km), je Fenster | Raster und Fenster wählbar |
 | Methodik | aus `content/methodology.md` | – |
 
 Downloads: Hotspots im Format „Tabelle A“ (+ Region, weight, frp_h) und eine Statistik-CSV je Periode.
@@ -58,7 +61,7 @@ Downloads: Hotspots im Format „Tabelle A“ (+ Region, weight, frp_h) und eine
 ## Architektur
 
 ```
-data/incoming/  FIRMS-CSV oder Tabelle A (.csv/.csv.gz/.parquet)  ──►  python -m backend.ingest
+data/incoming/  FIRMS-CSV, FIRMS-ZIP (Shapefile/CSV) oder Tabelle A  ──►  python -m backend.ingest
 data/raw/       kanonisches Schema, nicht harmonisiert (im Git)
 data/calibration/  optional: Tabelle C des Teams
         │  backend/build.py  (automatisch beim Serverstart)
@@ -77,7 +80,8 @@ index.html   (ApiProvider; ohne Backend: LocalProvider mit Demo/CSV, gleiche Rec
 |---|---|---|
 | `data/incoming/` | Rohdateien zum Einlesen | nein |
 | `data/raw/` | kanonisches Parquet | ja |
-| `data/calibration/` | Kalibriertabelle des Teams (optional) | ja |
+| `data/calibration/` | Kalibriertabelle des Teams (Tabelle C), wird für die Faktoren benutzt | ja |
+| `data/team/` | Tabelle B des Teams (`fire_activity_7d_<raster>.parquet`), für Karte und Abgleich | ja |
 | `data/harmonized/` | fertige harmonisierte Tabelle (optional, ersetzt harmonization.py) | ja |
 | `data/processed/` | gebaut | nein |
 
@@ -98,6 +102,9 @@ Gemeinsame Filter: `bbox`, `polygon`, `start`, `end`, `exclude_low`, `vegetation
 | `GET /api/matrix` | aktivste Zellen × Perioden |
 | `GET /api/satellites` | Rohdetektionen je Satellit und Periode |
 | `GET /api/hotspots.csv` | Download im Format Tabelle A |
+| `GET /api/team` | gelieferte Tabellen B: Raster, Zeitfenster |
+| `GET /api/team/cells` | Zellen einer Tabelle B für die Karte |
+| `GET /api/team/check` | Abgleich Tabelle B gegen FireCal für Gebiet und Fenster |
 
 Online-Doku zum Lesen: https://putskev.github.io/firecal/api-docs.html. Nach Änderungen an Endpunkten:
 `python -m backend.export_openapi`.

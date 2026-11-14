@@ -46,7 +46,10 @@ Auswahl aus Gebiet, Zeitraum und Filtern hängen.
 - 8 Endpunkte, Doku unter `/docs` und online
 
 ### Daten
-- Echte FIRMS-NRT-Daten, global, 07.–13.11.2026: **849.393 Hotspots** (MODIS Terra/Aqua, VIIRS NOAA-20/21)
+- Echte FIRMS-NRT-Daten, global, 01.–13.11.2026: **1.559.662 Hotspots** (MODIS Terra/Aqua, VIIRS NOAA-20/21),
+  aus Tabelle A des Datenteams und den FIRMS-ZIPs
+- Kalibriertabelle (Tabelle C) und Zelltabellen (Tabelle B, 5°/0,5°/2 km) des Datenteams eingebunden;
+  Abgleich: mit Tabelle B (2 km) **0,000 % Abweichung**, Regionen exakt übernommen
 
 ### Infrastruktur
 - GitHub-Repo, GitHub Pages (Demo), API-Doku online, täglicher Workflow (wartet auf MAP_KEY), Dockerfile

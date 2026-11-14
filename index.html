@@ -72,6 +72,8 @@ table.calib{border-collapse:collapse;width:100%;font-size:12px;font-variant-nume
 table.calib th,table.calib td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:right}
 table.calib th:first-child,table.calib td:first-child{text-align:left}
 table.calib tr.hl{background:#e8f2f5;font-weight:600}
+td.ok{color:#1b7a3a}td.off{color:#b3261e;font-weight:600}
+.teamctl{display:none;gap:4px;align-items:center}.teamctl select{font-size:12px}
 #matrixWrap{position:relative;overflow-x:auto}
 #matrix{display:block;cursor:pointer}
 #tip{position:fixed;z-index:3000;pointer-events:none;background:#1d1f24;color:#fff;font-size:12px;padding:5px 8px;border-radius:6px;display:none;max-width:300px}
@@ -134,7 +136,8 @@ input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line)
         <div class="mapbar">
           <span id="mapLabel">full range</span>
           <button id="mapReset" class="btn small" style="display:none" title="Show full range">×</button>
-          <div class="seg" id="mapModeSeg"><button data-v="auto" class="on">Auto</button><button data-v="heat">Density</button><button data-v="points">Points</button></div>
+          <div class="seg" id="mapModeSeg"><button data-v="auto" class="on">Auto</button><button data-v="heat">Density</button><button data-v="points">Points</button><button data-v="team" id="teamModeBtn" style="display:none" title="Aggregated cells delivered by the data team (Tabelle B)">Team cells</button></div>
+          <span class="teamctl" id="teamCtl"><select id="teamGrid" title="Grid of the team table"></select><select id="teamPeriod" title="Time window"></select></span>
           <div class="seg" id="colorSeg" title="Colour of single points"><button data-v="sensor" class="on">Sensor</button><button data-v="conf">Confidence</button><button data-v="frp">FRP</button></div>
           <label class="fg" title="Density colour scale">Scale <input id="heatMax" type="range" min="0.1" max="3" step="0.05" value="1" style="width:70px"></label>
         </div>
@@ -183,6 +186,13 @@ input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line)
       <div id="yearly" class="chart"></div></div>
     <div class="card"><h3>Harmonization check</h3><p class="how">Raw MODIS and VIIRS, MODIS converted with the calibration factor, and the harmonized series with its uncertainty band. Converted MODIS should run close to VIIRS where both exist.</p>
       <div id="check" class="chart"></div></div>
+  </div>
+
+  <div class="card" id="teamCard" style="display:none">
+    <div class="head"><h3>Cross-check with the data team (Tabelle B)</h3><span class="grow"></span>
+      <span class="note">Grid</span><select id="teamCheckGrid"></select></div>
+    <p class="how">The data team delivers aggregated cells per time window (“Tabelle B”). FireCal recomputes the same sums from the single hotspots for the selected area (without low confidence, like the team table). Green = equal within 0.5 %. Team cells count when their centre is inside the area, so small differences at the edge of a drawn area are expected.</p>
+    <div id="teamCheck"></div>
   </div>
 
   <div class="grid g4">
@@ -256,7 +266,7 @@ const S = {
   metric:'count', view:'harm', perDay:false, sats:new Set(SATS), dn:'all', incLow:false, veg:false,
   rows:{}, sat:{}, periods:[], rangeP:[], mapPeriod:null, mapMode:'auto', colorBy:'sensor',
   heatMax:1, heatRef:null, anomMode:'pct', mSort:'total', mNorm:'global', matrix:null, dist:null,
-  req:0, rreq:0, hreq:0, playing:false
+  req:0, rreq:0, hreq:0, treq:0, team:null, playing:false
 };
 
 /* ---------- helpers ---------- */
@@ -298,15 +308,12 @@ function showTip(e, html) { tip.innerHTML = html; tip.style.display = 'block'; t
 function hideTip() { tip.style.display = 'none'; }
 
 /* ---------- placeholder regions (same as backend/regions.py) ---------- */
-function regionOf(lat, lon) {
-  let r = 'Asien';
-  if (lon < -25) r = 'Amerika';
-  if (lon >= -25 && lon < 60 && lat >= 36) r = 'Europa/Westasien';
-  if (lon >= -25 && lon < 55 && lat < 36) r = 'Afrika';
-  if (lon >= 35 && lon < 60 && lat >= 12 && lat < 36) r = 'Europa/Westasien';
-  if (lon >= 110 && lat < -10) r = 'Ozeanien';
-  if (lon >= 150 && lat < 0) r = 'Ozeanien';
-  return r;
+function regionOf(lat, lon) {   // same boxes as backend/regions.py and the data team's Tabelle B
+  if (lon < -30) return 'Amerika';
+  if (lon >= 110 && lat < -10) return 'Ozeanien';
+  if (lon >= 55) return 'Asien';
+  if (lon >= -20 && lat < 35) return 'Afrika';
+  return 'Europa/Westasien';
 }
 
 /* ---------- filters ---------- */
@@ -335,6 +342,9 @@ const ApiProvider = {
   async points(f, bbox, start, end, limit) { return getJSON(`${API}/api/points?${qs({ ...apiF(f), bbox, start, end, limit })}`); },
   async distributions(f, start, end) { return getJSON(`${API}/api/distributions?${qs({ ...apiF(f), start, end })}`); },
   async matrix(f, gran, view, metric, start, end, top) { return getJSON(`${API}/api/matrix?${qs({ ...apiF(f), granularity: gran, view, metric, start, end, top })}`); },
+  async team() { try { return await getJSON(`${API}/api/team`); } catch { return { grids: [] }; } },
+  async teamCells(grid, period, view, metric, bbox, polygon) { return getJSON(`${API}/api/team/cells?${qs({ grid, period, view, metric, bbox, polygon, limit: 30000 })}`); },
+  async teamCheck(grid, f) { return getJSON(`${API}/api/team/check?${qs({ grid, bbox: f.bbox, polygon: f.polygon, vegetation_only: f.vegetation_only })}`); },
   downloadPoints(f, start, end, view) { const a = document.createElement('a'); a.href = `${API}/api/hotspots.csv?${qs({ ...apiF(f), start, end, view })}`; document.body.appendChild(a); a.click(); a.remove(); toast('Export started'); }
 };
 
@@ -524,6 +534,8 @@ L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addT
 const heatGradient = {}; VIRIDIS.forEach((c, i) => { heatGradient[(0.25 + 0.75 * i / (VIRIDIS.length - 1)).toFixed(3)] = c; });
 const heat = L.heatLayer([], { radius: 14, blur: 16, max: 1, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGradient }).addTo(map);
 const pointLayer = L.layerGroup().addTo(map);
+const teamLayer = L.layerGroup().addTo(map);
+const teamRenderer = L.canvas({ padding: .3 });
 let lastZoom = map.getZoom();
 map.on('moveend', () => { heat.options.maxZoom = map.getZoom(); const z = map.getZoom() !== lastZoom; lastZoom = map.getZoom(); clearTimeout(zoomTimer); zoomTimer = setTimeout(() => refreshMap(z), 250); });
 $('calLegendBar').style.background = viridisCss;
@@ -567,7 +579,7 @@ function useProvider(p) {
   clearRegion();
   const [w, s, e, n] = S.meta.bbox;
   if (e - w > 200) map.setView([10, 10], 2); else map.fitBounds([[s, w], [n, e]], { padding: [20, 20], maxZoom: 6 });
-  renderFooter(); refresh();
+  renderFooter(); loadTeam(); refresh();
 }
 
 /* ---------- data flow ---------- */
@@ -577,7 +589,7 @@ async function refresh() {
   try {
     const f = F(), [rows, sat] = await Promise.all([p.series(f, S.gran), p.satellites(f, S.gran)]);
     if (id !== S.req) return;
-    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange();
+    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange(); renderTeamCheck();
   } catch (e) { console.error(e); toast('Could not load data'); }
   finally { if (id === S.req) busy(false); }
 }
@@ -909,9 +921,16 @@ async function refreshMap(resetRef) {
   $('mapLabel').textContent = S.mapPeriod ? plabel(S.mapPeriod) : 'full range';
   $('mapReset').style.display = S.mapPeriod ? '' : 'none';
   renderMapLegend();
-  if (!bbox) { heat.setLatLngs([]); pointLayer.clearLayers(); return; }
+  if (!bbox) { heat.setLatLngs([]); pointLayer.clearLayers(); teamLayer.clearLayers(); return; }
   const f = { ...F(), bbox };
   try {
+    if (S.mapMode === 'team') {
+      const r = await p.teamCells($('teamGrid').value, $('teamPeriod').value, S.view, S.metric, bbox, F().polygon); if (id !== S.hreq) return;
+      heat.setLatLngs([]); pointLayer.clearLayers(); teamLayer.clearLayers(); drawTeamCells(r);
+      $('mapNote').textContent = `team cells (Tabelle B) · grid ${$('teamGrid').value} · ${fmt(r.count)} cells` + (r.truncated ? ` · showing the ${fmt(r.rows.length)} largest` : '');
+      return;
+    }
+    teamLayer.clearLayers();
     if (mapUsesPoints()) {
       const r = await p.points(f, bbox, s, e, 15000); if (id !== S.hreq) return;
       heat.setLatLngs([]); pointLayer.clearLayers();
@@ -930,6 +949,7 @@ async function refreshMap(resetRef) {
   } catch (err) { console.error(err); }
 }
 function renderMapLegend() {
+  if (S.mapMode === 'team') { $('mapLegend').innerHTML = `<div>Team cells · ${viewName()}${S.perDay ? ' per day' : ''}</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>low</span><span id="teamLegMax">high</span></div><div>Log colour. Values as delivered by the data team.</div>`; return; }
   $('mapLegend').innerHTML = mapUsesPoints()
     ? (S.colorBy === 'sensor' ? `<div><span class="dot" style="background:${C.modis}"></span>MODIS (1 km pixel) &nbsp;<span class="dot" style="background:${C.viirs}"></span>VIIRS (375 m)</div>`
       : S.colorBy === 'conf' ? `<div>${['low', 'nominal', 'high'].map(c => `<span class="dot" style="background:${C[c]}"></span>${c}`).join(' &nbsp;')}</div>`
@@ -938,6 +958,63 @@ function renderMapLegend() {
 }
 $('mapReset').addEventListener('click', () => { stopPlay(); selectPeriod(S.mapPeriod); });
 $('heatMax').addEventListener('input', e => { S.heatMax = +e.target.value; heat.setOptions({ max: S.heatMax }); });
+
+/* ---------- data team table (Tabelle B): map cells and cross-check ---------- */
+function cellBounds(lat, lon, cell) {
+  if (cell.deg) { const h = cell.deg / 2; return [[lat - h, lon - h], [lat + h, lon + h]]; }
+  const dlat = (cell.km || 2) / 111.32 / 2, dlon = dlat / Math.max(.05, Math.cos(lat * Math.PI / 180));
+  return [[lat - dlat, lon - dlon], [lat + dlat, lon + dlon]];
+}
+function drawTeamCells(r) {
+  const k = S.perDay ? 3 : 2, vals = r.rows.map(x => x[k]), mx = quantile(vals, .99) || 1, lm = Math.log10(mx + 1);
+  const unit = S.metric === 'frp' ? ' MW' : '';
+  for (const row of r.rows) {
+    const [lat, lon, v, vd, region, cal] = row, t = Math.log10(row[k] + 1) / lm;
+    L.rectangle(cellBounds(lat, lon, r.cell), { renderer: teamRenderer, weight: 0, fillColor: viridis(t), fillOpacity: .55 + .35 * Math.min(1, t) })
+      .bindTooltip(`<b>${region}</b> · cell ${lat.toFixed(3)}, ${lon.toFixed(3)}<br>${viewName()}: ${fmt(v)}${unit} (${fmt1(vd)}${unit} per day over ${r.days} days)<br>${cal ? 'converted from MODIS' : 'native VIIRS'}`).addTo(teamLayer);
+  }
+  const lg = $('teamLegMax'); if (lg) lg.textContent = fmt(mx) + unit;
+}
+async function loadTeam() {
+  const p = S.provider; S.team = p.team ? await p.team() : { grids: [] };
+  const grids = S.team.grids || [], has = grids.length > 0;
+  $('teamModeBtn').style.display = has ? '' : 'none'; $('teamCard').style.display = has ? '' : 'none';
+  if (!has) { if (S.mapMode === 'team') { S.mapMode = 'auto'; setSeg('mapModeSeg', 'auto'); } $('teamCtl').style.display = 'none'; return; }
+  const opts = grids.map(g => `<option value="${g.grid}">${g.grid}</option>`).join('');
+  $('teamGrid').innerHTML = opts; $('teamCheckGrid').innerHTML = opts;
+  const pref = grids.find(g => g.grid === '0.5deg') || grids[0], exact = grids.find(g => g.grid === '2km') || grids[0];
+  $('teamGrid').value = pref.grid; $('teamCheckGrid').value = exact.grid; fillTeamPeriods();
+}
+function fillTeamPeriods() {
+  const g = (S.team.grids || []).find(x => x.grid === $('teamGrid').value); if (!g) return;
+  const cur = $('teamPeriod').value;
+  $('teamPeriod').innerHTML = `<option value="">all windows (${g.periods[0].start} → ${g.periods[g.periods.length - 1].end})</option>` +
+    g.periods.map(p => `<option value="${p.start}">${p.start} → ${p.end} (${p.n_days} d)</option>`).join('');
+  if (g.periods.some(p => p.start === cur)) $('teamPeriod').value = cur;
+}
+async function renderTeamCheck() {
+  const p = S.provider; if (!p.teamCheck || !(S.team && S.team.grids && S.team.grids.length)) return;
+  const id = ++S.treq; $('teamCheck').innerHTML = '<p class="note">Comparing…</p>';
+  try {
+    const d = await p.teamCheck($('teamCheckGrid').value, F()); if (id !== S.treq) return;
+    const Q = [['n_modis', 'MODIS hotspots', ''], ['n_viirs', 'VIIRS hotspots', ''], ['frp_modis', 'MODIS FRP', ' MW'], ['frp_viirs', 'VIIRS FRP', ' MW'],
+      ['n_harmonized', 'harmonized count', ''], ['frp_harmonized', 'harmonized FRP', ' MW'], ['n_modis_calibrated', 'MODIS × factor (count)', ''], ['frp_modis_calibrated', 'MODIS × factor (FRP)', ' MW']];
+    const diff = (a, b) => { const d = b === 0 ? (a === 0 ? 0 : 100) : (a - b) / b * 100; return `<td class="${Math.abs(d) <= .5 ? 'ok' : 'off'}">${d >= 0 ? '+' : ''}${d.toFixed(2)} %</td>`; };
+    let html = `<table class="calib"><tr><th>Window</th><th>Quantity</th><th>Data team</th><th>FireCal</th><th>Difference</th></tr>`;
+    for (const w of d.windows) Q.forEach(([k, lab, u], i) => { html += `<tr>${i === 0 ? `<td rowspan="${Q.length}">${w.start} → ${w.end}<br><span class="note">${w.n_days} days</span></td>` : ''}<td style="text-align:left">${lab}</td><td>${fmt(w.team[k])}${u}</td><td>${fmt(w.firecal[k])}${u}</td>${diff(w.firecal[k], w.team[k])}</tr>`; });
+    html += '</table>';
+    if (d.regions && d.regions.length) {
+      html += `<h3 style="margin-top:12px">Per region (all windows)</h3><table class="calib"><tr><th>Region</th><th>MODIS team / FireCal</th><th></th><th>VIIRS team / FireCal</th><th></th><th>harmonized FRP team / FireCal</th><th></th><th>MODIS × factor team / FireCal</th><th></th></tr>`;
+      for (const r of d.regions) html += `<tr><td>${r.region}</td>` + ['n_modis', 'n_viirs', 'frp_harmonized', 'n_modis_calibrated'].map(k => `<td>${fmt(r.team[k])} / ${fmt(r.firecal[k])}</td>${diff(r.firecal[k], r.team[k])}`).join('') + '</tr>';
+      html += '</table>';
+    }
+    html += `<p class="note" style="margin-top:6px">${d.note}. Regions and MODIS × factor depend on the calibration table; the delivered table (data/calibration/) belongs to the grid it was computed on.</p>`;
+    $('teamCheck').innerHTML = html;
+  } catch (e) { console.error(e); $('teamCheck').innerHTML = '<p class="note">Cross-check not available.</p>'; }
+}
+$('teamGrid').addEventListener('change', () => { fillTeamPeriods(); refreshMap(true); });
+$('teamPeriod').addEventListener('change', () => refreshMap(true));
+$('teamCheckGrid').addEventListener('change', renderTeamCheck);
 
 /* ---------- animation ---------- */
 function stopPlay() { S.playing = false; $('playBtn').textContent = '▶ Play'; }
@@ -957,7 +1034,7 @@ seg('granSeg', v => { if (v !== S.gran) setGran(v); });
 seg('metricSeg', v => { S.metric = v; rerender(); });
 seg('viewSeg', v => { S.view = v; rerender(); });
 seg('dnSeg', v => { S.dn = v; refresh(); });
-seg('mapModeSeg', v => { S.mapMode = v; refreshMap(true); });
+seg('mapModeSeg', v => { S.mapMode = v; $('teamCtl').style.display = v === 'team' ? 'inline-flex' : 'none'; refreshMap(true); });
 seg('colorSeg', v => { S.colorBy = v; refreshMap(false); });
 seg('anomSeg', v => { S.anomMode = v; renderAnomaly(); });
 seg('mSortSeg', v => { S.mSort = v; drawMatrix(); });

@@ -1187,6 +1187,249 @@
         }
       }
     },
+    "/api/team": {
+      "get": {
+        "summary": "Team Info",
+        "description": "Tables delivered by the data team that are served as-is: grids, periods (time windows), rows.",
+        "operationId": "team_info_api_team_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/team/cells": {
+      "get": {
+        "summary": "Team Cells",
+        "description": "Cells of the team's 'Tabelle B' for the map: [[lat, lon, value, value_per_day, region, calibrated], ...].\nSeveral windows are summed per cell; value_per_day divides by the days of the chosen windows.\nIf more than `limit` cells match, the largest are returned and truncated = true.",
+        "operationId": "team_cells_api_team_cells_get",
+        "parameters": [
+          {
+            "name": "grid",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "grid label, see /api/team",
+              "default": "0.5deg",
+              "title": "Grid"
+            },
+            "description": "grid label, see /api/team"
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "period_start of one window; empty = all windows summed",
+              "title": "Period"
+            },
+            "description": "period_start of one window; empty = all windows summed"
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "harm",
+                "raw",
+                "modis",
+                "viirs"
+              ],
+              "type": "string",
+              "default": "harm",
+              "title": "View"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "count",
+                "frp"
+              ],
+              "type": "string",
+              "default": "count",
+              "title": "Metric"
+            }
+          },
+          {
+            "name": "bbox",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "west,south,east,north",
+              "title": "Bbox"
+            },
+            "description": "west,south,east,north"
+          },
+          {
+            "name": "polygon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "lat,lon;lat,lon;...",
+              "title": "Polygon"
+            },
+            "description": "lat,lon;lat,lon;..."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200000,
+              "minimum": 1,
+              "default": 30000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/team/check": {
+      "get": {
+        "summary": "Team Check",
+        "description": "Cross-check: sums of the team's 'Tabelle B' vs FireCal's own numbers for the same time windows and area.\nBoth without low-confidence detections (the team table excludes them). Team cells count if their centre is\nin the area, FireCal counts the exact hotspots, so small differences at the edge of an area are expected.\nPer window and in total, also per region (whole windows).",
+        "operationId": "team_check_api_team_check_get",
+        "parameters": [
+          {
+            "name": "grid",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "grid label, see /api/team",
+              "default": "0.5deg",
+              "title": "Grid"
+            },
+            "description": "grid label, see /api/team"
+          },
+          {
+            "name": "bbox",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "west,south,east,north",
+              "title": "Bbox"
+            },
+            "description": "west,south,east,north"
+          },
+          {
+            "name": "polygon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "lat,lon;lat,lon;...",
+              "title": "Polygon"
+            },
+            "description": "lat,lon;lat,lon;..."
+          },
+          {
+            "name": "vegetation_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "keep type = 0 (rows without type are kept)",
+              "default": false,
+              "title": "Vegetation Only"
+            },
+            "description": "keep type = 0 (rows without type are kept)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reload": {
       "post": {
         "summary": "Reload",

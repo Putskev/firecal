@@ -14,20 +14,15 @@ REGIONS = ["Afrika", "Amerika", "Asien", "Europa/Westasien", "Ozeanien"]
 
 
 def region_of(lat, lon) -> np.ndarray:
+    """Placeholder regions as boxes, identical to the data team's assignment in 'Tabelle B'
+    (checked against every cell of fire_activity_7d_2km). Replace with regions.geojson later."""
     lat = np.asarray(lat, dtype=float)
     lon = np.asarray(lon, dtype=float)
-    out = np.full(lat.shape, "Asien", dtype=object)
-    out[lon < -25] = "Amerika"
-    europe = (lon >= -25) & (lon < 60) & (lat >= 36)
-    out[europe] = "Europa/Westasien"
-    africa = (lon >= -25) & (lon < 55) & (lat < 36)
-    out[africa] = "Afrika"
-    west_asia = (lon >= 35) & (lon < 60) & (lat >= 12) & (lat < 36)
-    out[west_asia] = "Europa/Westasien"
-    oceania = (lon >= 110) & (lat < -10)
-    out[oceania] = "Ozeanien"
-    oceania_east = (lon >= 150) & (lat < 0)
-    out[oceania_east] = "Ozeanien"
+    out = np.full(lat.shape, "Europa/Westasien", dtype=object)    # rest: -30 <= lon < 55, north of 35 deg or west of -20
+    out[(lon >= -20) & (lon < 55) & (lat < 35)] = "Afrika"
+    out[lon >= 55] = "Asien"
+    out[(lon >= 110) & (lat < -10)] = "Ozeanien"
+    out[lon < -30] = "Amerika"
     return out
 
 
