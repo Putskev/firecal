@@ -7,6 +7,9 @@ Harmonisierter MODIS- und VIIRS-Brandkalender für die NASA Space Apps Challenge
 - **Frontend:** `index.html` (Leaflet, Plotly), wird vom Backend unter `/` ausgeliefert
 - **Daten:** NASA LANCE FIRMS, MODIS C6.1 und VIIRS 375 m (S-NPP, NOAA-20, NOAA-21)
 
+> **Harmonisierung / Datenbank übernehmen?** Alles Nötige steht in [`docs/AGENT_HANDOFF.md`](docs/AGENT_HANDOFF.md):
+> Eingabeschema, was geliefert werden muss, API-Vertrag zur Website, Validierung und Abnahme-Checkliste.
+
 ## Schnellstart (lokal)
 
 ```bash
