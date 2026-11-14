@@ -64,6 +64,8 @@ main{display:flex;flex-direction:column;gap:14px;min-width:0}
 .charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 .chart{height:280px}
 .empty{padding:40px;text-align:center;color:var(--muted)}
+.gray-tiles{filter:grayscale(1) brightness(1.05) contrast(.9)}
+footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:var(--muted)}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d1f24;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:2000}
 #toast.show{opacity:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -182,6 +184,7 @@ main{display:flex;flex-direction:column;gap:14px;min-width:0}
   </div>
 </main>
 </div>
+<footer>Fire data: NASA LANCE Fire Information for Resource Management System (FIRMS), MODIS Collection 6.1 (1 km) and VIIRS 375 m active fire products. Harmonization and analysis: FireCal team, NASA Space Apps Challenge 2026.</footer>
 <div id="toast" role="status"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -363,9 +366,19 @@ async function loadLive(manual) {
 
 /* ---------- map ---------- */
 const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([-14, -56], 5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+/* Basemap: Esri World Light Gray (no API key needed). Falls back to grayscale OpenStreetMap if it fails. */
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+const grayBase = L.tileLayer(ESRI + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Basemap &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16
 }).addTo(map);
+const grayLabels = L.tileLayer(ESRI + 'World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, pane: 'shadowPane' }).addTo(map);
+let tileErrors = 0;
+grayBase.on('tileerror', () => {
+  if (++tileErrors !== 4) return;
+  map.removeLayer(grayBase); map.removeLayer(grayLabels);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19, className: 'gray-tiles' }).addTo(map);
+});
+map.attributionControl.addAttribution('Fire data: NASA LANCE FIRMS');
 const heatGradient = {}; VIRIDIS.forEach((c, i) => { heatGradient[(0.25 + 0.75 * i / (VIRIDIS.length - 1)).toFixed(3)] = c; });
 const heat = L.heatLayer([], { radius: 18, blur: 20, max: state.heatMax, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGradient }).addTo(map);
 map.on('zoomend', () => { heat.options.maxZoom = map.getZoom(); heat.redraw(); });
@@ -526,8 +539,9 @@ function renderKPIs(series, med) {
   const peak = keys.reduce((a, k) => series[k] > series[a] ? k : a, keys[0]);
   const years = {}; keys.forEach(k => { const y = k.slice(0, 4); years[y] = (years[y] || 0) + series[k]; });
   const by = Object.keys(years).reduce((a, y) => years[y] > years[a] ? y : a, Object.keys(years)[0]);
-  const last = keys[keys.length - 1], lm = med[+last.slice(5, 7)], lv = series[last];
-  const nYears = state.spanMonths.filter(mk => mk.slice(5, 7) === last.slice(5, 7)).length;
+  const last = keys[keys.length - 1], lv = series[last];
+  const others = state.spanMonths.filter(mk => mk.slice(5, 7) === last.slice(5, 7) && mk !== last);
+  const lm = median(others.map(mk => monthValue(mk, state.C))), nYears = others.length + 1;
   const pct = lm > 0 && nYears >= 3 ? (lv - lm) / lm * 100 : null;
   const pctTxt = pct === null ? 'n/a' : `${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(0)}%`;
   const cls = pct === null ? '' : pct >= 0 ? 'up' : 'down';
@@ -535,7 +549,7 @@ function renderKPIs(series, med) {
     <div class="kpi"><div class="l">Total in range</div><div class="v">${fmt(total)}</div><div class="s">${u}, ${keys.length} months</div></div>
     <div class="kpi"><div class="l">Peak month</div><div class="v">${mlabel(peak)}</div><div class="s">${fmt(series[peak])} ${u}</div></div>
     <div class="kpi"><div class="l">Busiest year</div><div class="v">${by}</div><div class="s">${fmt(years[by])} ${u}</div></div>
-    <div class="kpi"><div class="l">${mlabel(last)} vs median</div><div class="v ${cls}">${pctTxt}</div><div class="s">${nYears >= 3 ? `${fmt(lv)} vs median ${fmt(lm)}` : 'needs at least 3 years of data'}</div></div>`;
+    <div class="kpi"><div class="l">${mlabel(last)} vs median of other years</div><div class="v ${cls}">${pctTxt}</div><div class="s">${nYears >= 3 ? `${fmt(lv)} vs median ${fmt(lm)}` : 'needs at least 3 years of data'}</div></div>`;
 }
 
 function renderCalendar(series) {
