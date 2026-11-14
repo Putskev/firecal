@@ -68,13 +68,16 @@ def load() -> None:
         con.execute(f"CREATE VIEW cells_month AS SELECT * FROM read_parquet('{CELLS_MONTH}')")
         con.execute(f"CREATE VIEW cells_day AS SELECT * FROM read_parquet('{CELLS_DAY}')")
         team = {}
-        for f in sorted(glob.glob(os.path.join(TEAM, "fire_activity_*.parquet"))):
+        from .sources import team_files
+        found = {os.path.basename(f): f for f in sorted(glob.glob(os.path.join(TEAM, "fire_activity_*.parquet")))}
+        found.update({os.path.basename(f): f for f in team_files()})   # server files win over the repo copies
+        for f in found.values():
             grid = os.path.basename(f)[len("fire_activity_"):-len(".parquet")].split("_", 1)[-1]  # 7d_0.5deg -> 0.5deg
             view = "team_" + "".join(ch if ch.isalnum() else "_" for ch in grid)
             con.execute(f"CREATE VIEW {view} AS SELECT * FROM read_parquet('{f}')")
             per = con.execute(f"""SELECT CAST(period_start AS VARCHAR), CAST(period_end AS VARCHAR), max(n_days)
                                   FROM {view} GROUP BY 1, 2 ORDER BY 1""").fetchall()
-            team[grid] = {"view": view, "file": os.path.relpath(f, ROOT),
+            team[grid] = {"view": view, "file": os.path.relpath(f, ROOT) if f.startswith(ROOT) else f,
                           "rows": con.execute(f"SELECT count(*) FROM {view}").fetchone()[0],
                           "periods": [{"start": a, "end": b, "n_days": int(n)} for a, b, n in per]}
         old, _db, _meta = _db, con, meta

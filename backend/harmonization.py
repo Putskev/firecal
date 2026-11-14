@@ -86,11 +86,18 @@ def _calibrate(d: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def calibration_files() -> list[str]:
+    """Team calibration tables: data/calibration/*.csv|*.parquet and calibration* files in FIRECAL_SOURCE."""
+    from .sources import calibration_files as external
+    return sorted(glob.glob(os.path.join(CALIBRATION_DIR, "*.csv")) + glob.glob(os.path.join(CALIBRATION_DIR, "*.parquet"))) + external()
+
+
 def _load_calibration() -> pd.DataFrame | None:
-    files = sorted(glob.glob(os.path.join(CALIBRATION_DIR, "*.csv")))
+    files = calibration_files()
     if not files:
         return None
-    cal = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
+    cal = pd.concat([pd.read_parquet(f) if f.endswith(".parquet") else pd.read_csv(f) for f in files], ignore_index=True)
+    cal = cal.drop_duplicates([c for c in ["region", "month"] if c in cal.columns], keep="last")
     need = {"region", "factor_n", "factor_frp"}
     if not need <= set(cal.columns):
         raise ValueError(f"calibration table needs columns {need}")
@@ -109,7 +116,7 @@ def harmonize(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     d = df.copy()
     d["region"] = region_of(d["latitude"].to_numpy(), d["longitude"].to_numpy())
     cal = _load_calibration()
-    source = "team calibration table (data/calibration/)"
+    source = "team calibration table (" + ", ".join(os.path.basename(f) for f in calibration_files()) + ")"
     if cal is None:
         cal = _calibrate(d)
         source = "computed from the loaded data"

@@ -115,6 +115,29 @@ DuckDB liest die Parquet-Dateien direkt; Statistik kommt aus den vorberechneten 
 Hotspots: API 0,3 GB RAM, Abfragen unter 0,1 s. Der Build-Schritt (pandas) braucht ca. 0,4 GB RAM je
 Mio. Hotspots. Für die volle Historie also auf einem Rechner mit genug RAM bauen oder jahresweise liefern.
 
+## Eigener Server (Hetzner, Ubuntu): App + API mit euren Parquet-Dateien
+
+Auf dem Server (per SSH, als Benutzer mit sudo) **ein** Befehl, Pfad = Ordner mit euren Parquet-Dateien:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_server.sh | sudo bash -s -- /pfad/zu/parquet
+```
+
+Das Skript installiert alles (Python, App, systemd-Dienst, Caddy mit HTTPS), prüft den Datenordner (Dateien,
+Spalten, Zeilen, RAM) und gibt am Ende die Links aus: `http://<IP>` und `https://<IP-mit-Strichen>.sslip.io`.
+Erneut ausführen = aktualisieren. Danach automatisch alle 15 Minuten: neuer Code von GitHub wird geholt,
+neue/geänderte Dateien im Datenordner werden eingelesen.
+
+Was im Datenordner (rekursiv, auch `year=/month=`-Ordner) erkannt wird (`backend/sources.py`):
+
+| Datei | erkannt an | Verwendung |
+|---|---|---|
+| Tabelle A / FIRMS | Spalten `latitude`, `longitude` + `datetime_utc` oder `acq_date` | Hotspots (zusätzlich zu `data/raw`, Duplikate werden entfernt) |
+| Tabelle C | Dateiname `calibration*` (.csv/.parquet) | Faktoren |
+| Tabelle B | Dateiname `fire_activity_*.parquet` | Karte „Team cells“ und Abgleich |
+
+Ports 80 und 443 müssen in der Hetzner-Cloud-Firewall offen sein. Log: `journalctl -u firecal -f`.
+
 ## Hosting
 
 - **GitHub Pages:** https://putskev.github.io/firecal/ (nur Demo). Mit `?api=https://euer-backend` nutzt die

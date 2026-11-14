@@ -33,18 +33,18 @@ from datetime import datetime, timezone
 import duckdb
 import pandas as pd
 
-from . import harmonization
+from . import harmonization, sources
 from .data import HARMONIZED, HARMONIZED_EXTRA, dedupe, drop_partial_last_day, normalize, validate
 from .regions import SATELLITES
 from .paths import (CELLS_DAY, CELLS_MONTH, DAY_RES, HARM_INFO, HARMONIZED_DIR, HOTSPOTS_DIR, META,
-                    MONTH_RES, PROCESSED, RAW)
+                    MONTH_RES, PROCESSED, RAW, ROOT)
 
 
 def _inputs() -> tuple[str, list[str]]:
     h = sorted(glob.glob(os.path.join(HARMONIZED_DIR, "*.parquet")) + glob.glob(os.path.join(HARMONIZED_DIR, "*.csv")))
     if h:
         return "harmonized", h
-    return "raw", sorted(glob.glob(os.path.join(RAW, "*.parquet")))
+    return "raw", sorted(glob.glob(os.path.join(RAW, "*.parquet"))) + sources.hotspot_files()
 
 
 def needs_build() -> bool:
@@ -54,7 +54,7 @@ def needs_build() -> bool:
     from . import regions
     deps = (files + [harmonization.__file__, regions.__file__, __file__]
             + glob.glob(os.path.join(HARMONIZED_DIR, "*.json"))
-            + glob.glob(os.path.join(os.path.dirname(RAW), "calibration", "*.csv")))
+            + harmonization.calibration_files())
     built = os.path.getmtime(META)
     if any(os.path.getmtime(f) > built for f in deps if os.path.exists(f)):
         return True
@@ -67,7 +67,8 @@ def needs_build() -> bool:
 
 
 def _signature(files: list[str]) -> list[list]:
-    return [[os.path.basename(f), os.path.getsize(f)] for f in files if os.path.exists(f)]
+    files = files + harmonization.calibration_files()
+    return [[os.path.relpath(f, ROOT) if f.startswith(ROOT) else f, os.path.getsize(f)] for f in files if os.path.exists(f)]
 
 
 def _read(path: str) -> pd.DataFrame:
