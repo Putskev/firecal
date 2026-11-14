@@ -109,6 +109,29 @@ footer{max-width:1700px;margin:0 auto;padding:0 16px 18px;font-size:12px;color:v
 .note{font-size:12px;color:var(--muted)}
 input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px}
 @media (max-width:1150px){.g-map,.g2,.g4{grid-template-columns:1fr}.hits{margin-left:0}}
+/* dark mode */
+body.dark{--bg:#111316;--panel:#1a1d22;--line:#2c3139;--text:#e4e4e1;--muted:#9ea4ab;--accent:#3d97b8;color-scheme:dark}
+body.dark .btn,body.dark .seg button,body.dark .chip,body.dark input,body.dark select{background:#22262d;color:var(--text);border-color:#3a4049}
+body.dark .seg{border-color:#3a4049}body.dark .seg button{border-right-color:#333941}
+body.dark .btn:hover{background:#2b3038}body.dark .seg button.on,body.dark .btn.primary,body.dark #layoutBtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+body.dark .chip.on{background:#173845;border-color:var(--accent);color:#bfe6f3}body.dark .chip.off{color:#666}
+body.dark .filters{background:#16191d;border-bottom-color:var(--line)}
+body.dark .area{background:#16303a;border-color:#24505f;color:#cbe8f2}
+body.dark .hits{background:#000}
+body.dark .warn{background:#3a3010;border-color:#6b5a1a;color:#f2dc9b}
+body.dark .cell.off{background:repeating-linear-gradient(45deg,#1f2328,#1f2328 4px,#262a30 4px,#262a30 8px)}
+body.dark .cell.sel{outline-color:#fff}
+body.dark #stats,body.dark .panehead{background:#15171b}
+body.dark table.calib tr.hl{background:#1d3540}
+body.dark .tbadge{background:#15303a;color:#a9d5e4;border-color:#24505f}
+body.dark .info{background:#22262d;color:#a9d5e4;border-color:#3d6a78}
+body.dark .mapbar,body.dark .maplegend{background:rgba(26,29,34,.95);color:var(--text);border-color:var(--line)}
+body.dark .leaflet-bar a,body.dark .leaflet-draw-toolbar a{background-color:#22262d;color:#ddd;border-bottom-color:#3a4049}
+body.dark .leaflet-control-attribution{background:rgba(26,29,34,.85)!important;color:#aaa}body.dark .leaflet-control-attribution a{color:#8cc8de}
+body.dark .leaflet-control-scale-line{background:rgba(26,29,34,.8);color:#ddd;border-color:#bbb}
+body.dark td.ok{color:#5fd38a}body.dark td.off{color:#ff8a7a}
+body.dark .legendrow .sw{filter:brightness(.8)}
+#themeBtn{min-width:34px;justify-content:center}
 /* side panel mode: statistics in a collapsible, resizable panel on the right */
 #mainCol,#stats{display:flex;flex-direction:column;gap:12px;min-width:0}
 .panehead,#paneTab,#paneResize{display:none}
@@ -134,6 +157,7 @@ body.side.collapsed #paneTab{display:flex}
 </style>
 </head>
 <body>
+<script>try { const t = localStorage.getItem('firecal.theme'); if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark'); } catch (e) {}</script>
 <header>
   <h1>FireCal</h1>
   <span class="sub">Harmonized MODIS + VIIRS burning activity calendar</span>
@@ -143,6 +167,7 @@ body.side.collapsed #paneTab{display:flex}
   <label class="btn small" for="file">Load FIRMS CSV</label>
   <input id="file" type="file" accept=".csv" multiple class="sr">
   <button id="demoBtn" class="btn small">Demo data</button>
+  <button id="themeBtn" class="btn small" title="Dark / light mode">🌙</button>
   <button id="layoutBtn" class="btn small" title="Show the statistics in a panel on the right that you can open and close (shortcut: S)">▥ Side panel</button>
   <a class="btn small" href="api-docs.html">API docs</a>
 </header>
@@ -330,7 +355,8 @@ function availSats() {
 }
 const VIIRS_START = '2012-01-20';
 const VIRIDIS = ['#440154','#482878','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'];
-const C = { modis:'#e69f00', viirs:'#0072b2', modisCal:'#cc79a7', harm:'#1f1f1d', warm:'#d55e00', cool:'#1b6fb5', low:'#b9b9b9', nominal:'#56b4e9', high:'#d55e00' };
+const DARK = () => document.body.classList.contains('dark');
+const C = { modis:'#e69f00', viirs:'#0072b2', modisCal:'#cc79a7', harm: DARK() ? '#f0f0ee' : '#1f1f1d', warm:'#d55e00', cool:'#1b6fb5', low:'#b9b9b9', nominal:'#56b4e9', high:'#d55e00' };
 const FRP_EDGES = [0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 1000, Infinity];
 
 const S = {
@@ -810,7 +836,8 @@ function baseline(p) {
 
 /* ---------- timeline (focus + context, brushing) ---------- */
 const plotCfg = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d'], toImageButtonOptions: { format: 'png', scale: 2 } };
-const L0 = { margin: { l: 52, r: 10, t: 6, b: 30 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { family: 'system-ui,sans-serif', size: 11, color: '#3a3a37' } };
+const L0 = { margin: { l: 52, r: 10, t: 6, b: 30 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { family: 'system-ui,sans-serif', size: 11, color: DARK() ? '#cfd2d6' : '#3a3a37' } };
+const GRID = () => DARK() ? '#2b3037' : '#eeede8';
 const xd = p => p.length === 7 ? p + '-15' : p;
 const xd2 = (d, side) => S.gran === 'month' ? (side === 'start' ? d.slice(0, 7) + '-01' : lastDay(d.slice(0, 7))) : (side === 'start' ? d + ' 00:00' : d + ' 23:59');
 let tlLock = false;
@@ -826,8 +853,8 @@ function renderTimeline() {
     marker: { color: cal.map(c => c ? '#7fa7b5' : '#21708a'), pattern: { shape: cal.map(c => c ? '/' : ''), fgcolor: '#fff', size: 5, solidity: .3 } },
     hovertemplate: '%{customdata}: %{y:,.0f} ' + unit() + '<extra></extra>' }],
     { ...L0, margin: { l: 52, r: 10, t: 4, b: 4 }, bargap: .05, shapes: timelineShapes(),
-      xaxis: { type: 'date', range: [xd2(S.rangeStart, 'start'), xd2(S.rangeEnd, 'end')], rangeslider: { visible: true, thickness: .3, bgcolor: '#f3f3f1' } },
-      yaxis: { gridcolor: '#eeede8', title: { text: unit(), font: { size: 10 } } } }, plotCfg).then(() => setTimeout(() => tlLock = false, 50));
+      xaxis: { type: 'date', range: [xd2(S.rangeStart, 'start'), xd2(S.rangeEnd, 'end')], rangeslider: { visible: true, thickness: .3, bgcolor: DARK() ? '#15181c' : '#f3f3f1', bordercolor: DARK() ? '#2c3139' : '#f3f3f1' } },
+      yaxis: { gridcolor: GRID(), title: { text: unit(), font: { size: 10 } } } }, plotCfg).then(() => setTimeout(() => tlLock = false, 50));
   const el = $('timeline');
   if (el._bound) return; el._bound = true;
   el.on('plotly_relayout', ev => {
@@ -941,7 +968,7 @@ function renderInsights() {
 
 /* ---------- calendar ---------- */
 function cellHtml(p, v, ref) {
-  const t = v / ref, bg = v > 0 ? viridis(t) : '#efeee9', fg = v > 0 && t < 0.62 ? '#fff' : '#1f1f1d', cal = S.view === 'harm' && calShare(p) > .5;
+  const t = v / ref, bg = v > 0 ? viridis(t) : (DARK() ? '#262a31' : '#efeee9'), fg = v > 0 && t < 0.62 ? '#fff' : '#1f1f1d', cal = S.view === 'harm' && calShare(p) > .5;
   return `<button class="cell${cal ? ' cal' : ''}${S.mapPeriod === p ? ' sel' : ''}" data-p="${p}" style="background:${bg};color:${fg}" data-tip="${plabel(p)}: ${fmt(v)} ${unit()}${cal ? ' · converted from MODIS' : ''}">${short(v)}</button>`;
 }
 function renderCalendar() {
@@ -977,7 +1004,7 @@ function renderAnomaly() {
   Plotly.react('anomaly', [{ type: 'bar', x: ps.map(xd), y: an, customdata: ps.map((p, i) => [plabel(p), fmt(vals[i]), fmt(meds[i])]),
     marker: { color: an.map(v => v >= 0 ? C.warm : C.cool), line: { color: an.map((v, i) => i === last ? '#000' : 'rgba(0,0,0,0)'), width: 2 } },
     hovertemplate: '%{customdata[0]}<br>value %{customdata[1]} · median %{customdata[2]}<br>anomaly %{y:+,.0f}' + (S.anomMode === 'pct' ? ' %' : '') + '<extra></extra>' }],
-    { ...L0, bargap: .1, xaxis: { type: 'date', gridcolor: '#eeede8' }, yaxis: { gridcolor: '#eeede8', zerolinecolor: '#888', title: { text: S.anomMode === 'pct' ? 'Δ %' : `Δ ${unit()}`, font: { size: 10 } } } },
+    { ...L0, bargap: .1, xaxis: { type: 'date', gridcolor: GRID() }, yaxis: { gridcolor: GRID(), zerolinecolor: '#888', title: { text: S.anomMode === 'pct' ? 'Δ %' : `Δ ${unit()}`, font: { size: 10 } } } },
     { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_anomaly' } });
 }
 
@@ -997,7 +1024,7 @@ function renderSeason() {
     { x: MONTHS, y: s.q1, type: 'scatter', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: 'rgba(33,112,138,.18)', name: 'middle 50 %', hoverinfo: 'skip' },
     { x: MONTHS, y: s.med, type: 'scatter', mode: 'lines+markers', name: 'median (other years)', line: { color: '#21708a', width: 2.5 }, hovertemplate: '%{x}: median %{y:,.0f}<extra></extra>' },
     { x: MONTHS, y: s.cur, type: 'scatter', mode: 'lines+markers', name: s.ly, line: { color: C.warm, width: 2, dash: 'dot' }, hovertemplate: `%{x} ${s.ly}: %{y:,.0f}<extra></extra>` }],
-    { ...L0, legend: { orientation: 'h', y: 1.15, x: 0 }, margin: { ...L0.margin, t: 24 }, yaxis: { gridcolor: '#eeede8', title: { text: unit(), font: { size: 10 } } } },
+    { ...L0, legend: { orientation: 'h', y: 1.15, x: 0 }, margin: { ...L0.margin, t: 24 }, yaxis: { gridcolor: GRID(), title: { text: unit(), font: { size: 10 } } } },
     { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_season' } });
 }
 
@@ -1009,13 +1036,13 @@ function yearTotals() {
 function renderYearly() {
   if (S.gran === 'day') {
     const ps = S.rangeP; Plotly.react('yearly', [{ type: 'bar', x: ps.map(xd), y: ps.map(p => val(p)), marker: { color: '#21708a' }, hovertemplate: '%{x}: %{y:,.0f}<extra></extra>' }],
-      { ...L0, annotations: [{ text: 'Daily totals (switch to monthly to compare years)', showarrow: false, xref: 'paper', yref: 'paper', x: 0, y: 1.08, xanchor: 'left', font: { size: 11, color: '#888' } }], margin: { ...L0.margin, t: 20 }, xaxis: { type: 'date' }, yaxis: { gridcolor: '#eeede8', title: { text: unit(), font: { size: 10 } } } }, plotCfg); return;
+      { ...L0, annotations: [{ text: 'Daily totals (switch to monthly to compare years)', showarrow: false, xref: 'paper', yref: 'paper', x: 0, y: 1.08, xanchor: 'left', font: { size: 11, color: '#888' } }], margin: { ...L0.margin, t: 20 }, xaxis: { type: 'date' }, yaxis: { gridcolor: GRID(), title: { text: unit(), font: { size: 10 } } } }, plotCfg); return;
   }
   const ys = yearTotals(), comp = ys.filter(y => y.complete), fit = linfit(comp.map(y => +y.y), comp.map(y => y.v));
   const tr = [{ type: 'bar', x: ys.map(y => y.y), y: ys.map(y => y.v), name: 'total per year', marker: { color: ys.map(y => y.complete ? '#21708a' : '#b9d3dc'), pattern: { shape: ys.map(y => y.calib && S.view === 'harm' ? '/' : ''), fgcolor: '#fff', solidity: .3 } },
     customdata: ys.map(y => (y.complete ? '' : ' (incomplete)') + (y.calib && S.view === 'harm' ? ' · converted from MODIS' : '')), hovertemplate: '%{x}: %{y:,.0f}%{customdata}<extra></extra>' }];
   if (fit && comp.length >= 3) { const x0 = +comp[0].y, x1 = +comp[comp.length - 1].y; tr.push({ type: 'scatter', mode: 'lines', x: [String(x0), String(x1)], y: [fit.a + fit.b * x0, fit.a + fit.b * x1], name: `trend ${fit.b >= 0 ? '+' : '−'}${Math.abs(fit.b / fit.mean * 100).toFixed(1)} %/yr`, line: { color: C.warm, dash: 'dash', width: 2 } }); }
-  Plotly.react('yearly', tr, { ...L0, legend: { orientation: 'h', y: 1.15, x: 0 }, margin: { ...L0.margin, t: 24 }, xaxis: { type: 'category' }, yaxis: { gridcolor: '#eeede8', title: { text: S.metric === 'count' ? 'hotspots' : 'MW', font: { size: 10 } } } },
+  Plotly.react('yearly', tr, { ...L0, legend: { orientation: 'h', y: 1.15, x: 0 }, margin: { ...L0.margin, t: 24 }, xaxis: { type: 'category' }, yaxis: { gridcolor: GRID(), title: { text: S.metric === 'count' ? 'hotspots' : 'MW', font: { size: 10 } } } },
     { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_years' } });
 }
 
@@ -1024,7 +1051,7 @@ function renderCheck() {
   const ps = S.rangeP, x = ps.length > 2 ? ps.map(xd) : ps.map(plabel), mode = ps.length <= 40 ? 'lines+markers' : 'lines', g = k => ps.map(p => val(p, k));
   const tr = [
     { x, y: g('hi'), type: 'scatter', mode: 'lines', line: { width: 0 }, hoverinfo: 'skip', showlegend: false },
-    { x, y: g('lo'), type: 'scatter', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: 'rgba(31,31,29,.12)', name: 'uncertainty 25–75 %', hoverinfo: 'skip' },
+    { x, y: g('lo'), type: 'scatter', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: DARK() ? 'rgba(240,240,238,.14)' : 'rgba(31,31,29,.12)', name: 'uncertainty 25–75 %', hoverinfo: 'skip' },
     { x, y: g('modis'), type: 'scatter', mode, name: 'MODIS raw', line: { color: C.modis, width: 1.5 }, marker: { size: 4 } },
     { x, y: g('viirs'), type: 'scatter', mode, name: 'VIIRS raw', line: { color: C.viirs, width: 1.5 }, marker: { size: 4 } },
     { x, y: g('modisCal'), type: 'scatter', mode, name: 'MODIS × factor', line: { color: C.modisCal, width: 1.5, dash: 'dash' }, marker: { size: 4 } },
@@ -1032,7 +1059,7 @@ function renderCheck() {
   const sh = ps.length > 2 ? Object.entries(SAT_START).filter(([s, d]) => d > S.rangeStart && d < S.rangeEnd) : [];
   Plotly.react('check', tr, { ...L0, hovermode: 'x unified', shapes: sh.map(([s, d]) => ({ type: 'line', x0: d, x1: d, yref: 'paper', y0: 0, y1: 1, line: { color: '#999', dash: 'dot', width: 1 } })),
     annotations: sh.map(([s, d]) => ({ x: d, y: 1, yref: 'paper', text: s, showarrow: false, font: { size: 10, color: '#777' }, yanchor: 'bottom' })),
-    legend: { orientation: 'h', y: 1.22, x: 0, font: { size: 10 } }, margin: { ...L0.margin, t: 36 }, xaxis: { type: ps.length > 2 ? 'date' : 'category', gridcolor: '#eeede8' }, yaxis: { gridcolor: '#eeede8', title: { text: unit(), font: { size: 10 } } } },
+    legend: { orientation: 'h', y: 1.22, x: 0, font: { size: 10 } }, margin: { ...L0.margin, t: 36 }, xaxis: { type: ps.length > 2 ? 'date' : 'category', gridcolor: GRID() }, yaxis: { gridcolor: GRID(), title: { text: unit(), font: { size: 10 } } } },
     { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_harmonization_check' } });
 }
 
@@ -1065,17 +1092,17 @@ function renderDist() {
   const labels = FRP_EDGES.slice(0, -1).map((e, i) => FRP_EDGES[i + 1] === Infinity ? `≥${e}` : `${e}–${FRP_EDGES[i + 1]}`);
   const st = df.stats || {}, med = s => st[s] && st[s].frp_median !== null && st[s].frp_median !== undefined ? ` (median ${fmt1(st[s].frp_median)} MW)` : '';
   Plotly.react('dFrp', [{ type: 'bar', x: labels, y: norm(df.frp.MODIS), name: 'MODIS' + med('MODIS'), marker: { color: C.modis } }, { type: 'bar', x: labels, y: norm(df.frp.VIIRS), name: 'VIIRS' + med('VIIRS'), marker: { color: C.viirs } }],
-    { ...L0, barmode: 'group', bargap: .15, legend: { orientation: 'h', y: 1.25, x: 0, font: { size: 10 } }, margin: { l: 36, r: 6, t: 32, b: 54 }, xaxis: { tickangle: -45, title: { text: 'FRP (MW)', font: { size: 10 } } }, yaxis: { ticksuffix: '%', gridcolor: '#eeede8' } }, plotCfg);
+    { ...L0, barmode: 'group', bargap: .15, legend: { orientation: 'h', y: 1.25, x: 0, font: { size: 10 } }, margin: { l: 36, r: 6, t: 32, b: 54 }, xaxis: { tickangle: -45, title: { text: 'FRP (MW)', font: { size: 10 } } }, yaxis: { ticksuffix: '%', gridcolor: GRID() } }, plotCfg);
   const hrs = Array.from({ length: 24 }, (_, i) => i);
   Plotly.react('dHour', [{ type: 'bar', x: hrs, y: norm(d.local_hour.MODIS), name: 'MODIS', marker: { color: C.modis } }, { type: 'bar', x: hrs, y: norm(d.local_hour.VIIRS), name: 'VIIRS', marker: { color: C.viirs } }],
-    { ...L0, barmode: 'group', bargap: .1, legend: { orientation: 'h', y: 1.2, x: 0, font: { size: 10 } }, margin: { l: 36, r: 6, t: 28, b: 36 }, xaxis: { dtick: 3, title: { text: 'local solar time (h)', font: { size: 10 } } }, yaxis: { ticksuffix: '%', gridcolor: '#eeede8' } }, plotCfg);
+    { ...L0, barmode: 'group', bargap: .1, legend: { orientation: 'h', y: 1.2, x: 0, font: { size: 10 } }, margin: { l: 36, r: 6, t: 28, b: 36 }, xaxis: { dtick: 3, title: { text: 'local solar time (h)', font: { size: 10 } } }, yaxis: { ticksuffix: '%', gridcolor: GRID() } }, plotCfg);
   const cls = ['low', 'nominal', 'high'], tot = s => cls.reduce((a, c) => a + (d.conf_class[`${s}|${c}`] || 0), 0);
   Plotly.react('dConf', cls.map(c => ({ type: 'bar', orientation: 'h', y: ['MODIS', 'VIIRS'], x: ['MODIS', 'VIIRS'].map(s => tot(s) ? (d.conf_class[`${s}|${c}`] || 0) / tot(s) * 100 : 0), name: c + (c === 'low' && !S.incLow ? ' (excluded)' : ''),
       marker: { color: C[c], opacity: c === 'low' && !S.incLow ? .45 : 1 }, customdata: [c, c], hovertemplate: `${c}: %{x:.1f} %<extra>%{y}</extra>` })),
     { ...L0, barmode: 'stack', legend: { orientation: 'h', y: 1.25, x: 0, font: { size: 10 } }, margin: { l: 50, r: 6, t: 30, b: 30 }, xaxis: { ticksuffix: '%', range: [0, 100] } }, plotCfg);
   const sats = availSats();
   Plotly.react('dSat', [{ type: 'bar', x: sats, y: sats.map(s => d.satellite[s] || 0), marker: { color: sats.map(s => S.sats.has(s) ? (SAT_SENSOR[s] === 'MODIS' ? C.modis : C.viirs) : '#ddd') }, hovertemplate: '%{x}: %{y:,.0f} detections<br>click to switch on/off<extra></extra>' }],
-    { ...L0, margin: { l: 50, r: 6, t: 10, b: 30 }, yaxis: { gridcolor: '#eeede8' } }, plotCfg);
+    { ...L0, margin: { l: 50, r: 6, t: 10, b: 30 }, yaxis: { gridcolor: GRID() } }, plotCfg);
   bindOnce('dConf', ev => { if (ev.points[0].data.customdata[0] === 'low') { S.incLow = !S.incLow; $('incLow').checked = S.incLow; refresh(); } });
   bindOnce('dSat', ev => toggleSat(ev.points[0].x));
 }
@@ -1096,15 +1123,16 @@ function drawMatrix() {
   const dpr = devicePixelRatio || 1, cssW = labW + cw * ps.length + totW;
   cv.width = cssW * dpr; cv.height = H * dpr; cv.style.width = cssW + 'px'; cv.style.height = H + 'px';
   const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, cssW, H); ctx.font = '11px system-ui'; ctx.textBaseline = 'middle';
-  if (!rows.length) { ctx.fillStyle = '#888'; ctx.fillText('No detections in this selection', 4, 12); return; }
+  const tx = DARK() ? '#c3c7cc' : '#555', tx2 = DARK() ? '#9aa0a6' : '#888';
+  if (!rows.length) { ctx.fillStyle = tx2; ctx.fillText('No detections in this selection', 4, 12); return; }
   const gmax = quantile(rows.flatMap(r => r.arr).filter(v => v > 0), .97) || 1;
   rows.forEach((r, i) => {
     const y = 20 + i * rh, rmax = Math.max(...r.arr) || 1;
-    ctx.fillStyle = '#555'; ctx.textAlign = 'left'; ctx.fillText(`${r.region.slice(0, 10)} ${deg(r.lat, 'NS')} ${deg(r.lon, 'EW')}`, 2, y + rh / 2);
-    r.arr.forEach((v, j) => { const t = S.mNorm === 'row' ? v / rmax : v / gmax; ctx.fillStyle = v > 0 ? viridis(t) : '#f3f2ee'; ctx.fillRect(labW + j * cw, y + 1, Math.max(1, cw - (cw > 4 ? 1 : 0)), rh - 2); });
-    ctx.fillStyle = '#555'; ctx.textAlign = 'right'; ctx.fillText(short(r.total), cssW - 4, y + rh / 2);
+    ctx.fillStyle = tx; ctx.textAlign = 'left'; ctx.fillText(`${r.region.slice(0, 10)} ${deg(r.lat, 'NS')} ${deg(r.lon, 'EW')}`, 2, y + rh / 2);
+    r.arr.forEach((v, j) => { const t = S.mNorm === 'row' ? v / rmax : v / gmax; ctx.fillStyle = v > 0 ? viridis(t) : (DARK() ? '#22262c' : '#f3f2ee'); ctx.fillRect(labW + j * cw, y + 1, Math.max(1, cw - (cw > 4 ? 1 : 0)), rh - 2); });
+    ctx.fillStyle = tx; ctx.textAlign = 'right'; ctx.fillText(short(r.total), cssW - 4, y + rh / 2);
   });
-  ctx.textAlign = 'left'; ctx.fillStyle = '#888'; const step = Math.max(1, Math.ceil(46 / cw));
+  ctx.textAlign = 'left'; ctx.fillStyle = tx2; const step = Math.max(1, Math.ceil(46 / cw));
   ps.forEach((p, j) => { if (j % step === 0) ctx.fillText(S.gran === 'month' ? (step >= 12 ? p.slice(0, 4) : (p.endsWith('-01') ? p.slice(0, 4) : MONTHS[+p.slice(5, 7) - 1])) : p.slice(5), labW + j * cw, 9); });
   if (S.mapPeriod) { const j = ps.indexOf(S.mapPeriod); if (j >= 0) { ctx.strokeStyle = '#d55e00'; ctx.lineWidth = 2; ctx.strokeRect(labW + j * cw, 18, cw, rows.length * rh + 2); } }
   cv._layout = { rows, labW, cw, rh, ps };
@@ -1307,6 +1335,25 @@ document.addEventListener('click', e => {
   pop.innerHTML = HELP[i.dataset.help] || ''; pop.style.display = 'block';
   const r = i.getBoundingClientRect(); pop.style.left = Math.min(window.innerWidth - 440, r.left) + 'px'; pop.style.top = (r.bottom + 8) + 'px';
 });
+
+/* ---------- dark mode ---------- */
+function setTheme(dark, save = true) {
+  document.body.classList.toggle('dark', dark); if (save) store.set('theme', dark ? 'dark' : 'light');
+  $('themeBtn').textContent = dark ? '☀️' : '🌙'; $('themeBtn').title = dark ? 'Light mode' : 'Dark mode';
+  L0.font.color = dark ? '#cfd2d6' : '#3a3a37'; C.harm = dark ? '#f0f0ee' : '#1f1f1d';
+  if (S.provider && S.rangeStart) { renderTimeline(); renderRange(); renderDist(); drawMatrix(); }
+}
+$('themeBtn').addEventListener('click', () => setTheme(!DARK()));
+setTheme(DARK(), false);
+
+/* ---------- zoom limit: the scale bar never goes below 200 m ---------- */
+// Web Mercator: metres per pixel = 156543 * cos(latitude) / 2^zoom. The scale bar is up to 100 px wide,
+// so 2 m per pixel or more keeps it at 200 m or more.
+function capZoom() {
+  const lat = map.getCenter().lat, z = Math.floor(Math.log2(156543.03 * Math.cos(lat * Math.PI / 180) / 2));
+  const max = Math.max(3, Math.min(18, z)); if (map.getMaxZoom() !== max) map.setMaxZoom(max);
+}
+map.on('moveend', capZoom); capZoom();
 
 /* ---------- animation ---------- */
 function stopPlay() { S.playing = false; $('playBtn').textContent = '▶ Play'; }

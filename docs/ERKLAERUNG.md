@@ -221,6 +221,19 @@ Jede Karte im Dashboard hat ein Zeit-Abzeichen 🕒 neben dem Titel. Es zeigt ge
 
 ---
 
+### Zoom-Grenze
+Die Karte zoomt höchstens so weit, dass die Maßstabsleiste mindestens **200 m** zeigt. Web-Mercator:
+`Meter pro Pixel = 156 543 · cos(Breite) / 2^Zoom`; die Leiste ist bis zu 100 px breit, also gilt
+`max. Zoom = floor(log2(156 543 · cos(Breite) / 2))` (am Äquator 16, in Mitteleuropa 15).
+
+### Herkunft der Kartenbilder
+| Ebene | Quelle |
+|---|---|
+| Firefly, Satellite, Streets, Topographic, Dark/Light gray | Esri ArcGIS Online Basemaps (World Imagery: Maxar, Earthstar Geographics u. a.; Firefly = abgedunkelte Variante davon) |
+| Blue Marble | NASA GIBS, Ebene `BlueMarble_ShadedRelief_Bathymetry` (NASA Earth Observatory) |
+| Tägliche Echtfarbbilder | NASA GIBS, Ebenen `*_CorrectedReflectance_TrueColor` von VIIRS NOAA-20/NOAA-21/S-NPP und MODIS Terra/Aqua (dieselben Bilder wie NASA Worldview und die FIRMS-Karte) |
+| Grenzen und Ortsnamen | Esri `World_Boundaries_and_Places` |
+
 ## 9. Server-Archiv
 
 * `FIRECAL_SOURCE` = Ordner mit den Parquet-Dateien (wird rekursiv durchsucht).
