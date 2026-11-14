@@ -3,79 +3,88 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FireCal · Harmonized MODIS + VIIRS burn calendar</title>
+<title>FireCal · Harmonized MODIS + VIIRS burning activity</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
 <style>
-:root{--bg:#f4f4f2;--panel:#fff;--line:#e2e1dc;--text:#1f1f1d;--muted:#6b6a65;--accent:#21708a;--warm:#d95f02;--cool:#1b6fb5}
+:root{--bg:#f3f3f1;--panel:#fff;--line:#e0dfda;--text:#1f1f1d;--muted:#6b6a65;--accent:#21708a;--modis:#e69f00;--viirs:#0072b2;--warm:#d55e00;--cool:#1b6fb5}
 *{box-sizing:border-box}
 body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
-header{display:flex;align-items:center;gap:10px;padding:10px 18px;background:#1d1f24;color:#fff;flex-wrap:wrap}
-header h1{font-size:16px;font-weight:600;margin:0}
+a{color:var(--accent)}
+header{display:flex;align-items:center;gap:10px;padding:9px 16px;background:#1d1f24;color:#fff;flex-wrap:wrap}
+header h1{font-size:16px;font-weight:650;margin:0}
 header .sub{color:#b9bac0;font-size:13px}
 header .spacer{flex:1}
-.pill{font-size:12px;padding:3px 10px;border-radius:999px;background:#33363d;color:#e2e2e2}
-.pill.demo{background:#5a3b00;color:#ffd58a}
-.pill.api{background:#0f4a3a;color:#aef0d6}
-.layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:14px;padding:14px;max-width:1500px;margin:0 auto}
-aside{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:16px;align-self:start;position:sticky;top:14px}
-aside h2{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-.hint{font-size:12px;color:var(--muted);margin:4px 0 0}
-.row{display:flex;gap:6px;align-items:center}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-input[type=number],input[type=date],select{width:100%;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
-input[type=number]{font-size:12px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;border:1px solid #c9c8c2;border-radius:8px;background:#fff;font:inherit;cursor:pointer;color:var(--text)}
-.btn:hover{background:#f1f0ec}
+.pill{font-size:12px;padding:3px 10px;border-radius:999px;background:#33363d;color:#e2e2e2;white-space:nowrap}
+.pill.demo{background:#5a3b00;color:#ffd58a}.pill.api{background:#0f4a3a;color:#aef0d6}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid #c9c8c2;border-radius:8px;background:#fff;font:inherit;font-size:13px;cursor:pointer;color:var(--text);text-decoration:none}
+.btn:hover{background:#f1f0ec}.btn.small{padding:3px 9px;font-size:12px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.primary:hover{background:#1a5c72}
-.btn.small{padding:4px 9px;font-size:12px}
-.seg{display:flex;border:1px solid #c9c8c2;border-radius:8px;overflow:hidden}
-.seg button{flex:1;border:0;background:#fff;padding:6px 4px;font:inherit;font-size:12px;cursor:pointer;border-right:1px solid #e2e1dc}
-.seg button:last-child{border-right:0}
-.seg button.on{background:var(--accent);color:#fff}
-.harm{background:#f1f6f8;border:1px solid #d3e4ea;border-radius:8px;padding:8px 10px;font-size:12px}
-.badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;margin-left:4px}
-.badge.placeholder{background:#fdecc8;color:#7a4b00}.badge.final{background:#d7f2e3;color:#14593a}
-main{display:flex;flex-direction:column;gap:14px;min-width:0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-.card h3{font-size:14px;font-weight:600;margin:0 0 2px}
-.card .desc{font-size:12px;color:var(--muted);margin:0 0 10px}
-#mapwrap{position:relative;height:440px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.filters{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px}
+.fg{display:flex;align-items:center;gap:6px}
+.fg>span.l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.seg{display:inline-flex;border:1px solid #c9c8c2;border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:5px 9px;font:inherit;font-size:12px;cursor:pointer;border-right:1px solid #e2e1dc}
+.seg button:last-child{border-right:0}.seg button.on{background:var(--accent);color:#fff}
+.chip{border:1px solid #c9c8c2;border-radius:999px;padding:3px 9px;background:#fff;cursor:pointer;font-size:12px}
+.chip.on{background:#e8f2f5;border-color:var(--accent);color:#0f4a5c;font-weight:600}
+.chip.off{color:#aaa;text-decoration:line-through}
+.hits{margin-left:auto;background:#1d1f24;color:#fff;border-radius:8px;padding:5px 10px;font-variant-numeric:tabular-nums}
+.hits b{font-size:14px}
+.area{background:#e8f2f5;border:1px solid #bcd9e3;border-radius:8px;padding:4px 8px}
+main{padding:12px 16px;max-width:1700px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.card h3{font-size:14px;font-weight:650;margin:0}
+.card .how{font-size:12px;color:var(--muted);margin:2px 0 8px}
+.head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.head .grow{flex:1}
+.grid{display:grid;gap:12px}
+.g-map{grid-template-columns:minmax(0,2fr) minmax(320px,1fr)}
+.g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+#mapwrap{position:relative;height:520px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
 #map{position:absolute;inset:0}
-.mapbar{position:absolute;top:10px;right:10px;z-index:500;display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
-.maplegend{position:absolute;left:10px;bottom:22px;z-index:500;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px;width:190px}
+.mapbar{position:absolute;top:8px;right:8px;z-index:500;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:75%;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
+.maplegend{position:absolute;left:8px;bottom:24px;z-index:500;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px;max-width:250px}
 .maplegend .bar{height:8px;border-radius:4px;margin:4px 0 2px}
-.busy{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:500;background:#1d1f24;color:#fff;font-size:12px;padding:4px 10px;border-radius:999px;display:none}
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.kpi .l{font-size:12px;color:var(--muted)}
-.kpi .v{font-size:22px;font-weight:600;margin-top:2px}
-.kpi .s{font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.busy{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:600;background:#1d1f24;color:#fff;font-size:12px;padding:3px 10px;border-radius:999px;display:none}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.kpi .l{font-size:11.5px;color:var(--muted)}.kpi .v{font-size:20px;font-weight:650;margin-top:1px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11.5px;color:var(--muted)}
 .up{color:var(--warm)}.down{color:var(--cool)}
-.cal{display:grid;gap:3px;font-size:11px}
-.cal .h{text-align:center;color:var(--muted);font-size:11px;padding-bottom:2px}
+.warn{background:#fff4d6;border:1px solid #f0d58a;color:#6b4e00;border-radius:8px;padding:6px 9px;font-size:12px}
+.insights{margin:8px 0 0;padding-left:18px;font-size:13px}.insights li{margin:3px 0}
+.cal{display:grid;gap:2px;font-size:11px}
+.cal .h{text-align:center;color:var(--muted);font-size:11px}
 .cal .y{color:var(--muted);display:flex;align-items:center;white-space:nowrap}
 .cal .t{color:var(--muted);display:flex;align-items:center;justify-content:flex-end;font-variant-numeric:tabular-nums}
-.cell{height:24px;border:0;border-radius:4px;font:inherit;font-size:10.5px;cursor:pointer;font-variant-numeric:tabular-nums;padding:0}
+.cell{height:22px;border:0;border-radius:3px;font:inherit;font-size:10px;cursor:pointer;font-variant-numeric:tabular-nums;padding:0;position:relative}
 .cell.off{background:repeating-linear-gradient(45deg,#f3f2ee,#f3f2ee 4px,#ebeae5 4px,#ebeae5 8px);cursor:default}
-.cell.sel{outline:2px solid #111;outline-offset:1px}
-.cell:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.callegend{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
-.callegend .bar{height:10px;width:220px;border-radius:5px}
-.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
-.chart{height:280px}
-.note{font-size:12px;color:var(--muted);padding:8px 0}
-#method{font-size:14px;line-height:1.6}
-#method h1{font-size:16px;margin:0 0 6px}#method h2{font-size:14px;margin:14px 0 4px}
-#method .todo{color:var(--muted);font-style:italic}
-#method table{border-collapse:collapse;font-size:13px}#method td,#method th{border:1px solid var(--line);padding:4px 8px}
-footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:var(--muted)}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d1f24;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:2000}
+.cell.cal::after{content:"";position:absolute;inset:0;border-radius:3px;background:repeating-linear-gradient(135deg,rgba(255,255,255,.55) 0 2px,transparent 2px 6px)}
+.cell.sel{outline:2px solid #111;outline-offset:1px;z-index:2}
+.legendrow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.legendrow .bar{height:10px;width:200px;border-radius:5px}
+.sw{display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:3px}
+.chart{height:260px}.chart.s{height:220px}
+#timeline{height:150px}
+table.calib{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+table.calib th,table.calib td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:right}
+table.calib th:first-child,table.calib td:first-child{text-align:left}
+table.calib tr.hl{background:#e8f2f5;font-weight:600}
+#matrixWrap{position:relative;overflow-x:auto}
+#matrix{display:block;cursor:pointer}
+#tip{position:fixed;z-index:3000;pointer-events:none;background:#1d1f24;color:#fff;font-size:12px;padding:5px 8px;border-radius:6px;display:none;max-width:300px}
+#method{font-size:14px;line-height:1.6}#method h1{font-size:16px;margin:0 0 6px}#method h2{font-size:14px;margin:12px 0 4px}
+#method .todo{color:var(--muted);font-style:italic}#method table{border-collapse:collapse;font-size:13px}#method td,#method th{border:1px solid var(--line);padding:4px 8px}
+footer{max-width:1700px;margin:0 auto;padding:0 16px 18px;font-size:12px;color:var(--muted)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d1f24;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:4000}
 #toast.show{opacity:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .gray-tiles{filter:grayscale(1) brightness(1.05) contrast(.9)}
-@media (max-width:1000px){.layout{grid-template-columns:1fr}aside{position:static}.charts{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.note{font-size:12px;color:var(--muted)}
+input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px}
+@media (max-width:1150px){.g-map,.g2,.g4{grid-template-columns:1fr}.hits{margin-left:0}}
 </style>
 </head>
 <body>
@@ -85,122 +94,123 @@ footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:v
   <span id="source" class="pill">Loading…</span>
   <span class="spacer"></span>
   <button id="apiBtn" class="btn small" style="display:none">API data</button>
-  <label class="btn small" for="file">Load FIRMS CSV files</label>
+  <label class="btn small" for="file">Load FIRMS CSV</label>
   <input id="file" type="file" accept=".csv" multiple class="sr">
   <button id="demoBtn" class="btn small">Demo data</button>
+  <a class="btn small" href="api-docs.html">API docs</a>
 </header>
 
-<div class="layout">
-<aside>
-  <section>
-    <h2>Area of interest</h2>
-    <p class="hint" style="margin:0 0 8px">Draw a rectangle or polygon on the map, or enter a bounding box.</p>
-    <div class="grid2">
-      <input id="minLat" type="number" step="0.01" placeholder="Min lat" aria-label="Minimum latitude">
-      <input id="maxLat" type="number" step="0.01" placeholder="Max lat" aria-label="Maximum latitude">
-      <input id="minLon" type="number" step="0.01" placeholder="Min lon" aria-label="Minimum longitude">
-      <input id="maxLon" type="number" step="0.01" placeholder="Max lon" aria-label="Maximum longitude">
-    </div>
-    <div class="row" style="margin-top:6px">
-      <button id="applyBox" class="btn small">Apply box</button>
-      <button id="clearRegion" class="btn small">Clear area</button>
-    </div>
-    <p id="regionInfo" class="hint">Whole dataset</p>
-  </section>
-
-  <section>
-    <h2>Date range</h2>
-    <div style="display:grid;grid-template-columns:40px 1fr;gap:6px;align-items:center;font-size:12px;color:var(--muted)">
-      <label for="from">From</label><input id="from" type="date">
-      <label for="to">To</label><input id="to" type="date">
-    </div>
-    <div class="seg" id="granSeg" style="margin-top:8px">
-      <button data-v="month">Monthly</button>
-      <button data-v="day">Daily</button>
-    </div>
-    <p class="hint">Daily view is limited to 1 year.</p>
-  </section>
-
-  <section>
-    <h2>Metric</h2>
-    <div class="seg" id="metricSeg">
-      <button data-v="count" class="on">Hotspot count</button>
-      <button data-v="frp">FRP sum</button>
-    </div>
-  </section>
-
-  <section>
-    <h2>Sensor view</h2>
-    <div class="seg" id="viewSeg">
-      <button data-v="harm" class="on">Harmonized</button>
-      <button data-v="modis">MODIS raw</button>
-      <button data-v="viirs">VIIRS raw</button>
-    </div>
-    <div class="harm" id="harmInfo" style="margin-top:8px"></div>
-  </section>
-
-  <section>
-    <h2>Filters</h2>
-    <label class="row" style="font-size:13px"><input type="checkbox" id="hideLow" checked> Exclude low-confidence detections</label>
-    <label class="row" style="font-size:13px;margin-top:4px"><input type="checkbox" id="vegOnly"> Vegetation fires only (type&nbsp;=&nbsp;0)</label>
-    <p class="hint" id="typeHint">Needs archive data with a <code>type</code> column.</p>
-  </section>
-
-  <section>
-    <h2>Downloads</h2>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <button id="dlPoints" class="btn primary">Download hotspots CSV</button>
-      <button id="dlSummary" class="btn">Download summary CSV</button>
-    </div>
-    <p class="hint">Charts have a camera icon for PNG export.</p>
-  </section>
-</aside>
+<div class="filters" id="filters">
+  <div class="fg"><span class="l">Metric</span><div class="seg" id="metricSeg"><button data-v="count" class="on">Hotspots</button><button data-v="frp">FRP (MW)</button></div>
+    <label class="fg" title="Divide by the days in each period, so months and partial periods are comparable"><input type="checkbox" id="perDay"> per day</label></div>
+  <div class="fg"><span class="l">Values</span><div class="seg" id="viewSeg"><button data-v="harm" class="on" title="Harmonized on VIIRS level">Harmonized</button><button data-v="raw">Raw all</button><button data-v="modis">MODIS</button><button data-v="viirs">VIIRS</button></div></div>
+  <div class="fg"><span class="l">Satellites</span><span id="satChips"></span></div>
+  <div class="fg"><span class="l">Time of day</span><div class="seg" id="dnSeg"><button data-v="all" class="on">All</button><button data-v="D">Day</button><button data-v="N">Night</button></div></div>
+  <label class="fg"><input type="checkbox" id="incLow"> incl. low confidence</label>
+  <label class="fg"><input type="checkbox" id="vegOnly"> vegetation only</label>
+  <div class="fg"><span class="l">Calendar</span><div class="seg" id="granSeg"><button data-v="month">Monthly</button><button data-v="day">Daily</button></div></div>
+  <span class="area" id="areaInfo">Area: whole dataset</span>
+  <div class="hits" id="hits">–</div>
+</div>
 
 <main>
-  <div id="mapwrap">
-    <div id="map" role="region" aria-label="Map with hotspot density"></div>
-    <div class="busy" id="busy">Loading…</div>
-    <div class="mapbar">
-      <span id="mapLabel">Map: full range</span>
-      <button id="mapReset" class="btn small" style="display:none" aria-label="Show full range">×</button>
-      <button id="playBtn" class="btn small" aria-label="Animate periods">▶ Play</button>
-      <label class="row" title="Heat scale (fixed across periods)">Scale <input id="heatMax" type="range" min="0.1" max="3" step="0.05" value="1" style="width:80px"></label>
-    </div>
-    <div class="maplegend">
-      <div>Hotspot density</div>
-      <div class="bar" id="mapLegendBar"></div>
-      <div class="row" style="justify-content:space-between"><span>low</span><span>high</span></div>
-    </div>
+  <div class="card">
+    <div class="head"><h3>Timeline</h3><span class="grow"></span>
+      <span class="note" id="rangeLabel"></span>
+      <input id="from" type="date" title="Start"><input id="to" type="date" title="End">
+      <button id="playBtn" class="btn small">▶ Play</button>
+      <button id="resetRange" class="btn small">Full range</button></div>
+    <p class="how">Drag the handles of the small overview below the chart to choose the period for all views. Click a bar to show that period on the map. Hatched bars are converted from MODIS (before VIIRS); dotted lines mark new satellites.</p>
+    <div id="timeline"></div>
   </div>
 
-  <div class="kpis" id="kpis"></div>
+  <div class="grid g-map">
+    <div class="card">
+      <div class="head"><h3>Map</h3><span class="grow"></span><span class="note" id="mapNote"></span></div>
+      <p class="how">Draw a rectangle or polygon (toolbar on the left) to analyse an area. Zoomed out: density of hotspots. Zoomed in (or “Points”): the real detections, never converted.</p>
+      <div id="mapwrap">
+        <div id="map" role="region" aria-label="Map"></div>
+        <div class="busy" id="busy">Loading…</div>
+        <div class="mapbar">
+          <span id="mapLabel">full range</span>
+          <button id="mapReset" class="btn small" style="display:none" title="Show full range">×</button>
+          <div class="seg" id="mapModeSeg"><button data-v="auto" class="on">Auto</button><button data-v="heat">Density</button><button data-v="points">Points</button></div>
+          <div class="seg" id="colorSeg" title="Colour of single points"><button data-v="sensor" class="on">Sensor</button><button data-v="conf">Confidence</button><button data-v="frp">FRP</button></div>
+          <label class="fg" title="Density colour scale">Scale <input id="heatMax" type="range" min="0.1" max="3" step="0.05" value="1" style="width:70px"></label>
+        </div>
+        <div class="maplegend" id="mapLegend"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;font-size:12px;align-items:center">
+        <span class="note">Box:</span>
+        <input id="minLat" type="number" step="0.01" placeholder="min lat" style="width:78px">
+        <input id="maxLat" type="number" step="0.01" placeholder="max lat" style="width:78px">
+        <input id="minLon" type="number" step="0.01" placeholder="min lon" style="width:78px">
+        <input id="maxLon" type="number" step="0.01" placeholder="max lon" style="width:78px">
+        <button id="applyBox" class="btn small">Apply</button><button id="clearRegion" class="btn small">Clear area</button>
+        <span style="flex:1"></span>
+        <button id="dlPoints" class="btn small primary">Download hotspots CSV</button>
+        <button id="dlSummary" class="btn small">Download statistics CSV</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Key figures for the selection</h3>
+      <p class="how">Area from the map, period from the timeline. Harmonized values are on VIIRS level.</p>
+      <div class="kpis" id="kpis"></div>
+      <div id="warnBox" style="margin-top:8px"></div>
+      <h3 style="margin-top:10px">What the data says</h3>
+      <ul class="insights" id="insights"></ul>
+    </div>
+  </div>
 
   <div class="card">
-    <h3>Burning activity calendar</h3>
-    <p class="desc" id="calDesc"></p>
+    <div class="head"><h3>Burning activity calendar</h3><span class="grow"></span><span class="note" id="calNote"></span></div>
+    <p class="how" id="calHow"></p>
     <div class="cal" id="cal"></div>
-    <div class="callegend"><span>0</span><div class="bar" id="calLegendBar"></div><span id="calLegendMax"></span><span>· hatched = outside range / no data</span></div>
+    <div class="legendrow"><span>0</span><div class="bar" id="calLegendBar"></div><span id="calLegendMax"></span>
+      <span><span class="sw" style="background:repeating-linear-gradient(135deg,#9ad 0 2px,#fff 2px 6px)"></span>converted from MODIS</span>
+      <span><span class="sw" style="background:repeating-linear-gradient(45deg,#f3f2ee,#f3f2ee 4px,#ebeae5 4px,#ebeae5 8px)"></span>outside range / no data</span></div>
   </div>
 
-  <div class="charts">
-    <div class="card">
-      <h3>Anomaly vs median</h3>
-      <p class="desc" id="anomDesc"></p>
-      <div id="anomaly" class="chart"></div>
-    </div>
-    <div class="card">
-      <h3>Harmonization check</h3>
-      <p class="desc">Raw sensor series, the harmonized VIIRS contribution and the harmonized total. After harmonization the jump between sensors should disappear.</p>
-      <div id="compare" class="chart"></div>
-    </div>
+  <div class="grid g2">
+    <div class="card"><div class="head"><h3>Anomaly vs history</h3><span class="grow"></span><div class="seg" id="anomSeg"><button data-v="pct" class="on">%</button><button data-v="abs">absolute</button></div></div>
+      <p class="how" id="anomHow"></p><div id="anomaly" class="chart"></div></div>
+    <div class="card"><h3>Seasonal pattern</h3><p class="how">Typical year: median of each calendar month over all other years (band = middle 50 %), compared with the latest year. Shows when the fire season is.</p>
+      <div id="season" class="chart"></div></div>
   </div>
 
-  <div class="card" id="methodCard">
-    <div id="method"><p class="note">Loading methodology…</p></div>
+  <div class="grid g2">
+    <div class="card"><h3>Years compared</h3><p class="how">Total per year with a linear trend over complete years. Hatched = mostly converted from MODIS, light = incomplete year.</p>
+      <div id="yearly" class="chart"></div></div>
+    <div class="card"><h3>Harmonization check</h3><p class="how">Raw MODIS and VIIRS, MODIS converted with the calibration factor, and the harmonized series with its uncertainty band. Converted MODIS should run close to VIIRS where both exist.</p>
+      <div id="check" class="chart"></div></div>
   </div>
+
+  <div class="grid g4">
+    <div class="card"><h3>Fire intensity (FRP)</h3><p class="how">Share of detections per FRP class. VIIRS sees many small fires that MODIS misses.</p><div id="dFrp" class="chart s"></div></div>
+    <div class="card"><h3>Local time of detection</h3><p class="how">Satellites pass at fixed local times (Terra ~10:30 / 22:30, Aqua and VIIRS ~13:30 / 01:30). Peaks are overpasses, not fire behaviour.</p><div id="dHour" class="chart s"></div></div>
+    <div class="card"><h3>Confidence</h3><p class="how">Share of low / nominal / high per sensor. Click “low” to include or exclude it everywhere.</p><div id="dConf" class="chart s"></div></div>
+    <div class="card"><h3>Satellites</h3><p class="how">Detections per satellite. Click a bar to switch that satellite on or off (raw values and map).</p><div id="dSat" class="chart s"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3>Where and when: space × time matrix</h3><span class="grow"></span>
+      <span class="note">Sort</span><div class="seg" id="mSortSeg"><button data-v="total" class="on">total</button><button data-v="peak">peak time</button><button data-v="lat">north → south</button></div>
+      <span class="note">Colour</span><div class="seg" id="mNormSeg"><button data-v="global" class="on">absolute</button><button data-v="row">per row</button></div></div>
+    <p class="how" id="matrixHow"></p>
+    <div id="matrixWrap"><canvas id="matrix"></canvas></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h3>Satellite timeline</h3><p class="how">Raw detections per satellite and period (log colour). New satellites (S-NPP 2012, NOAA-20 2018, NOAA-21 2023) raise raw counts without more fire, which is why raw counts are not comparable over time. The orange frame is the selected period.</p>
+      <div id="swim" class="chart s"></div></div>
+    <div class="card"><h3>Calibration factors (MODIS → VIIRS)</h3><p class="how">Factor = VIIRS / MODIS in cells where both detect fire. The band (25–75 %) is the uncertainty used above. The region of the selected area is highlighted.</p>
+      <div id="calib"></div></div>
+  </div>
+
+  <div class="card" id="methodCard"><div id="method"><p class="note">Loading methodology…</p></div></div>
 </main>
-</div>
-<footer>Fire data: NASA LANCE Fire Information for Resource Management System (FIRMS), MODIS Collection 6.1 (1 km) and VIIRS 375 m active fire products. Harmonization and analysis: FireCal team, NASA Space Apps Challenge 2026. · <a href="api-docs.html" style="color:inherit">API documentation</a> · <a href="https://github.com/Putskev/firecal" style="color:inherit">GitHub</a></footer>
+<footer id="footer"></footer>
+<div id="tip"></div>
 <div id="toast" role="status"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -211,32 +221,42 @@ footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:v
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script>
 /* =====================================================================
-   FireCal frontend
-   Data comes from a "provider" with one interface:
-     span() -> [firstDate, lastDate]      bbox() -> [w,s,e,n]
-     info() -> harmonization info         hasType() -> bool
-     series(filters, gran) -> { period: {modis_n, viirs_n, modis_frp, viirs_frp,
-                                         modis_h_n, viirs_h_n, modis_h_frp, viirs_h_frp,
-                                         harm_n, harm_frp} }
-     heat(filters, start, end, view, metric, res) -> [[lat, lon, value], ...]
-     downloadPoints(filters, start, end, view)
-   ApiProvider  : FastAPI backend (same origin, or ?api=https://your-backend)
-   LocalProvider: demo data or uploaded CSVs, harmonized in the browser with the placeholder method
-   ===================================================================== */
-window.type = window.type || ''; // workaround for a leaflet-draw 1.0.4 rectangle bug
+   FireCal dashboard: coordinated views (timeline, map, calendar, statistics,
+   distributions, space-time matrix, satellite timeline), all linked to one
+   selection = area + period + filters.
 
+   Data comes from a provider with one interface (ApiProvider = FastAPI backend,
+   LocalProvider = demo or uploaded CSV, same calculations in the browser):
+     meta()                                   span, satellites, harmonization, calibration
+     series(f, gran)                          {period: {raw + harmonized fields}}
+     satellites(f, gran)                      {sat: {period: n}}
+     heat(f, start, end, view, metric, res)   [[lat, lon, value]]
+     points(f, bbox, start, end, limit)       {count, truncated, rows}
+     distributions(f, start, end)             frp / local_hour / conf / satellite / daynight
+     matrix(f, gran, view, metric, start, end, top) {res, rows:[{lat,lon,region,total,values}]}
+     downloadPoints(f, start, end, view)
+   Harmonization (docs/HANDOFF_Frontend.md): VIIRS level; native VIIRS from 2012-01-20,
+   before that MODIS x factor(region). Map points are always raw detections.
+   ===================================================================== */
+window.type = window.type || '';
 const qp = new URLSearchParams(location.search);
 const API = (qp.get('api') ?? window.FIRECAL_API ?? '').replace(/\/$/, '');
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const SATS = ['Terra','Aqua','SNPP','N20','N21'];
+const SAT_SENSOR = {Terra:'MODIS', Aqua:'MODIS', SNPP:'VIIRS', N20:'VIIRS', N21:'VIIRS'};
+const SAT_START = {Terra:'2000-11-01', Aqua:'2002-07-04', SNPP:'2012-01-20', N20:'2018-01-01', N21:'2023-01-01'};
+const VIIRS_START = '2012-01-20';
 const VIRIDIS = ['#440154','#482878','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'];
-const COLORS = { modis:'#e69f00', viirs:'#56b4e9', viirsH:'#0072b2', harm:'#1f1f1d', warm:'#d95f02', cool:'#1b6fb5' };
+const C = { modis:'#e69f00', viirs:'#0072b2', modisCal:'#cc79a7', harm:'#1f1f1d', warm:'#d55e00', cool:'#1b6fb5', low:'#b9b9b9', nominal:'#56b4e9', high:'#d55e00' };
+const FRP_EDGES = [0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 1000, Infinity];
 
-const state = {
-  provider: null, gran: 'month', from: null, to: null, region: null,
-  metric: 'count', view: 'harm', hideLow: true, vegOnly: false,
-  rows: {}, rangePeriods: [], mapPeriod: null, heatMax: 1, heatRef: null,
-  playing: false, req: 0, heatReq: 0
+const S = {
+  provider:null, meta:null, gran:'month', from:null, to:null, region:null,
+  metric:'count', view:'harm', perDay:false, sats:new Set(SATS), dn:'all', incLow:false, veg:false,
+  rows:{}, sat:{}, periods:[], rangeP:[], mapPeriod:null, mapMode:'auto', colorBy:'sensor',
+  heatMax:1, heatRef:null, anomMode:'pct', mSort:'total', mNorm:'global', matrix:null, dist:null,
+  req:0, rreq:0, hreq:0, playing:false
 };
 
 /* ---------- helpers ---------- */
@@ -246,589 +266,728 @@ const isoDay = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.g
 const toDate = s => new Date(s + 'T00:00:00Z');
 const addDays = (s, n) => { const d = toDate(s); d.setUTCDate(d.getUTCDate() + n); return isoDay(d); };
 const dayDiff = (a, b) => Math.round((toDate(b) - toDate(a)) / 864e5);
-function monthsBetween(a, b) {
-  const out = []; let [y, m] = a.split('-').map(Number); const [y2, m2] = b.split('-').map(Number);
-  while (y < y2 || (y === y2 && m <= m2)) { out.push(`${y}-${pad(m)}`); if (++m > 12) { m = 1; y++; } }
-  return out;
-}
-function daysBetween(a, b) { const out = []; for (let d = a; d <= b; d = addDays(d, 1)) out.push(d); return out; }
+const lastDay = mk => { const [y, m] = mk.split('-').map(Number); return isoDay(new Date(Date.UTC(y, m, 0))); };
+function monthsBetween(a, b) { const o = []; let [y, m] = a.split('-').map(Number); const [y2, m2] = b.split('-').map(Number);
+  while (y < y2 || (y === y2 && m <= m2)) { o.push(`${y}-${pad(m)}`); if (++m > 12) { m = 1; y++; } } return o; }
+function daysBetween(a, b) { const o = []; for (let d = a; d <= b; d = addDays(d, 1)) o.push(d); return o; }
 const periodsBetween = (a, b, g) => g === 'month' ? monthsBetween(a.slice(0, 7), b.slice(0, 7)) : daysBetween(a, b);
-const periodOf = (date, g) => g === 'month' ? date.slice(0, 7) : date;
-function periodRange(p, g) {
-  if (g === 'day') return [p, p];
-  const [y, m] = p.split('-').map(Number);
-  return [`${p}-01`, isoDay(new Date(Date.UTC(y, m, 0)))];
-}
-function plabel(p) {
-  const [y, m, d] = p.split('-');
-  return d ? `${MONTHS[+m - 1]} ${+d}, ${y}` : `${MONTHS[+m - 1]} ${y}`;
-}
-const fmt = v => Math.round(v).toLocaleString('en-US');
-function short(v) {
-  v = Math.round(v);
-  if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-  if (v >= 1e4) return Math.round(v / 1e3) + 'k';
-  if (v >= 1e3) return (v / 1e3).toFixed(1) + 'k';
-  return String(v);
-}
+const pOf = (date, g) => g === 'month' ? date.slice(0, 7) : date;
+const pRange = (p, g) => g === 'day' ? [p, p] : [`${p}-01`, lastDay(p)];
+function plabel(p) { const [y, m, d] = p.split('-'); return d ? `${MONTHS[+m - 1]} ${+d}, ${y}` : `${MONTHS[+m - 1]} ${y}`; }
+const fmt = v => (v === null || v === undefined || !isFinite(v)) ? '–' : Math.round(v).toLocaleString('en-US');
+const fmt1 = v => (v === null || v === undefined || !isFinite(v)) ? '–' : (+v).toLocaleString('en-US', { maximumFractionDigits: 1 });
+function short(v) { v = Math.round(v); if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M'; if (v >= 1e4) return Math.round(v / 1e3) + 'k'; if (v >= 1e3) return (v / 1e3).toFixed(1) + 'k'; return String(v); }
+const pct = (a, b) => b > 0 ? a / b * 100 : null;
 function hex(h) { return [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); }
-function viridis(t) {
-  t = Math.max(0, Math.min(1, t)); const n = VIRIDIS.length - 1;
-  const i = Math.min(n - 1, Math.floor(t * n)), f = t * n - i, a = hex(VIRIDIS[i]), b = hex(VIRIDIS[i + 1]);
-  return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * f)).join(',')})`;
-}
+function viridis(t) { t = Math.max(0, Math.min(1, t)); const n = VIRIDIS.length - 1, i = Math.min(n - 1, Math.floor(t * n)), f = t * n - i, a = hex(VIRIDIS[i]), b = hex(VIRIDIS[i + 1]);
+  return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * f)).join(',')})`; }
 const viridisCss = `linear-gradient(90deg,${VIRIDIS.join(',')})`;
-function median(arr) {
-  if (!arr.length) return 0; const s = [...arr].sort((a, b) => a - b), h = s.length >> 1;
-  return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2;
-}
-function quantile(arr, q) { if (!arr.length) return 1; const s = [...arr].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(q * (s.length - 1)))] || s[s.length - 1] || 1; }
-function pearson(x, y) {
-  const n = x.length; if (n < 3) return null;
-  const mx = x.reduce((a, b) => a + b) / n, my = y.reduce((a, b) => a + b) / n;
-  let sxy = 0, sxx = 0, syy = 0;
-  for (let i = 0; i < n; i++) { const dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
-  return sxx && syy ? sxy / Math.sqrt(sxx * syy) : null;
-}
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2800); }
+function quantile(arr, q) { const s = arr.filter(v => v !== null && isFinite(v)).sort((a, b) => a - b); if (!s.length) return null; const pos = (s.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos); return s[lo] + (s[hi] - s[lo]) * (pos - lo); }
+const median = a => quantile(a, 0.5);
+function pearson(x, y) { const n = x.length; if (n < 3) return null; const mx = x.reduce((a, b) => a + b) / n, my = y.reduce((a, b) => a + b) / n;
+  let sxy = 0, sxx = 0, syy = 0; for (let i = 0; i < n; i++) { const dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; } return sxx && syy ? sxy / Math.sqrt(sxx * syy) : null; }
+function linfit(xs, ys) { const n = xs.length; if (n < 3) return null; const mx = xs.reduce((a, b) => a + b) / n, my = ys.reduce((a, b) => a + b) / n;
+  let num = 0, den = 0; for (let i = 0; i < n; i++) { num += (xs[i] - mx) * (ys[i] - my); den += (xs[i] - mx) ** 2; } const b = den ? num / den : 0; return { a: my - b * mx, b, mean: my }; }
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2800); }
 function busy(on) { $('busy').style.display = on ? 'block' : 'none'; }
 const csvCell = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-function downloadText(name, text) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
-}
+function downloadText(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
 const qs = o => Object.entries(o).filter(([, v]) => v !== null && v !== undefined && v !== '').map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+const tip = $('tip');
+function showTip(e, html) { tip.innerHTML = html; tip.style.display = 'block'; tip.style.left = Math.min(e.clientX + 12, innerWidth - 310) + 'px'; tip.style.top = (e.clientY + 12) + 'px'; }
+function hideTip() { tip.style.display = 'none'; }
+
+/* ---------- placeholder regions (same as backend/regions.py) ---------- */
+function regionOf(lat, lon) {
+  let r = 'Asien';
+  if (lon < -25) r = 'Amerika';
+  if (lon >= -25 && lon < 60 && lat >= 36) r = 'Europa/Westasien';
+  if (lon >= -25 && lon < 55 && lat < 36) r = 'Afrika';
+  if (lon >= 35 && lon < 60 && lat >= 12 && lat < 36) r = 'Europa/Westasien';
+  if (lon >= 110 && lat < -10) r = 'Ozeanien';
+  if (lon >= 150 && lat < 0) r = 'Ozeanien';
+  return r;
+}
 
 /* ---------- filters ---------- */
-function filters() {
-  const R = state.region;
+function F() {
+  const R = S.region;
   return {
     bbox: R ? [R.minLon, R.minLat, R.maxLon, R.maxLat].map(v => +v.toFixed(5)).join(',') : null,
-    polygon: R && R.poly ? R.poly.map(([la, lo]) => `${la.toFixed(5)},${lo.toFixed(5)}`).join(';') : null,
-    exclude_low: state.hideLow, vegetation_only: state.vegOnly, region: R
+    polygon: R && R.poly ? R.poly.map(([a, b]) => `${a.toFixed(5)},${b.toFixed(5)}`).join(';') : null,
+    exclude_low: !S.incLow, vegetation_only: S.veg,
+    satellites: S.sats.size === SATS.length ? null : [...S.sats].join(','), daynight: S.dn, region: R, satSet: S.sats
   };
 }
-const apiFilters = f => ({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only });
+const apiF = f => ({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, satellites: f.satellites, daynight: f.daynight });
 
 /* ---------- API provider ---------- */
+async function getJSON(url) { const r = await fetch(url); if (!r.ok) throw new Error(await r.text()); return r.json(); }
 const ApiProvider = {
-  name: 'api', meta: null,
-  async init() {
-    const r = await fetch(`${API}/api/meta`, { cache: 'no-store' });
-    if (!r.ok) throw new Error('no api');
-    const m = await r.json(); if (m.api !== 'firecal') throw new Error('not firecal');
-    this.meta = m; return this;
-  },
-  label() { return `API · ${fmt(this.meta.rows)} hotspots · ${this.meta.first_date} to ${this.meta.last_date}`; },
-  span() { return [this.meta.first_date, this.meta.last_date]; },
-  bbox() { return this.meta.bbox; },
-  info() { return this.meta.harmonization || {}; },
-  hasType() { return !!this.meta.has_type; },
-  async series(f, gran) {
-    const r = await fetch(`${API}/api/timeseries?${qs({ ...apiFilters(f), granularity: gran })}`);
-    if (!r.ok) throw new Error(await r.text());
-    return (await r.json()).rows;
-  },
-  async heat(f, start, end, view, metric, res) {
-    const r = await fetch(`${API}/api/heatmap?${qs({ ...apiFilters(f), start, end, view, metric, res })}`);
-    if (!r.ok) throw new Error(await r.text());
-    return (await r.json()).cells;
-  },
-  downloadPoints(f, start, end, view) {
-    const a = document.createElement('a');
-    a.href = `${API}/api/hotspots.csv?${qs({ ...apiFilters(f), start, end, view })}`;
-    document.body.appendChild(a); a.click(); a.remove();
-    toast('Export started');
-  }
+  name: 'api', m: null,
+  async init() { const r = await fetch(`${API}/api/meta`, { cache: 'no-store' }); if (!r.ok) throw 0; const m = await r.json();
+    if (m.api !== 'firecal' || !m.harmonization || !m.harmonization.params || m.harmonization.params.target_level !== 'VIIRS') throw 0; this.m = m; return this; },
+  meta() { return this.m; },
+  label() { return `API · ${fmt(this.m.rows)} hotspots · ${this.m.first_date} → ${this.m.last_date}`; },
+  async series(f, gran) { return (await getJSON(`${API}/api/timeseries?${qs({ ...apiF(f), granularity: gran })}`)).rows; },
+  async satellites(f, gran) { return (await getJSON(`${API}/api/satellites?${qs({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, granularity: gran })}`)).satellites; },
+  async heat(f, start, end, view, metric, res) { return (await getJSON(`${API}/api/heatmap?${qs({ ...apiF(f), start, end, view, metric, res })}`)).cells; },
+  async points(f, bbox, start, end, limit) { return getJSON(`${API}/api/points?${qs({ ...apiF(f), bbox, start, end, limit })}`); },
+  async distributions(f, start, end) { return getJSON(`${API}/api/distributions?${qs({ ...apiF(f), start, end })}`); },
+  async matrix(f, gran, view, metric, start, end, top) { return getJSON(`${API}/api/matrix?${qs({ ...apiF(f), granularity: gran, view, metric, start, end, top })}`); },
+  downloadPoints(f, start, end, view) { const a = document.createElement('a'); a.href = `${API}/api/hotspots.csv?${qs({ ...apiF(f), start, end, view })}`; document.body.appendChild(a); a.click(); a.remove(); toast('Export started'); }
 };
 
-/* ---------- local provider (demo / uploaded CSV, placeholder harmonization in the browser) ---------- */
+/* ---------- local provider: demo or uploaded CSV, same calculations in the browser ---------- */
+const emptyRow = () => ({ modis_n: 0, viirs_n: 0, modis_frp: 0, viirs_frp: 0, raw_n: 0, raw_frp: 0, n_night: 0, n_high: 0, harm_n: 0, harm_n_lo: 0, harm_n_hi: 0, harm_frp: 0, harm_frp_lo: 0, harm_frp_hi: 0, modis_h_n: 0, viirs_h_n: 0, modis_cal_n: 0, modis_cal_frp: 0 });
+const rawOk = (p, f) => f.satSet.has(p.sat) && (f.daynight === 'all' || p.dn === f.daynight);
+function pointValue(p, f, view, metric) {
+  if (view === 'harm') return metric === 'count' ? p.w : p.fh;
+  if (!rawOk(p, f)) return 0;
+  if (view === 'modis' && p.sensor !== 'MODIS') return 0; if (view === 'viirs' && p.sensor !== 'VIIRS') return 0;
+  return metric === 'count' ? 1 : p.frp;
+}
 const LocalProvider = {
-  name: 'local', points: [], _label: '', _info: {}, _span: null, _bbox: null, isDemo: true,
+  name: 'local', pts: [], m: null, isDemo: true, _label: '',
   load(points, label, isDemo) {
-    this.points = points; this._label = label; this.isDemo = !!isDemo;
-    let min = '9999', max = '0000', s = 90, n = -90, w = 180, e = -180;
-    for (const p of points) {
-      if (p.date < min) min = p.date; if (p.date > max) max = p.date;
-      if (p.lat < s) s = p.lat; if (p.lat > n) n = p.lat; if (p.lon < w) w = p.lon; if (p.lon > e) e = p.lon;
-    }
-    this._span = [min, max]; this._bbox = [w, s, e, n];
-    this._info = harmonizeLocal(points);
+    this.pts = points; this.isDemo = !!isDemo; this._label = label;
+    let min = '9999', max = '0000', s = 90, n = -90, w = 180, e = -180, hasType = false;
+    for (const p of points) { if (p.date < min) min = p.date; if (p.date > max) max = p.date; if (p.lat < s) s = p.lat; if (p.lat > n) n = p.lat; if (p.lon < w) w = p.lon; if (p.lon > e) e = p.lon; if (p.type !== null) hasType = true; }
+    const harm = harmonizeLocal(points, isDemo ? 1e6 : 7);
+    const sats = SATS.map(sat => { let a = null, b = null, k = 0; for (const p of points) if (p.sat === sat) { k++; if (!a || p.date < a) a = p.date; if (!b || p.date > b) b = p.date; } return { satellite: sat, sensor: SAT_SENSOR[sat], start: SAT_START[sat], first_date: a, last_date: b, rows: k }; });
+    this.m = { rows: points.length, first_date: min, last_date: max, bbox: [w, s, e, n], has_type: hasType, satellites: sats, harmonization: harm, data_version: isDemo ? 'demo' : 'upload' };
     return this;
   },
-  label() { return this._label; },
-  span() { return this._span; }, bbox() { return this._bbox; }, info() { return this._info; },
-  hasType() { return this.points.some(p => p.type !== null); },
-  _sel(f, start, end) {
-    return this.points.filter(p => inRegion(p, f.region) && (!f.exclude_low || p.cc !== 'low') &&
-      (!f.vegetation_only || p.type === null || p.type === 0) && (!start || p.date >= start) && (!end || p.date <= end));
+  meta() { return this.m; }, label() { return this._label; },
+  _sel(f, start, end, rawOnly) {
+    return this.pts.filter(p => inRegion(p, f.region) && (!f.exclude_low || p.cc !== 'low') && (!f.vegetation_only || p.type === null || p.type === 0)
+      && (!start || p.date >= start) && (!end || p.date <= end) && (!rawOnly || rawOk(p, f)));
   },
   async series(f, gran) {
     const rows = {};
     for (const p of this._sel(f)) {
-      const k = periodOf(p.date, gran);
-      const r = rows[k] || (rows[k] = { modis_n: 0, viirs_n: 0, modis_frp: 0, viirs_frp: 0, modis_h_n: 0, viirs_h_n: 0, modis_h_frp: 0, viirs_h_frp: 0, harm_n: 0, harm_frp: 0 });
-      const s = p.sensor === 'MODIS' ? 'modis' : 'viirs';
-      r[s + '_n']++; r[s + '_frp'] += p.frp; r[s + '_h_n'] += p.w; r[s + '_h_frp'] += p.fh; r.harm_n += p.w; r.harm_frp += p.fh;
+      const k = pOf(p.date, gran), r = rows[k] || (rows[k] = emptyRow()), ok = rawOk(p, f), M = p.sensor === 'MODIS';
+      if (ok) { if (M) { r.modis_n++; r.modis_frp += p.frp; } else { r.viirs_n++; r.viirs_frp += p.frp; } r.raw_n++; r.raw_frp += p.frp; if (p.dn === 'N') r.n_night++; if (p.cc === 'high') r.n_high++; }
+      r.harm_n += p.w; r.harm_n_lo += p.wlo; r.harm_n_hi += p.whi; r.harm_frp += p.fh; r.harm_frp_lo += p.fhlo; r.harm_frp_hi += p.fhhi;
+      if (M) r.modis_h_n += p.w; else r.viirs_h_n += p.w; r.modis_cal_n += p.wc; r.modis_cal_frp += p.fc;
     }
     return rows;
   },
+  async satellites(f, gran) { const out = {}; for (const p of this._sel(f)) { const k = pOf(p.date, gran), o = out[p.sat] || (out[p.sat] = {}); o[k] = (o[k] || 0) + 1; } return out; },
   async heat(f, start, end, view, metric, res) {
     const cells = new Map();
     for (const p of this._sel(f, start, end)) {
-      let v;
-      if (view === 'harm') v = metric === 'count' ? p.w : p.fh;
-      else if ((view === 'modis') === (p.sensor === 'MODIS')) v = metric === 'count' ? 1 : p.frp;
-      else continue;
-      if (!v) continue;
+      const v = pointValue(p, f, view, metric); if (!v) continue;
       const la = Math.floor(p.lat / res) * res + res / 2, lo = Math.floor(p.lon / res) * res + res / 2, k = la + ',' + lo;
       const c = cells.get(k); if (c) c[2] += v; else cells.set(k, [la, lo, v]);
     }
     return [...cells.values()];
   },
-  downloadPoints(f, start, end, view) {
-    const rows = [['latitude', 'longitude', 'acq_date', 'satellite', 'sensor', 'confidence', 'conf_class', 'frp', 'type', 'weight', 'frp_h']];
-    for (const p of this._sel(f, start, end)) {
-      if (view === 'modis' && p.sensor !== 'MODIS') continue;
-      if (view === 'viirs' && p.sensor !== 'VIIRS') continue;
-      rows.push([p.lat, p.lon, p.date, p.sat, p.sensor, p.conf, p.cc, p.frp, p.type ?? '', +p.w.toFixed(5), +p.fh.toFixed(3)]);
+  async points(f, bbox, start, end, limit) {
+    const [w, s, e, n] = bbox.split(',').map(Number);
+    const sel = this._sel(f, start, end, true).filter(p => p.lon >= w && p.lon <= e && p.lat >= s && p.lat <= n).sort((a, b) => b.frp - a.frp);
+    return { count: sel.length, truncated: sel.length > limit, rows: sel.slice(0, limit).map(p => [p.lat, p.lon, p.sensor, p.sat, p.frp, p.cc, p.date, p.time, p.dn, p.px, p.lh]) };
+  },
+  async distributions(f, start, end) {
+    const sel = this._sel({ ...f, exclude_low: false }, start, end, true);
+    const out = { frp: { MODIS: Array(18).fill(0), VIIRS: Array(18).fill(0) }, local_hour: { MODIS: Array(24).fill(0), VIIRS: Array(24).fill(0) }, conf_class: {}, satellite: {}, daynight: {}, stats: {} }, fr = { MODIS: [], VIIRS: [] };
+    for (const p of sel) {
+      const ck = `${p.sensor}|${p.cc}`; out.conf_class[ck] = (out.conf_class[ck] || 0) + 1;
+      if (f.exclude_low && p.cc === 'low') continue;
+      let b = 0; while (b < 17 && p.frp >= FRP_EDGES[b + 1]) b++; out.frp[p.sensor][b]++;
+      if (isFinite(p.lh)) out.local_hour[p.sensor][Math.floor(p.lh) % 24]++;
+      out.satellite[p.sat] = (out.satellite[p.sat] || 0) + 1; const dk = `${p.sensor}|${p.dn}`; out.daynight[dk] = (out.daynight[dk] || 0) + 1; fr[p.sensor].push(p.frp);
     }
-    downloadText(`firecal_hotspots_${start}_${end}.csv`, rows.map(r => r.map(csvCell).join(',')).join('\n'));
-    toast(`${fmt(rows.length - 1)} hotspots exported`);
+    for (const s of ['MODIS', 'VIIRS']) if (fr[s].length) out.stats[s] = { n: fr[s].length, frp_median: median(fr[s]), frp_p90: quantile(fr[s], .9) };
+    return out;
+  },
+  async matrix(f, gran, view, metric, start, end, top) {
+    const R = f.region, box = R ? [R.minLon, R.minLat, R.maxLon, R.maxLat] : this.m.bbox, span = Math.max(box[2] - box[0], box[3] - box[1]);
+    const res = [0.25, 0.5, 1, 2, 5, 10].find(r => r >= span / 12) || 10, cells = new Map();
+    for (const p of this._sel(f, start, end)) {
+      const v = pointValue(p, f, view, metric); if (!v) continue;
+      const la = Math.floor(p.lat / res) * res + res / 2, lo = Math.floor(p.lon / res) * res + res / 2, k = la + ',' + lo, per = pOf(p.date, gran);
+      let c = cells.get(k); if (!c) { c = { lat: la, lon: lo, total: 0, values: {} }; cells.set(k, c); } c.total += v; c.values[per] = (c.values[per] || 0) + v;
+    }
+    const rows = [...cells.values()].sort((a, b) => b.total - a.total).slice(0, top); rows.forEach(r => r.region = regionOf(r.lat, r.lon));
+    return { res, rows };
+  },
+  downloadPoints(f, start, end, view) {
+    const rows = [['sensor', 'satellite', 'datetime_utc', 'latitude', 'longitude', 'brightness_k', 'frp', 'pixel_km2', 'conf_class', 'daynight', 'local_hour', 'type', 'region', 'weight', 'frp_h']];
+    for (const p of this._sel(f, start, end, true)) { if (view === 'modis' && p.sensor !== 'MODIS') continue; if (view === 'viirs' && p.sensor !== 'VIIRS') continue;
+      rows.push([p.sensor, p.sat, `${p.date} ${pad(Math.floor(p.time / 100))}:${pad(p.time % 100)}:00+00:00`, p.lat, p.lon, p.bk ?? '', p.frp, p.px ?? '', p.cc, p.dn, p.lh ?? '', p.type ?? '', p.region, +p.w.toFixed(4), +p.fh.toFixed(3)]); }
+    downloadText(`firecal_hotspots_${start}_${end}.csv`, rows.map(r => r.map(csvCell).join(',')).join('\n')); toast(`${fmt(rows.length - 1)} hotspots exported`);
   }
 };
 
-/* Same placeholder method as backend/harmonization.py (global ratio over overlap months) */
-function harmonizeLocal(points) {
-  const agg = {};
+/* same method as backend/harmonization.py */
+function harmonizeLocal(points, windowDays = 7) {
+  for (const p of points) p.region = regionOf(p.lat, p.lon);
+  const minDay = points.reduce((a, p) => p.date < a ? p.date : a, '9999'), g = new Map();
+  for (const p of points) { if (p.cc === 'low' || p.date < VIIRS_START) continue;   // calibrate only where both sensors exist
+    const k = `${p.region}|${Math.floor(p.lat / 2)}_${Math.floor(p.lon / 2)}|${Math.floor(dayDiff(minDay, p.date) / windowDays)}`;
+    let c = g.get(k); if (!c) { c = { region: p.region, mn: 0, vn: 0, mf: 0, vf: 0 }; g.set(k, c); }
+    if (p.sensor === 'MODIS') { c.mn++; c.mf += p.frp; } else { c.vn++; c.vf += p.frp; } }
+  const both = [...g.values()].filter(c => c.mn > 0 && c.vn > 0);
+  const row = (name, part, fb) => { const sum = k => part.reduce((a, c) => a + c[k], 0), rf = part.filter(c => c.mf > 0).map(c => c.vf / c.mf), rn = part.map(c => c.vn / c.mn), ok = part.filter(c => c.mf > 0 && c.vf > 0);
+    return { region: name, factor_n: sum('vn') / sum('mn'), factor_frp: sum('vf') / sum('mf'), factor_frp_p25: quantile(rf, .25), factor_frp_p75: quantile(rf, .75), factor_n_p25: quantile(rn, .25), factor_n_p75: quantile(rn, .75),
+      r_log_frp: pearson(ok.map(c => Math.log(c.mf)), ok.map(c => Math.log(c.vf))), n_cells: part.length, used_global_fallback: fb }; };
+  const REG = ['Afrika', 'Amerika', 'Asien', 'Europa/Westasien', 'Ozeanien'];
+  let table;
+  if (both.length) { const gl = row('global', both, false); table = REG.map(r => { const part = both.filter(c => c.region === r); return part.length >= 20 ? row(r, part, false) : { ...gl, region: r, n_cells: part.length, used_global_fallback: true }; }); table.push(gl); }
+  else table = [...REG, 'global'].map(r => ({ region: r, factor_n: 1, factor_frp: 1, factor_frp_p25: 1, factor_frp_p75: 1, factor_n_p25: 1, factor_n_p75: 1, r_log_frp: null, n_cells: 0, used_global_fallback: true }));
+  const T = Object.fromEntries(table.map(r => [r.region, r])), vDays = new Set(); for (const p of points) if (p.sensor === 'VIIRS') vDays.add(p.date);
+  let calN = 0, mN = 0;
   for (const p of points) {
-    const m = p.date.slice(0, 7), a = agg[m] || (agg[m] = { mn: 0, vn: 0, mf: 0, vf: 0, mAll: 0, vAll: 0 });
-    if (p.sensor === 'MODIS') { a.mAll++; if (p.cc !== 'low') { a.mn++; a.mf += p.frp; } }
-    else { a.vAll++; if (p.cc !== 'low') { a.vn++; a.vf += p.frp; } }
+    const t = T[p.region] || T.global, useV = p.date >= VIIRS_START && vDays.has(p.date);
+    p.w = p.wlo = p.whi = p.fh = p.fhlo = p.fhhi = 0;
+    if (p.sensor === 'VIIRS') { if (useV) { p.w = p.wlo = p.whi = 1; p.fh = p.fhlo = p.fhhi = p.frp; } p.wc = 0; p.fc = 0; }
+    else { mN++; if (!useV) { calN++; p.w = t.factor_n; p.wlo = t.factor_n_p25; p.whi = t.factor_n_p75; p.fh = p.frp * t.factor_frp; p.fhlo = p.frp * t.factor_frp_p25; p.fhhi = p.frp * t.factor_frp_p75; } p.wc = t.factor_n; p.fc = p.frp * t.factor_frp; }
   }
-  let sm = 0, sv = 0, smf = 0, svf = 0, n = 0, vStart = null;
-  for (const m of Object.keys(agg).sort()) {
-    const a = agg[m];
-    if (a.vAll > 0 && !vStart) vStart = m;
-    if (a.mn > 0 && a.vn > 0) { sm += a.mn; sv += a.vn; smf += a.mf; svf += a.vf; n++; }
-  }
-  const kn = sv ? sm / sv : 1, kf = svf ? smf / svf : 1;
-  for (const p of points) {
-    const m = p.date.slice(0, 7), a = agg[m];
-    const useV = vStart && m >= vStart && (a.vAll > 0 || a.mAll === 0);
-    if (p.sensor === 'VIIRS') { p.w = useV ? kn : 0; p.fh = useV ? p.frp * kf : 0; }
-    else { p.w = useV ? 0 : 1; p.fh = useV ? 0 : p.frp; }
-  }
-  return { name: 'placeholder-ratio (browser)', version: '0.1', status: 'placeholder',
-           description: 'Global ratio of monthly MODIS / VIIRS sums over overlap months.',
-           params: { k_count: +kn.toFixed(5), k_frp: +kf.toFixed(5), overlap_months: n, viirs_start: vStart } };
+  return { name: 'region-factor (VIIRS level, browser)', version: '0.2', status: 'placeholder', description: 'MODIS x factor per region; native VIIRS from 2012-01-20.',
+    params: { target_level: 'VIIRS', viirs_start: VIIRS_START, cell_deg: 2, window_days: windowDays > 1e4 ? 'whole overlap' : windowDays, factor_source: windowDays > 1e4 ? 'demo: whole overlap per cell (sparse synthetic data)' : 'computed from the loaded data', calibrated_share: mN ? +(calN / mN).toFixed(4) : 0 }, calibration: table };
 }
 
-/* ---------- demo data (synthetic, clearly labelled) ---------- */
+/* ---------- demo data: synthetic, 2001-2026, two fire regions with different seasons ---------- */
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function makeDemo() {
-  const r = mulberry32(42);
-  const gauss = () => { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
-  const clusters = [{ lat: -12.5, lon: -55.5, s: 1.1, w: 1 }, { lat: -16.8, lon: -61.0, s: 0.8, w: .8 }, { lat: -9.5, lon: -63.0, s: 0.9, w: .7 }, { lat: -19.5, lon: -57.0, s: 0.6, w: .5 }, { lat: -14.0, lon: -48.0, s: 1.2, w: .6 }];
-  const wsum = clusters.reduce((a, c) => a + c.w, 0);
-  const pick = () => { let x = r() * wsum; for (const c of clusters) { x -= c.w; if (x <= 0) return c; } return clusters[0]; };
-  const yearFactor = { 2004: 1.4, 2005: 1.5, 2007: 1.6, 2010: 1.7, 2019: 1.3, 2020: 1.8, 2024: 1.9 };
-  const season = [.05, .04, .05, .08, .15, .35, .7, 1, .95, .55, .2, .08];
+  const r = mulberry32(42), gauss = () => { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const areas = [
+    { clusters: [{ lat: -12.5, lon: -55.5, s: .55 }, { lat: -16.8, lon: -61.0, s: .45 }, { lat: -9.5, lon: -63.0, s: .5 }], season: [.05, .04, .05, .07, .15, .3, .65, 1, .95, .55, .2, .08], scale: 30, years: { 2004: 1.4, 2005: 1.5, 2007: 1.6, 2010: 1.7, 2019: 1.3, 2020: 1.6, 2024: 1.8 } },
+    { clusters: [{ lat: -12.0, lon: 24.0, s: .6 }, { lat: -9.0, lon: 18.5, s: .5 }, { lat: -14.5, lon: 29.0, s: .5 }], season: [.02, .02, .03, .1, .45, .9, 1, .75, .4, .15, .05, .02], scale: 26, years: { 2008: 1.3, 2015: 1.25, 2023: 1.2 } }
+  ];
   const pts = [];
-  const emit = (sensor, n, mk, y) => {
+  const add = (sensor, sat, n, a, mk) => {
     for (let i = 0; i < n; i++) {
-      const c = pick(), conf = sensor === 'MODIS' ? Math.round(15 + r() * 85) : (r() < .12 ? 'l' : r() < .85 ? 'n' : 'h');
-      pts.push({ lat: +(c.lat + gauss() * c.s).toFixed(4), lon: +(c.lon + gauss() * c.s).toFixed(4), date: `${mk}-${pad(1 + Math.floor(r() * 28))}`,
-        sensor, frp: +(sensor === 'MODIS' ? Math.exp(2.6 + gauss() * .9) : Math.exp(1.5 + gauss() * .9)).toFixed(1), conf, cc: confClass(sensor, conf),
-        sat: sensor === 'MODIS' ? (r() < .5 ? 'Terra' : 'Aqua') : (y < 2018 || r() < .5 ? 'N' : 'N20'), type: r() < .97 ? 0 : 2 });
+      const c = a.clusters[Math.floor(r() * a.clusters.length)], lat = +(c.lat + gauss() * c.s).toFixed(4), lon = +(c.lon + gauss() * c.s).toFixed(4);
+      const night = r() < (sensor === 'VIIRS' ? .3 : .22), base = sat === 'Terra' ? (night ? 22.5 : 10.5) : (night ? 1.5 : 13.5) + (sat === 'N20' ? .8 : 0);
+      const lh = ((base + gauss() * .6) % 24 + 24) % 24, utc = ((lh - lon / 15) % 24 + 24) % 24, time = Math.floor(utc) * 100 + Math.floor((utc % 1) * 60);
+      const frp = +(sensor === 'MODIS' ? Math.exp(2.75 + gauss() * .9) : Math.exp(1.8 + gauss() * .9)).toFixed(2);
+      const cc = sensor === 'MODIS' ? (r() < .1 ? 'low' : r() < .8 ? 'nominal' : 'high') : (r() < .12 ? 'low' : r() < .87 ? 'nominal' : 'high');
+      pts.push({ lat, lon, date: `${mk}-${pad(1 + Math.floor(r() * 28))}`, time, sensor, sat, frp, cc, dn: night ? 'N' : 'D', px: sensor === 'MODIS' ? +(1 + r() * 3).toFixed(2) : +(.14 + r() * .3).toFixed(3), lh: +lh.toFixed(2), bk: null, type: r() < .97 ? 0 : 2 });
     }
   };
-  for (const mk of monthsBetween('2003-01', '2026-10')) {
+  for (const mk of monthsBetween('2001-01', '2026-10')) {
     const y = +mk.slice(0, 4), m = +mk.slice(5, 7);
-    const base = 140 * season[m - 1] * (yearFactor[y] || 1) * (0.8 + 0.4 * r()) * (1 - 0.01 * (y - 2003));
-    emit('MODIS', Math.round(base * (0.85 + 0.3 * r())), mk, y);
-    if (y >= 2012) emit('VIIRS', Math.round(base * 3.4 * (0.85 + 0.3 * r())), mk, y);
+    for (const a of areas) {
+      const base = a.scale * a.season[m - 1] * (a.years[y] || 1) * (0.8 + 0.4 * r()), k = () => 0.85 + .3 * r();
+      add('MODIS', 'Terra', Math.round(base * .45 * k()), a, mk);
+      if (mk >= '2002-07') add('MODIS', 'Aqua', Math.round(base * .55 * k()), a, mk);
+      // demo simplification: total VIIRS ~ 9x MODIS, split over the active VIIRS satellites
+      const vs = ['SNPP', 'N20', 'N21'].filter(s => mk >= SAT_START[s].slice(0, 7) && !(s === 'SNPP' && mk < '2012-02'));
+      for (const s of vs) add('VIIRS', s, Math.round(base * 9 / vs.length * k()), a, mk);
+    }
   }
   return pts;
 }
 
-/* ---------- FIRMS CSV loader (local mode) ---------- */
-function confClass(sensor, conf) {
-  if (sensor === 'MODIS') { const n = +conf; return n < 30 ? 'low' : n < 80 ? 'nominal' : 'high'; }
-  return ({ l: 'low', n: 'nominal', h: 'high' })[String(conf).toLowerCase().charAt(0)] || 'nominal';
-}
+/* ---------- CSV upload: raw FIRMS or the team's "Tabelle A" ---------- */
+const SAT_NAMES = { T: 'Terra', TERRA: 'Terra', A: 'Aqua', AQUA: 'Aqua', N: 'SNPP', NPP: 'SNPP', SNPP: 'SNPP', '1': 'N20', N20: 'N20', N21: 'N21' };
+function confClass(sensor, conf) { if (sensor === 'MODIS') { const n = +conf; return n < 30 ? 'low' : n < 80 ? 'nominal' : 'high'; } return ({ l: 'low', n: 'nominal', h: 'high' })[String(conf).toLowerCase().charAt(0)] || 'nominal'; }
 function normRow(r) {
-  const lat = +r.latitude, lon = +r.longitude;
-  if (!isFinite(lat) || !isFinite(lon) || !r.acq_date) return null;
-  const date = String(r.acq_date).slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
-  const sensor = (String(r.instrument || r.sensor || '').toUpperCase().includes('VIIRS') || 'bright_ti4' in r) ? 'VIIRS' : 'MODIS';
-  const conf = r.confidence ?? '';
-  return { lat, lon, date, sensor, frp: +r.frp || 0, conf, cc: confClass(sensor, conf), sat: r.satellite ?? '',
-           type: (r.type === undefined || r.type === null || r.type === '') ? null : +r.type };
+  const lat = +r.latitude, lon = +r.longitude; if (!isFinite(lat) || !isFinite(lon)) return null;
+  let date, time;
+  if (r.datetime_utc) { const s = String(r.datetime_utc); date = s.slice(0, 10); time = +s.slice(11, 13) * 100 + +s.slice(14, 16); }
+  else { date = String(r.acq_date || '').slice(0, 10); time = +r.acq_time || 0; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const sensor = String(r.sensor || r.instrument || '').toUpperCase().includes('VIIRS') || 'bright_ti4' in r ? 'VIIRS' : 'MODIS';
+  const sat = SAT_NAMES[String(r.satellite ?? '').toUpperCase()] || String(r.satellite ?? '');
+  const cc = ['low', 'nominal', 'high'].includes(String(r.conf_class).toLowerCase()) ? String(r.conf_class).toLowerCase() : confClass(sensor, r.confidence ?? '');
+  const lh = r.local_hour !== undefined && r.local_hour !== '' && r.local_hour !== null ? +r.local_hour : ((Math.floor(time / 100) + (time % 100) / 60 + lon / 15) % 24 + 24) % 24;
+  const px = r.pixel_km2 !== undefined ? +r.pixel_km2 : (+r.scan || 0) * (+r.track || 0);
+  return { lat, lon, date, time, sensor, sat, frp: +r.frp || 0, cc, dn: String(r.daynight || 'D').toUpperCase().charAt(0), px, lh, bk: +(r.brightness_k ?? r.brightness ?? r.bright_ti4) || null, type: (r.type === undefined || r.type === null || r.type === '') ? null : +r.type };
 }
 $('file').addEventListener('change', async e => {
   const files = [...e.target.files]; if (!files.length) return;
   toast(`Reading ${files.length} file(s)… large files take a while`);
   try {
-    const parts = await Promise.all(files.map(file => new Promise((res, rej) => Papa.parse(file, {
-      header: true, dynamicTyping: true, skipEmptyLines: true, complete: x => res(x.data.map(normRow).filter(Boolean)), error: rej }))));
-    const all = parts.flat();
-    if (!all.length) { toast('No hotspots found. Are these FIRMS CSV files?'); return; }
-    const nM = all.filter(p => p.sensor === 'MODIS').length;
-    useProvider(LocalProvider.load(all, `${files.length} file(s) · ${fmt(all.length)} hotspots (MODIS ${fmt(nM)}, VIIRS ${fmt(all.length - nM)})`, false));
+    const parts = await Promise.all(files.map(file => new Promise((res, rej) => Papa.parse(file, { header: true, dynamicTyping: true, skipEmptyLines: true, complete: x => res(x.data.map(normRow).filter(Boolean)), error: rej }))));
+    let all = parts.flat(); if (!all.length) { toast('No hotspots found'); return; }
+    const last = all.reduce((a, p) => p.date > a ? p.date : a, '0000'); all = all.filter(p => p.date < last);
+    useProvider(LocalProvider.load(all, `${files.length} file(s) · ${fmt(all.length)} hotspots (incomplete last day ${last} removed)`, false));
   } catch (err) { console.error(err); toast('Could not read the file(s)'); }
   e.target.value = '';
 });
-$('demoBtn').addEventListener('click', () => useProvider(LocalProvider.load(makeDemo(), 'Demo data (synthetic)', true)));
-$('apiBtn').addEventListener('click', () => ApiProvider.meta && useProvider(ApiProvider));
+$('demoBtn').addEventListener('click', () => useProvider(LocalProvider.load(makeDemo(), 'Demo data (synthetic, 2001–2026)', true)));
+$('apiBtn').addEventListener('click', () => ApiProvider.m && useProvider(ApiProvider));
 
 /* ---------- map ---------- */
 let zoomTimer = null;
-const map = L.map('map', { zoomControl: true, worldCopyJump: true }).setView([0, 0], 2);
+const map = L.map('map', { zoomControl: true, worldCopyJump: true, preferCanvas: true }).setView([0, 0], 2);
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
 const grayBase = L.tileLayer(ESRI + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { attribution: 'Basemap &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16 }).addTo(map);
 const grayLabels = L.tileLayer(ESRI + 'World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, pane: 'shadowPane' }).addTo(map);
 let tileErrors = 0;
-grayBase.on('tileerror', () => {
-  if (++tileErrors !== 4) return;
-  map.removeLayer(grayBase); map.removeLayer(grayLabels);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19, className: 'gray-tiles' }).addTo(map);
-});
+grayBase.on('tileerror', () => { if (++tileErrors !== 4) return; map.removeLayer(grayBase); map.removeLayer(grayLabels); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19, className: 'gray-tiles' }).addTo(map); });
 map.attributionControl.addAttribution('Fire data: NASA LANCE FIRMS');
+L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(map);
 const heatGradient = {}; VIRIDIS.forEach((c, i) => { heatGradient[(0.25 + 0.75 * i / (VIRIDIS.length - 1)).toFixed(3)] = c; });
 const heat = L.heatLayer([], { radius: 14, blur: 16, max: 1, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGradient }).addTo(map);
+const pointLayer = L.layerGroup().addTo(map);
 let lastZoom = map.getZoom();
-map.on('moveend', () => {               // reload heat for the visible area; new colour scale only when zoom changed
-  heat.options.maxZoom = map.getZoom();
-  const zoomed = map.getZoom() !== lastZoom; lastZoom = map.getZoom();
-  clearTimeout(zoomTimer); zoomTimer = setTimeout(() => refreshHeat(zoomed), 250);
-});
-$('mapLegendBar').style.background = viridisCss; $('calLegendBar').style.background = viridisCss;
+map.on('moveend', () => { heat.options.maxZoom = map.getZoom(); const z = map.getZoom() !== lastZoom; lastZoom = map.getZoom(); clearTimeout(zoomTimer); zoomTimer = setTimeout(() => refreshMap(z), 250); });
+$('calLegendBar').style.background = viridisCss;
 
 const drawn = new L.FeatureGroup().addTo(map);
-const shape = { color: '#21708a', weight: 2, fillOpacity: 0.06 };
-map.addControl(new L.Control.Draw({
-  position: 'topleft',
-  draw: { polyline: false, circle: false, circlemarker: false, marker: false, polygon: { shapeOptions: shape, allowIntersection: false }, rectangle: { shapeOptions: shape } },
-  edit: { featureGroup: drawn, edit: false, remove: false }
-}));
+const shape = { color: '#21708a', weight: 2, fillOpacity: 0.05 };
+map.addControl(new L.Control.Draw({ position: 'topleft', draw: { polyline: false, circle: false, circlemarker: false, marker: false, polygon: { shapeOptions: shape, allowIntersection: false }, rectangle: { shapeOptions: shape } }, edit: { featureGroup: drawn, edit: false, remove: false } }));
 map.on(L.Draw.Event.CREATED, e => { drawn.clearLayers(); drawn.addLayer(e.layer); setRegion(e.layer, e.layerType === 'polygon'); });
-
 function setRegion(layer, isPoly) {
-  const b = layer.getBounds();
-  let poly = null;
+  const b = layer.getBounds(); let poly = null;
   if (isPoly) { const ll = layer.getLatLngs(); poly = (Array.isArray(ll[0]) ? ll[0] : ll).map(p => [p.lat, p.lng]); }
-  state.region = { minLat: b.getSouth(), maxLat: b.getNorth(), minLon: Math.max(-180, b.getWest()), maxLon: Math.min(180, b.getEast()), poly };
-  $('minLat').value = b.getSouth().toFixed(2); $('maxLat').value = b.getNorth().toFixed(2);
-  $('minLon').value = b.getWest().toFixed(2); $('maxLon').value = b.getEast().toFixed(2);
-  $('regionInfo').textContent = poly ? `Polygon with ${poly.length} vertices` :
-    `Box ${b.getSouth().toFixed(2)}…${b.getNorth().toFixed(2)}° lat, ${b.getWest().toFixed(2)}…${b.getEast().toFixed(2)}° lon`;
-  refresh();
+  S.region = { minLat: Math.max(-90, b.getSouth()), maxLat: Math.min(90, b.getNorth()), minLon: Math.max(-180, b.getWest()), maxLon: Math.min(180, b.getEast()), poly };
+  ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(k => $(k).value = S.region[k].toFixed(2));
+  updateAreaInfo(); refresh();
 }
+function updateAreaInfo() {
+  const R = S.region;
+  $('areaInfo').innerHTML = R ? `Area: ${R.poly ? `polygon (${R.poly.length} pts)` : `${R.minLat.toFixed(1)}…${R.maxLat.toFixed(1)}°, ${R.minLon.toFixed(1)}…${R.maxLon.toFixed(1)}°`} · region ${regionOf((R.minLat + R.maxLat) / 2, (R.minLon + R.maxLon) / 2)} <a href="#" id="areaClear" title="Clear area">×</a>` : 'Area: whole dataset';
+  const a = $('areaClear'); if (a) a.onclick = ev => { ev.preventDefault(); clearRegion(); refresh(); };
+}
+function applyBox(v) { const rect = L.rectangle([[v[0], v[2]], [v[1], v[3]]], shape); drawn.clearLayers(); drawn.addLayer(rect); map.fitBounds(rect.getBounds(), { padding: [20, 20] }); setRegion(rect, false); }
 $('applyBox').addEventListener('click', () => {
   const v = ['minLat', 'maxLat', 'minLon', 'maxLon'].map(id => parseFloat($(id).value));
-  if (v.some(x => !isFinite(x)) || v[0] >= v[1] || v[2] >= v[3] || v[0] < -90 || v[1] > 90 || v[2] < -180 || v[3] > 180) {
-    toast('Enter a valid box: min < max, lat −90…90, lon −180…180'); return;
-  }
-  const rect = L.rectangle([[v[0], v[2]], [v[1], v[3]]], shape);
-  drawn.clearLayers(); drawn.addLayer(rect); map.fitBounds(rect.getBounds(), { padding: [20, 20] });
-  setRegion(rect, false);
+  if (v.some(x => !isFinite(x)) || v[0] >= v[1] || v[2] >= v[3] || v[0] < -90 || v[1] > 90 || v[2] < -180 || v[3] > 180) { toast('Enter a valid box: min < max, lat −90…90, lon −180…180'); return; }
+  applyBox(v);
 });
-function clearRegion() {
-  drawn.clearLayers(); state.region = null;
-  ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(id => $(id).value = '');
-  $('regionInfo').textContent = 'Whole dataset';
-}
+function clearRegion() { drawn.clearLayers(); S.region = null; ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(id => $(id).value = ''); updateAreaInfo(); }
 $('clearRegion').addEventListener('click', () => { clearRegion(); refresh(); });
-function pip(lat, lon, poly) {
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const yi = poly[i][0], xi = poly[i][1], yj = poly[j][0], xj = poly[j][1];
-    if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
-  }
-  return inside;
-}
-function inRegion(p, R) {
-  if (!R) return true;
-  if (p.lat < R.minLat || p.lat > R.maxLat || p.lon < R.minLon || p.lon > R.maxLon) return false;
-  return R.poly ? pip(p.lat, p.lon, R.poly) : true;
-}
+function pip(lat, lon, poly) { let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const yi = poly[i][0], xi = poly[i][1], yj = poly[j][0], xj = poly[j][1]; if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside; } return inside; }
+function inRegion(p, R) { if (!R) return true; if (p.lat < R.minLat || p.lat > R.maxLat || p.lon < R.minLon || p.lon > R.maxLon) return false; return R.poly ? pip(p.lat, p.lon, R.poly) : true; }
 
-/* ---------- provider switching ---------- */
+/* ---------- provider switch ---------- */
 function useProvider(p) {
-  stopPlay();
-  state.provider = p;
-  const [first, last] = p.span();
-  $('source').textContent = p.label();
-  $('source').className = 'pill ' + (p.name === 'api' ? 'api' : (p.isDemo ? 'demo' : ''));
-  $('apiBtn').style.display = ApiProvider.meta && p.name !== 'api' ? '' : 'none';
-  state.from = first; state.to = last; state.mapPeriod = null;
+  stopPlay(); S.provider = p; S.meta = p.meta();
+  const first = S.meta.first_date, last = S.meta.last_date;
+  $('source').textContent = p.label(); $('source').className = 'pill ' + (p.name === 'api' ? 'api' : (p.isDemo ? 'demo' : ''));
+  $('apiBtn').style.display = ApiProvider.m && p.name !== 'api' ? '' : 'none';
+  S.from = first; S.to = last; S.mapPeriod = null;
   ['from', 'to'].forEach(id => { $(id).min = first; $(id).max = last; });
-  $('from').value = first; $('to').value = last;
   setGran(dayDiff(first, last) <= 92 ? 'day' : 'month', false);
-  $('typeHint').textContent = p.hasType() ? 'Type 0 = presumed vegetation fire.' : 'Current data has no type column (only archive files have it).';
   clearRegion();
-  const [w, s, e, n] = p.bbox();
-  if (e - w > 200) map.setView([15, 0], 2); else map.fitBounds([[s, w], [n, e]], { padding: [20, 20], maxZoom: 8 });
-  refresh();
+  const [w, s, e, n] = S.meta.bbox;
+  if (e - w > 200) map.setView([10, 10], 2); else map.fitBounds([[s, w], [n, e]], { padding: [20, 20], maxZoom: 6 });
+  renderFooter(); refresh();
 }
 
 /* ---------- data flow ---------- */
-async function refresh() {          // filters / region / granularity changed -> refetch series
-  const p = state.provider; if (!p) return;
-  const id = ++state.req; busy(true);
+async function refresh() {
+  const p = S.provider; if (!p) return;
+  const id = ++S.req; busy(true);
   try {
-    const rows = await p.series(filters(), state.gran);
-    if (id !== state.req) return;
-    state.rows = rows;
-    renderAll(); await refreshHeat(true);
-  } catch (err) { console.error(err); toast('Could not load data'); }
-  finally { if (id === state.req) busy(false); }
+    const f = F(), [rows, sat] = await Promise.all([p.series(f, S.gran), p.satellites(f, S.gran)]);
+    if (id !== S.req) return;
+    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange();
+  } catch (e) { console.error(e); toast('Could not load data'); }
+  finally { if (id === S.req) busy(false); }
 }
-function onRangeChange() { state.mapPeriod = null; renderAll(); refreshHeat(true); }
-
-function recompute() {
-  let from = state.from, to = state.to; const [first, last] = state.provider.span();
-  if (from < first) from = first; if (to > last) to = last; if (from > to) [from, to] = [to, from];
-  if (state.gran === 'day' && dayDiff(from, to) > 366) { from = addDays(to, -365); state.from = from; $('from').value = from; toast('Daily view limited to 1 year: start moved'); }
-  state.rangePeriods = periodsBetween(from, to, state.gran);
-  state.rangeStart = from; state.rangeEnd = to;
-  if (state.mapPeriod && !state.rangePeriods.includes(state.mapPeriod)) state.mapPeriod = null;
+function onRange() { computeRange(); markTimeline(); renderRange(); }
+function renderRange() {
+  renderKPIs(); renderCalendar(); renderAnomaly(); renderSeason(); renderYearly(); renderCheck(); renderSwim(); renderCalib(); renderInsights();
+  loadRangeViews(); refreshMap(true);
 }
-function value(p, view = state.view) {
-  const r = state.rows[p]; if (!r) return 0;
-  const c = state.metric === 'count';
-  switch (view) {
-    case 'modis': return c ? r.modis_n : r.modis_frp;
-    case 'viirs': return c ? r.viirs_n : r.viirs_frp;
-    case 'viirsH': return c ? r.viirs_h_n : r.viirs_h_frp;
-    default: return c ? r.harm_n : r.harm_frp;
-  }
+function computeRange() {
+  const first = S.meta.first_date, last = S.meta.last_date;
+  let a = S.from < first ? first : S.from, b = S.to > last ? last : S.to; if (a > b) [a, b] = [b, a];
+  if (S.gran === 'day' && dayDiff(a, b) > 366) { a = addDays(b, -365); S.from = a; toast('Daily view: limited to 1 year'); }
+  S.rangeStart = a; S.rangeEnd = b; $('from').value = a; $('to').value = b;
+  S.periods = periodsBetween(first, last, S.gran); S.rangeP = periodsBetween(a, b, S.gran);
+  if (S.mapPeriod && !S.rangeP.includes(S.mapPeriod)) S.mapPeriod = null;
+  $('rangeLabel').textContent = `${a} → ${b} · ${S.rangeP.length} ${S.gran === 'day' ? 'days' : 'months'}`;
 }
-const unit = () => state.metric === 'count' ? 'hotspots' : 'MW FRP';
-const viewName = () => ({ harm: 'Harmonized', modis: 'MODIS raw', viirs: 'VIIRS raw' })[state.view];
-
-/* medians: monthly -> same calendar month across all years; daily -> all days in the range */
-function baseline(p, excludeSelf) {
-  if (state.gran === 'month') {
-    const m = p.slice(5, 7);
-    const vals = Object.keys(state.rows).filter(k => k.slice(5, 7) === m && (!excludeSelf || k !== p)).map(k => value(k));
-    const [first, last] = state.provider.span();
-    const years = monthsBetween(first.slice(0, 7), last.slice(0, 7)).filter(k => k.slice(5, 7) === m && (!excludeSelf || k !== p));
-    while (vals.length < years.length) vals.push(0);          // months without detections count as 0
-    return { med: median(vals), n: vals.length };
-  }
-  const vals = state.rangePeriods.filter(k => !excludeSelf || k !== p).map(k => value(k));
-  return { med: median(vals), n: vals.length };
+async function loadRangeViews() {
+  const id = ++S.rreq, f = F(), p = S.provider;
+  try {
+    const [dist, mx] = await Promise.all([p.distributions(f, S.rangeStart, S.rangeEnd), p.matrix(f, S.gran, S.view, S.metric, S.rangeStart, S.rangeEnd, 30)]);
+    if (id !== S.rreq) return; S.dist = dist; S.matrix = mx; renderDist(); drawMatrix(); renderInsights();
+  } catch (e) { console.error(e); }
 }
 
-function renderAll() {
-  recompute(); renderHarmInfo(); renderKPIs(); renderCalendar(); renderAnomaly(); renderCompare();
+/* ---------- values ---------- */
+function daysIn(p) {
+  if (S.gran === 'day') return 1;
+  const [a, b] = pRange(p, 'month'), s = a < S.meta.first_date ? S.meta.first_date : a, e = b > S.meta.last_date ? S.meta.last_date : b;
+  return Math.max(1, dayDiff(s, e) + 1);
+}
+const FIELD = { harm: ['harm_n', 'harm_frp'], raw: ['raw_n', 'raw_frp'], modis: ['modis_n', 'modis_frp'], viirs: ['viirs_n', 'viirs_frp'], modisCal: ['modis_cal_n', 'modis_cal_frp'], lo: ['harm_n_lo', 'harm_frp_lo'], hi: ['harm_n_hi', 'harm_frp_hi'] };
+function val(p, view = S.view, perDay = S.perDay) { const r = S.rows[p]; if (!r) return 0; const v = r[FIELD[view][S.metric === 'count' ? 0 : 1]]; return perDay ? v / daysIn(p) : v; }
+function calShare(p) { const r = S.rows[p]; return r && r.harm_n > 0 ? r.modis_h_n / r.harm_n : 0; }
+const unit = () => (S.metric === 'count' ? 'hotspots' : 'MW') + (S.perDay ? '/day' : '');
+const viewName = () => ({ harm: 'Harmonized (VIIRS level)', raw: 'Raw, all sensors', modis: 'Raw MODIS', viirs: 'Raw VIIRS' })[S.view];
+const latestYear = () => S.meta.last_date.slice(0, 4);
+function baseline(p) {
+  if (S.gran === 'month') { const m = p.slice(5, 7); const v = S.periods.filter(k => k.slice(5, 7) === m && k.slice(0, 4) !== p.slice(0, 4)).map(k => val(k)); return { med: median(v), n: v.length }; }
+  const v = S.rangeP.filter(k => k !== p).map(k => val(k)); return { med: median(v), n: v.length };
 }
 
-function renderHarmInfo() {
-  const info = state.provider.info() || {}, pr = info.params || {};
-  const st = info.status === 'final' ? 'final' : 'placeholder';
-  const params = Object.entries(pr).filter(([, v]) => v !== null && v !== undefined).map(([k, v]) => `${k} = <b>${typeof v === 'number' ? +v.toFixed(4) : v}</b>`).join('<br>');
-  const xs = [], ys = [], c = state.metric === 'count';
-  for (const p of state.rangePeriods) { const r = state.rows[p]; if (r && r.modis_n > 0 && r.viirs_n > 0) { xs.push(c ? r.modis_n : r.modis_frp); ys.push(c ? r.viirs_n : r.viirs_frp); } }
-  const rr = pearson(xs, ys);
-  $('harmInfo').innerHTML = `<b>${info.name || 'unknown'}</b> v${info.version || '?'}<span class="badge ${st}">${st}</span>` +
-    (info.description ? `<div style="color:var(--muted);margin:4px 0">${info.description}</div>` : '') +
-    (params ? `<div>${params}</div>` : '') +
-    (rr !== null ? `<div style="margin-top:4px">MODIS vs VIIRS in this area: <b>r = ${rr.toFixed(2)}</b> (${xs.length} ${state.gran === 'day' ? 'days' : 'months'})</div>` : '');
+/* ---------- timeline (focus + context, brushing) ---------- */
+const plotCfg = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d'], toImageButtonOptions: { format: 'png', scale: 2 } };
+const L0 = { margin: { l: 52, r: 10, t: 6, b: 30 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { family: 'system-ui,sans-serif', size: 11, color: '#3a3a37' } };
+const xd = p => p.length === 7 ? p + '-15' : p;
+const xd2 = (d, side) => S.gran === 'month' ? (side === 'start' ? d.slice(0, 7) + '-01' : lastDay(d.slice(0, 7))) : (side === 'start' ? d + ' 00:00' : d + ' 23:59');
+let tlLock = false;
+function timelineShapes() {
+  const sh = Object.values(SAT_START).filter(d => d > S.meta.first_date && d < S.meta.last_date).map(d => ({ type: 'line', x0: d, x1: d, yref: 'paper', y0: 0, y1: 1, line: { color: '#999', dash: 'dot', width: 1 } }));
+  if (S.mapPeriod) { const [a, b] = pRange(S.mapPeriod, S.gran); sh.push({ type: 'rect', x0: a, x1: b + ' 23:59', yref: 'paper', y0: 0, y1: 1, fillcolor: 'rgba(213,94,0,.2)', line: { width: 0 } }); }
+  return sh;
+}
+function renderTimeline() {
+  const ps = S.periods, cal = ps.map(p => S.view === 'harm' && calShare(p) > .5);
+  tlLock = true;
+  Plotly.react('timeline', [{ type: 'bar', x: ps.map(xd), y: ps.map(p => val(p)), customdata: ps.map(plabel),
+    marker: { color: cal.map(c => c ? '#7fa7b5' : '#21708a'), pattern: { shape: cal.map(c => c ? '/' : ''), fgcolor: '#fff', size: 5, solidity: .3 } },
+    hovertemplate: '%{customdata}: %{y:,.0f} ' + unit() + '<extra></extra>' }],
+    { ...L0, margin: { l: 52, r: 10, t: 4, b: 4 }, bargap: .05, shapes: timelineShapes(),
+      xaxis: { type: 'date', range: [xd2(S.rangeStart, 'start'), xd2(S.rangeEnd, 'end')], rangeslider: { visible: true, thickness: .3, bgcolor: '#f3f3f1' } },
+      yaxis: { gridcolor: '#eeede8', title: { text: unit(), font: { size: 10 } } } }, plotCfg).then(() => setTimeout(() => tlLock = false, 50));
+  const el = $('timeline');
+  if (el._bound) return; el._bound = true;
+  el.on('plotly_relayout', ev => {
+    if (tlLock) return;
+    let a = ev['xaxis.range[0]'] ?? (ev['xaxis.range'] || [])[0], b = ev['xaxis.range[1]'] ?? (ev['xaxis.range'] || [])[1];
+    if (ev['xaxis.autorange']) { a = S.meta.first_date; b = S.meta.last_date; }
+    if (!a || !b) return;
+    a = String(a).slice(0, 10); b = String(b).slice(0, 10);
+    if (S.gran === 'month') { a = a.slice(0, 7) + '-01'; b = lastDay(b.slice(0, 7)); }
+    clearTimeout(el._t); el._t = setTimeout(() => { S.from = a; S.to = b; computeRange(); renderRange(); }, 300);
+  });
+  el.on('plotly_click', ev => { const d = String(ev.points[0].x).slice(0, 10); stopPlay(); selectPeriod(pOf(d, S.gran)); });
+}
+function markTimeline() { tlLock = true; Plotly.relayout('timeline', { 'xaxis.range': [xd2(S.rangeStart, 'start'), xd2(S.rangeEnd, 'end')], shapes: timelineShapes() }).then(() => setTimeout(() => tlLock = false, 50)); }
+$('resetRange').addEventListener('click', () => { S.from = S.meta.first_date; S.to = S.meta.last_date; onRange(); });
+$('from').addEventListener('change', e => { if (e.target.value) { S.from = e.target.value; onRange(); } });
+$('to').addEventListener('change', e => { if (e.target.value) { S.to = e.target.value; onRange(); } });
+
+function selectPeriod(p) {
+  S.mapPeriod = (S.mapPeriod === p) ? null : p;
+  document.querySelectorAll('.cell.sel').forEach(c => c.classList.remove('sel'));
+  if (S.mapPeriod) { const c = document.querySelector(`.cell[data-p="${S.mapPeriod}"]`); if (c) c.classList.add('sel'); }
+  tlLock = true; Plotly.relayout('timeline', { shapes: timelineShapes() }).then(() => setTimeout(() => tlLock = false, 50));
+  drawMatrix(); return refreshMap(false);
 }
 
+/* ---------- KPIs, warnings, insights ---------- */
+const sumRange = field => S.rangeP.reduce((a, p) => a + (S.rows[p] ? S.rows[p][field] : 0), 0);
 function renderKPIs() {
-  const ps = state.rangePeriods, u = unit(), day = state.gran === 'day';
-  const vals = ps.map(p => value(p)), total = vals.reduce((a, b) => a + b, 0);
-  const peak = ps.reduce((a, p) => value(p) > value(a) ? p : a, ps[0]);
-  let third;
-  if (day) third = `<div class="kpi"><div class="l">Daily average</div><div class="v">${fmt(total / ps.length)}</div><div class="s">${u} per day</div></div>`;
-  else {
-    const years = {}; ps.forEach(p => { const y = p.slice(0, 4); years[y] = (years[y] || 0) + value(p); });
-    const by = Object.keys(years).reduce((a, y) => years[y] > years[a] ? y : a, Object.keys(years)[0]);
-    third = `<div class="kpi"><div class="l">Busiest year</div><div class="v">${by}</div><div class="s">${fmt(years[by])} ${u}</div></div>`;
-  }
-  const last = ps[ps.length - 1], lv = value(last), b = baseline(last, true);
-  const ok = b.n >= (day ? 2 : 2) && b.med > 0, pct = ok ? (lv - b.med) / b.med * 100 : null;
-  const cls = pct === null ? '' : pct >= 0 ? 'up' : 'down';
-  const label = day ? `${plabel(last)} vs median of the other days` : `${plabel(last)} vs median of other years`;
+  const c = S.metric === 'count', hN = sumRange('harm_n'), hF = sumRange('harm_frp');
+  const mN = sumRange('modis_n'), vN = sumRange('viirs_n'), raw = sumRange('raw_n'), night = sumRange('n_night'), high = sumRange('n_high'), calHN = sumRange('modis_h_n');
+  const days = S.rangeP.reduce((a, p) => a + daysIn(p), 0), calPct = pct(calHN, hN);
+  const last = S.rangeP[S.rangeP.length - 1], lv = val(last), b = baseline(last), ok = b.n >= 3 && b.med > 0, d = ok ? (lv - b.med) / b.med * 100 : null;
+  const bandN = calPct > 1 ? `<div class="s">25–75 %: ${fmt(sumRange('harm_n_lo'))}–${fmt(sumRange('harm_n_hi'))}</div>` : '';
+  const bandF = calPct > 1 ? `<div class="s">25–75 %: ${short(sumRange('harm_frp_lo'))}–${short(sumRange('harm_frp_hi'))} MW</div>` : '';
   $('kpis').innerHTML = `
-    <div class="kpi"><div class="l">Total in range</div><div class="v">${fmt(total)}</div><div class="s">${u}, ${ps.length} ${day ? 'days' : 'months'}</div></div>
-    <div class="kpi"><div class="l">Peak ${day ? 'day' : 'month'}</div><div class="v">${plabel(peak)}</div><div class="s">${fmt(value(peak))} ${u}</div></div>
-    ${third}
-    <div class="kpi"><div class="l">${label}</div><div class="v ${cls}">${pct === null ? 'n/a' : `${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(0)}%`}</div>
-      <div class="s">${ok ? `${fmt(lv)} vs median ${fmt(b.med)}` : 'needs more history'}</div></div>`;
+    <div class="kpi"><div class="l">Harmonized hotspots</div><div class="v">${fmt(hN)}</div><div class="s">${fmt(hN / days)} per day${calPct > 1 ? ` · ${calPct.toFixed(0)} % from MODIS` : ''}</div>${bandN}</div>
+    <div class="kpi"><div class="l">Harmonized FRP</div><div class="v">${short(hF)} MW</div><div class="s">${fmt(hF / days)} MW per day</div>${bandF}</div>
+    <div class="kpi"><div class="l">Raw detections</div><div class="v">${fmt(raw)}</div><div class="s"><span class="dot" style="background:var(--modis)"></span>MODIS ${fmt(mN)} · <span class="dot" style="background:var(--viirs)"></span>VIIRS ${fmt(vN)}</div></div>
+    <div class="kpi"><div class="l">${plabel(last)} vs ${S.gran === 'month' ? 'same month, other years' : 'other days'}</div><div class="v ${d === null ? '' : d >= 0 ? 'up' : 'down'}">${d === null ? 'n/a' : `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(0)} %`}</div><div class="s">${ok ? `${fmt(lv)} vs median ${fmt(b.med)} (${b.n} ${S.gran === 'month' ? 'yrs' : 'days'})` : 'needs ≥ 3 years of history'}</div></div>
+    <div class="kpi"><div class="l">Night share</div><div class="v">${raw ? (night / raw * 100).toFixed(0) : '–'} %</div><div class="s">of raw detections</div></div>
+    <div class="kpi"><div class="l">High confidence</div><div class="v">${raw ? (high / raw * 100).toFixed(0) : '–'} %</div><div class="s">of raw detections</div></div>`;
+  $('hits').innerHTML = `<b>${fmt(raw)}</b> raw · <b>${fmt(hN)}</b> harmonized`;
+  const perPeriod = hN / Math.max(1, S.rangeP.length), w = [];
+  if (S.meta.data_version === 'demo') w.push('Demo data: synthetic numbers for testing the layout, not real fires.');
+  if (perPeriod < 30) w.push(`Few hotspots (${fmt(perPeriod)} per ${S.gran === 'day' ? 'day' : 'month'}): the MODIS → VIIRS conversion is uncertain here.`);
+  if ((S.meta.harmonization || {}).status !== 'final') w.push('Harmonization is a placeholder until the team’s calibration is delivered.');
+  $('warnBox').innerHTML = w.map(x => `<div class="warn" style="margin-top:4px">${x}</div>`).join('');
+}
+function renderInsights() {
+  const ps = S.rangeP, u = unit(), out = [];
+  if (!ps.length) return;
+  const peak = ps.reduce((a, p) => val(p) > val(a) ? p : a, ps[0]);
+  out.push(`Strongest ${S.gran === 'day' ? 'day' : 'month'} in the period: <b>${plabel(peak)}</b> with ${fmt(val(peak))} ${u}.`);
+  if (S.gran === 'month') {
+    const yrs = yearTotals().filter(y => y.complete);
+    if (yrs.length >= 3) {
+      const top = yrs.reduce((a, y) => y.v > a.v ? y : a), low = yrs.reduce((a, y) => y.v < a.v ? y : a); out.push(`Most active year: <b>${top.y}</b>; quietest: <b>${low.y}</b>.`);
+      const fit = linfit(yrs.map(y => +y.y), yrs.map(y => y.v)); if (fit && fit.mean) out.push(`Trend over complete years: <b>${fit.b >= 0 ? '+' : '−'}${Math.abs(fit.b / fit.mean * 100).toFixed(1)} % per year</b>${Math.abs(fit.b / fit.mean) < .01 ? ' (roughly stable)' : ''}.`);
+    }
+    const s = seasonStats(); if (s && Math.max(...s.n) >= 2) { const meds = s.med.map(v => v || 0), max = Math.max(...meds), on = meds.map((v, i) => v >= max * .5 ? i : -1).filter(i => i >= 0);
+      if (on.length && max > 0) out.push(`Fire season (months above half the peak): <b>${on.map(i => MONTHS[i]).join(', ')}</b>, peak in <b>${MONTHS[meds.indexOf(max)]}</b>.`); }
+  }
+  const last = ps[ps.length - 1], b = baseline(last); if (b.n >= 3 && b.med > 0) { const d = (val(last) - b.med) / b.med * 100; out.push(`${plabel(last)} is <b>${Math.abs(d).toFixed(0)} % ${d >= 0 ? 'above' : 'below'}</b> the median of ${S.gran === 'month' ? 'the same month in other years' : 'the other days'}.`); }
+  const mN = sumRange('modis_n'), vN = sumRange('viirs_n'); if (mN > 0 && vN > 0) out.push(`VIIRS detects <b>${(vN / mN).toFixed(1)}×</b> as many hotspots as MODIS here (finer pixels, more satellites); for FRP the ratio is only ${(sumRange('viirs_frp') / sumRange('modis_frp')).toFixed(1)}×. Raw counts are therefore not comparable.`);
+  if (S.dist && S.dist.local_hour) { const v = S.dist.local_hour.VIIRS, m = S.dist.local_hour.MODIS, tot = v.map((x, i) => x + m[i]), mx = Math.max(...tot); if (mx > 0) { const h = tot.indexOf(mx); out.push(`Most detections at <b>${pad(h)}:00–${pad((h + 1) % 24)}:00</b> local time, which matches satellite overpasses rather than the fires’ daily peak.`); } }
+  if (S.gran === 'month') {     // only mention a satellite change if raw VIIRS really jumps (12 months before vs after)
+    const jumps = Object.entries(SAT_START).filter(([s, d]) => SAT_SENSOR[s] === 'VIIRS' && s !== 'SNPP' && d > S.rangeStart && d <= S.rangeEnd).map(([s, d]) => {
+      const i = S.periods.indexOf(d.slice(0, 7)); if (i < 12 || i + 12 > S.periods.length) return null;
+      const mean = a => a.reduce((x, k) => x + (S.rows[k] ? S.rows[k].viirs_n : 0), 0) / a.length, before = mean(S.periods.slice(i - 12, i)), after = mean(S.periods.slice(i, i + 12));
+      return before > 0 && after / before > 1.25 ? `${s} (${d.slice(0, 4)}): raw VIIRS +${((after / before - 1) * 100).toFixed(0)} %` : null; }).filter(Boolean);
+    if (jumps.length) out.push(`New satellites raise raw counts: ${jumps.join(', ')}. Part of this is more overpasses, not more fire; the correction per satellite combination is planned by the data team.`);
+  }
+  $('insights').innerHTML = out.map(x => `<li>${x}</li>`).join('');
 }
 
+/* ---------- calendar ---------- */
 function cellHtml(p, v, ref) {
-  const t = v / ref, bg = v > 0 ? viridis(t) : '#efeee9', fg = v > 0 && t < 0.62 ? '#fff' : '#1f1f1d';
-  return `<button class="cell${state.mapPeriod === p ? ' sel' : ''}" data-p="${p}" style="background:${bg};color:${fg}" title="${plabel(p)}: ${fmt(v)} ${unit()}" aria-label="${plabel(p)}: ${fmt(v)} ${unit()}">${short(v)}</button>`;
+  const t = v / ref, bg = v > 0 ? viridis(t) : '#efeee9', fg = v > 0 && t < 0.62 ? '#fff' : '#1f1f1d', cal = S.view === 'harm' && calShare(p) > .5;
+  return `<button class="cell${cal ? ' cal' : ''}${S.mapPeriod === p ? ' sel' : ''}" data-p="${p}" style="background:${bg};color:${fg}" data-tip="${plabel(p)}: ${fmt(v)} ${unit()}${cal ? ' · converted from MODIS' : ''}">${short(v)}</button>`;
 }
 function renderCalendar() {
-  const ps = state.rangePeriods, inR = new Set(ps);
-  const ref = quantile(ps.map(p => value(p)).filter(v => v > 0), 0.95);
-  const cal = $('cal'); let h = '';
-  if (state.gran === 'month') {
-    cal.style.gridTemplateColumns = '44px repeat(12,minmax(0,1fr)) 54px';
+  const ps = S.rangeP, inR = new Set(ps), ref = quantile(ps.map(p => val(p)).filter(v => v > 0), .95) || 1, cal = $('cal'); let h = '';
+  if (S.gran === 'month') {
+    cal.style.gridTemplateColumns = '40px repeat(12,minmax(0,1fr)) 50px';
     h = '<div></div>' + MONTHS.map(m => `<div class="h">${m}</div>`).join('') + '<div class="h" style="text-align:right">Year</div>';
-    for (const y of [...new Set(ps.map(p => +p.slice(0, 4)))]) {
-      let ys = 0; h += `<div class="y">${y}</div>`;
-      for (let m = 1; m <= 12; m++) {
-        const p = `${y}-${pad(m)}`;
-        if (!inR.has(p)) { h += '<div class="cell off" aria-hidden="true"></div>'; continue; }
-        const v = value(p); ys += v; h += cellHtml(p, v, ref);
-      }
-      h += `<div class="t">${short(ys)}</div>`;
-    }
+    for (const y of [...new Set(ps.map(p => +p.slice(0, 4)))]) { let ys = 0; h += `<div class="y">${y}</div>`;
+      for (let m = 1; m <= 12; m++) { const p = `${y}-${pad(m)}`; if (!inR.has(p)) { h += '<div class="cell off"></div>'; continue; } const v = val(p); ys += v; h += cellHtml(p, v, ref); }
+      h += `<div class="t">${short(ys)}</div>`; }
   } else {
-    cal.style.gridTemplateColumns = '86px repeat(7,minmax(0,1fr)) 54px';
+    cal.style.gridTemplateColumns = '86px repeat(7,minmax(0,1fr)) 50px';
     h = '<div></div>' + WD.map(d => `<div class="h">${d}</div>`).join('') + '<div class="h" style="text-align:right">Week</div>';
-    const s0 = toDate(ps[0]), monday = addDays(ps[0], -((s0.getUTCDay() + 6) % 7));
-    for (let w = monday; w <= ps[ps.length - 1]; w = addDays(w, 7)) {
-      let ws = 0; h += `<div class="y">${plabel(w)}</div>`;
-      for (let i = 0; i < 7; i++) {
-        const p = addDays(w, i);
-        if (!inR.has(p)) { h += '<div class="cell off" aria-hidden="true"></div>'; continue; }
-        const v = value(p); ws += v; h += cellHtml(p, v, ref);
-      }
-      h += `<div class="t">${short(ws)}</div>`;
-    }
+    const s0 = toDate(ps[0]), mon = addDays(ps[0], -((s0.getUTCDay() + 6) % 7));
+    for (let w = mon; w <= ps[ps.length - 1]; w = addDays(w, 7)) { let ws = 0; h += `<div class="y">${plabel(w)}</div>`;
+      for (let i = 0; i < 7; i++) { const p = addDays(w, i); if (!inR.has(p)) { h += '<div class="cell off"></div>'; continue; } const v = val(p); ws += v; h += cellHtml(p, v, ref); }
+      h += `<div class="t">${short(ws)}</div>`; }
   }
   cal.innerHTML = h;
-  $('calLegendMax').textContent = `≥ ${short(ref)} ${unit()} (95th percentile)`;
-  $('calDesc').textContent = `${viewName()} ${unit()} per ${state.gran === 'day' ? 'day' : 'month'}. Click a cell to show it on the map.`;
+  $('calLegendMax').textContent = `≥ ${short(ref)} ${unit()} (95th pct.)`;
+  $('calHow').textContent = `${viewName()}, ${unit()} per ${S.gran === 'day' ? 'day' : 'month'} in the selected area. Hover for values, click to show a ${S.gran === 'day' ? 'day' : 'month'} on the map.`;
+  $('calNote').textContent = S.gran === 'month' ? 'rows = years, columns = months' : 'rows = weeks';
 }
-$('cal').addEventListener('click', e => {
-  const b = e.target.closest('.cell[data-p]'); if (!b) return;
-  stopPlay(); selectMapPeriod(state.mapPeriod === b.dataset.p ? null : b.dataset.p);
-});
-function selectMapPeriod(p) {
-  state.mapPeriod = p;
-  document.querySelectorAll('.cell.sel').forEach(c => c.classList.remove('sel'));
-  if (p) { const c = document.querySelector(`.cell[data-p="${p}"]`); if (c) c.classList.add('sel'); }
-  return refreshHeat(false);
-}
+$('cal').addEventListener('click', e => { const b = e.target.closest('.cell[data-p]'); if (b) { stopPlay(); selectPeriod(b.dataset.p); } });
+$('cal').addEventListener('mousemove', e => { const b = e.target.closest('[data-tip]'); if (b) showTip(e, b.dataset.tip); else hideTip(); });
+$('cal').addEventListener('mouseleave', hideTip);
 
-const plotCfg = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ['lasso2d', 'select2d'], toImageButtonOptions: { format: 'png', scale: 2 } };
-const baseLayout = { margin: { l: 56, r: 10, t: 6, b: 36 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { family: 'system-ui,sans-serif', size: 11, color: '#3a3a37' }, xaxis: { gridcolor: '#eeede8' }, yaxis: { gridcolor: '#eeede8', zerolinecolor: '#9a9993' } };
-const xVals = ps => ps.length > 2 ? ps.map(p => p.length === 7 ? p + '-01' : p) : ps.map(plabel);
-const xAxis = ps => ({ ...baseLayout.xaxis, type: ps.length > 2 ? 'date' : 'category' });
-
+/* ---------- anomaly ---------- */
 function renderAnomaly() {
-  const ps = state.rangePeriods, last = ps.length - 1;
-  const meds = ps.map(p => baseline(p, false).med), an = ps.map((p, i) => value(p) - meds[i]);
-  $('anomDesc').textContent = state.gran === 'month'
-    ? 'Monthly value minus the median of the same calendar month across all years. The last month is outlined.'
-    : 'Daily value minus the median of all days in the range. Switch to monthly with several years of data for seasonal anomalies.';
-  Plotly.react('anomaly', [{
-    type: 'bar', x: xVals(ps), y: an, customdata: ps.map((p, i) => [plabel(p), fmt(value(p)), fmt(meds[i])]),
-    marker: { color: an.map(v => v >= 0 ? COLORS.warm : COLORS.cool), line: { color: an.map((v, i) => i === last ? '#000' : 'rgba(0,0,0,0)'), width: 2 } },
-    hovertemplate: '%{customdata[0]}<br>value %{customdata[1]} · median %{customdata[2]}<br>anomaly %{y:+,.0f}<extra></extra>'
-  }], { ...baseLayout, bargap: 0.1, xaxis: xAxis(ps), yaxis: { ...baseLayout.yaxis, title: { text: `Δ ${unit()}`, font: { size: 11 } } } },
-  { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_anomaly' } });
+  const ps = S.rangeP, last = ps.length - 1, meds = ps.map(p => baseline(p).med), vals = ps.map(p => val(p));
+  const an = ps.map((p, i) => meds[i] === null ? null : S.anomMode === 'pct' ? (meds[i] > 0 ? (vals[i] - meds[i]) / meds[i] * 100 : null) : vals[i] - meds[i]);
+  $('anomHow').textContent = S.gran === 'month' ? 'Each month compared with the median of the same calendar month in all OTHER years (its own year excluded). Orange = more fire than usual, blue = less. The last month is outlined.' : 'Each day compared with the median of the other days in the period. For seasonal anomalies switch to monthly with several years of data.';
+  Plotly.react('anomaly', [{ type: 'bar', x: ps.map(xd), y: an, customdata: ps.map((p, i) => [plabel(p), fmt(vals[i]), fmt(meds[i])]),
+    marker: { color: an.map(v => v >= 0 ? C.warm : C.cool), line: { color: an.map((v, i) => i === last ? '#000' : 'rgba(0,0,0,0)'), width: 2 } },
+    hovertemplate: '%{customdata[0]}<br>value %{customdata[1]} · median %{customdata[2]}<br>anomaly %{y:+,.0f}' + (S.anomMode === 'pct' ? ' %' : '') + '<extra></extra>' }],
+    { ...L0, bargap: .1, xaxis: { type: 'date', gridcolor: '#eeede8' }, yaxis: { gridcolor: '#eeede8', zerolinecolor: '#888', title: { text: S.anomMode === 'pct' ? 'Δ %' : `Δ ${unit()}`, font: { size: 10 } } } },
+    { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_anomaly' } });
 }
 
-function renderCompare() {
-  const ps = state.rangePeriods, x = xVals(ps), mode = ps.length <= 40 ? 'lines+markers' : 'lines';
-  const tr = (view, name, color, extra = {}) => ({ type: 'scatter', mode, name, x, y: ps.map(p => value(p, view)), line: { color, width: 1.5, ...extra }, marker: { size: 4 }, hovertemplate: `${name}: %{y:,.0f}<extra></extra>` });
-  const info = state.provider.info() || {}, vs = info.params && info.params.viirs_start;
-  const vx = vs ? (state.gran === 'month' ? vs.slice(0, 7) + '-01' : (vs.length === 7 ? vs + '-01' : vs)) : null;
-  const shapes = ps.length > 2 && vx && vx > x[0] && vx <= x[x.length - 1] ? [{ type: 'line', xref: 'x', yref: 'paper', x0: vx, x1: vx, y0: 0, y1: 1, line: { color: '#9a9993', dash: 'dash', width: 1 } }] : [];
-  Plotly.react('compare', [tr('modis', 'MODIS raw', COLORS.modis), tr('viirs', 'VIIRS raw', COLORS.viirs, { dash: 'dot' }), tr('viirsH', 'VIIRS harmonized', COLORS.viirsH), tr('harm', 'Harmonized total', COLORS.harm, { width: 2.5 })],
-    { ...baseLayout, shapes, hovermode: 'x unified', legend: { orientation: 'h', y: 1.14, x: 0, font: { size: 11 } }, margin: { ...baseLayout.margin, t: 28 }, xaxis: xAxis(ps), yaxis: { ...baseLayout.yaxis, title: { text: unit(), font: { size: 11 } } } },
-    { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_harmonization' } });
+/* ---------- seasonal pattern ---------- */
+function seasonStats() {
+  if (S.gran !== 'month') return null;
+  const ly = latestYear(), by = {}; for (const p of S.periods) { const m = +p.slice(5, 7) - 1; if (p.slice(0, 4) === ly) continue; (by[m] || (by[m] = [])).push(val(p)); }
+  const med = [], q1 = [], q3 = [], n = []; for (let m = 0; m < 12; m++) { const a = by[m] || []; med.push(median(a)); q1.push(quantile(a, .25)); q3.push(quantile(a, .75)); n.push(a.length); }
+  return { med, q1, q3, n, ly, cur: Array.from({ length: 12 }, (_, m) => S.rows[`${ly}-${pad(m + 1)}`] ? val(`${ly}-${pad(m + 1)}`) : null) };
+}
+function emptyChart(id, text) { Plotly.react(id, [], { ...L0, annotations: [{ text, showarrow: false, xref: 'paper', yref: 'paper', x: .5, y: .5, font: { color: '#888' } }], xaxis: { visible: false }, yaxis: { visible: false } }, plotCfg); }
+function renderSeason() {
+  const s = seasonStats();
+  if (!s || Math.max(...s.n) < 2) return emptyChart('season', S.gran === 'month' ? 'Needs at least 2 other years of monthly data' : 'Switch the calendar to monthly to see the seasonal pattern');
+  Plotly.react('season', [
+    { x: MONTHS, y: s.q3, type: 'scatter', mode: 'lines', line: { width: 0 }, hoverinfo: 'skip', showlegend: false },
+    { x: MONTHS, y: s.q1, type: 'scatter', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: 'rgba(33,112,138,.18)', name: 'middle 50 %', hoverinfo: 'skip' },
+    { x: MONTHS, y: s.med, type: 'scatter', mode: 'lines+markers', name: 'median (other years)', line: { color: '#21708a', width: 2.5 }, hovertemplate: '%{x}: median %{y:,.0f}<extra></extra>' },
+    { x: MONTHS, y: s.cur, type: 'scatter', mode: 'lines+markers', name: s.ly, line: { color: C.warm, width: 2, dash: 'dot' }, hovertemplate: `%{x} ${s.ly}: %{y:,.0f}<extra></extra>` }],
+    { ...L0, legend: { orientation: 'h', y: 1.15, x: 0 }, margin: { ...L0.margin, t: 24 }, yaxis: { gridcolor: '#eeede8', title: { text: unit(), font: { size: 10 } } } },
+    { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_season' } });
 }
 
-/* ---------- heatmap ---------- */
-/* grid cell ~ one heat-layer bin (8 px) at the current zoom, so the colour scale means "per cell" */
-function heatRes() {
-  const target = 360 / (256 * 2 ** map.getZoom()) * 8;
-  return [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 4].find(r => r >= target * 0.75) || 4;
+/* ---------- years compared ---------- */
+function yearTotals() {
+  const by = {}; for (const p of S.rangeP) { const y = p.slice(0, 4), o = by[y] || (by[y] = { y, v: 0, n: 0, cal: 0, h: 0 }); o.v += val(p, S.view, false); o.n++; const r = S.rows[p]; if (r) { o.cal += r.modis_h_n; o.h += r.harm_n; } }
+  return Object.values(by).map(o => ({ ...o, complete: S.gran === 'month' ? o.n === 12 && `${o.y}-12-31` <= S.meta.last_date && `${o.y}-01-01` >= S.meta.first_date.slice(0, 8) + '01' : o.n >= 365, calib: o.h > 0 && o.cal / o.h > .5 }));
+}
+function renderYearly() {
+  if (S.gran === 'day') {
+    const ps = S.rangeP; Plotly.react('yearly', [{ type: 'bar', x: ps.map(xd), y: ps.map(p => val(p)), marker: { color: '#21708a' }, hovertemplate: '%{x}: %{y:,.0f}<extra></extra>' }],
+      { ...L0, annotations: [{ text: 'Daily totals (switch to monthly to compare years)', showarrow: false, xref: 'paper', yref: 'paper', x: 0, y: 1.08, xanchor: 'left', font: { size: 11, color: '#888' } }], margin: { ...L0.margin, t: 20 }, xaxis: { type: 'date' }, yaxis: { gridcolor: '#eeede8', title: { text: unit(), font: { size: 10 } } } }, plotCfg); return;
+  }
+  const ys = yearTotals(), comp = ys.filter(y => y.complete), fit = linfit(comp.map(y => +y.y), comp.map(y => y.v));
+  const tr = [{ type: 'bar', x: ys.map(y => y.y), y: ys.map(y => y.v), name: 'total per year', marker: { color: ys.map(y => y.complete ? '#21708a' : '#b9d3dc'), pattern: { shape: ys.map(y => y.calib && S.view === 'harm' ? '/' : ''), fgcolor: '#fff', solidity: .3 } },
+    customdata: ys.map(y => (y.complete ? '' : ' (incomplete)') + (y.calib && S.view === 'harm' ? ' · converted from MODIS' : '')), hovertemplate: '%{x}: %{y:,.0f}%{customdata}<extra></extra>' }];
+  if (fit && comp.length >= 3) { const x0 = +comp[0].y, x1 = +comp[comp.length - 1].y; tr.push({ type: 'scatter', mode: 'lines', x: [String(x0), String(x1)], y: [fit.a + fit.b * x0, fit.a + fit.b * x1], name: `trend ${fit.b >= 0 ? '+' : '−'}${Math.abs(fit.b / fit.mean * 100).toFixed(1)} %/yr`, line: { color: C.warm, dash: 'dash', width: 2 } }); }
+  Plotly.react('yearly', tr, { ...L0, legend: { orientation: 'h', y: 1.15, x: 0 }, margin: { ...L0.margin, t: 24 }, xaxis: { type: 'category' }, yaxis: { gridcolor: '#eeede8', title: { text: S.metric === 'count' ? 'hotspots' : 'MW', font: { size: 10 } } } },
+    { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_years' } });
 }
 
-/* visible map area (padded), intersected with the selected region -> only that part is requested */
-function viewFilters() {
-  const f = filters(), b = map.getBounds().pad(0.25);
-  let v = [Math.max(-180, b.getWest()), Math.max(-90, b.getSouth()), Math.min(180, b.getEast()), Math.min(90, b.getNorth())];
+/* ---------- harmonization check ---------- */
+function renderCheck() {
+  const ps = S.rangeP, x = ps.length > 2 ? ps.map(xd) : ps.map(plabel), mode = ps.length <= 40 ? 'lines+markers' : 'lines', g = k => ps.map(p => val(p, k));
+  const tr = [
+    { x, y: g('hi'), type: 'scatter', mode: 'lines', line: { width: 0 }, hoverinfo: 'skip', showlegend: false },
+    { x, y: g('lo'), type: 'scatter', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: 'rgba(31,31,29,.12)', name: 'uncertainty 25–75 %', hoverinfo: 'skip' },
+    { x, y: g('modis'), type: 'scatter', mode, name: 'MODIS raw', line: { color: C.modis, width: 1.5 }, marker: { size: 4 } },
+    { x, y: g('viirs'), type: 'scatter', mode, name: 'VIIRS raw', line: { color: C.viirs, width: 1.5 }, marker: { size: 4 } },
+    { x, y: g('modisCal'), type: 'scatter', mode, name: 'MODIS × factor', line: { color: C.modisCal, width: 1.5, dash: 'dash' }, marker: { size: 4 } },
+    { x, y: g('harm'), type: 'scatter', mode, name: 'Harmonized', line: { color: C.harm, width: 2.5 }, marker: { size: 4 } }];
+  const sh = ps.length > 2 ? Object.entries(SAT_START).filter(([s, d]) => d > S.rangeStart && d < S.rangeEnd) : [];
+  Plotly.react('check', tr, { ...L0, hovermode: 'x unified', shapes: sh.map(([s, d]) => ({ type: 'line', x0: d, x1: d, yref: 'paper', y0: 0, y1: 1, line: { color: '#999', dash: 'dot', width: 1 } })),
+    annotations: sh.map(([s, d]) => ({ x: d, y: 1, yref: 'paper', text: s, showarrow: false, font: { size: 10, color: '#777' }, yanchor: 'bottom' })),
+    legend: { orientation: 'h', y: 1.22, x: 0, font: { size: 10 } }, margin: { ...L0.margin, t: 36 }, xaxis: { type: ps.length > 2 ? 'date' : 'category', gridcolor: '#eeede8' }, yaxis: { gridcolor: '#eeede8', title: { text: unit(), font: { size: 10 } } } },
+    { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_harmonization_check' } });
+}
+
+/* ---------- distributions (linked: clicks change global filters) ---------- */
+function bindOnce(id, fn) { const el = $(id); if (el._b) return; el._b = true; el.on('plotly_click', fn); }
+function renderDist() {
+  const d = S.dist; if (!d) return;
+  const norm = a => { const s = a.reduce((x, y) => x + y, 0); return a.map(v => s ? v / s * 100 : 0); };
+  const labels = FRP_EDGES.slice(0, -1).map((e, i) => FRP_EDGES[i + 1] === Infinity ? `≥${e}` : `${e}–${FRP_EDGES[i + 1]}`);
+  const st = d.stats || {}, med = s => st[s] && st[s].frp_median !== null ? ` (median ${fmt1(st[s].frp_median)} MW)` : '';
+  Plotly.react('dFrp', [{ type: 'bar', x: labels, y: norm(d.frp.MODIS), name: 'MODIS' + med('MODIS'), marker: { color: C.modis } }, { type: 'bar', x: labels, y: norm(d.frp.VIIRS), name: 'VIIRS' + med('VIIRS'), marker: { color: C.viirs } }],
+    { ...L0, barmode: 'group', bargap: .15, legend: { orientation: 'h', y: 1.25, x: 0, font: { size: 10 } }, margin: { l: 36, r: 6, t: 32, b: 54 }, xaxis: { tickangle: -45, title: { text: 'FRP (MW)', font: { size: 10 } } }, yaxis: { ticksuffix: '%', gridcolor: '#eeede8' } }, plotCfg);
+  const hrs = Array.from({ length: 24 }, (_, i) => i);
+  Plotly.react('dHour', [{ type: 'bar', x: hrs, y: norm(d.local_hour.MODIS), name: 'MODIS', marker: { color: C.modis } }, { type: 'bar', x: hrs, y: norm(d.local_hour.VIIRS), name: 'VIIRS', marker: { color: C.viirs } }],
+    { ...L0, barmode: 'group', bargap: .1, legend: { orientation: 'h', y: 1.2, x: 0, font: { size: 10 } }, margin: { l: 36, r: 6, t: 28, b: 36 }, xaxis: { dtick: 3, title: { text: 'local solar time (h)', font: { size: 10 } } }, yaxis: { ticksuffix: '%', gridcolor: '#eeede8' } }, plotCfg);
+  const cls = ['low', 'nominal', 'high'], tot = s => cls.reduce((a, c) => a + (d.conf_class[`${s}|${c}`] || 0), 0);
+  Plotly.react('dConf', cls.map(c => ({ type: 'bar', orientation: 'h', y: ['MODIS', 'VIIRS'], x: ['MODIS', 'VIIRS'].map(s => tot(s) ? (d.conf_class[`${s}|${c}`] || 0) / tot(s) * 100 : 0), name: c + (c === 'low' && !S.incLow ? ' (excluded)' : ''),
+      marker: { color: C[c], opacity: c === 'low' && !S.incLow ? .45 : 1 }, customdata: [c, c], hovertemplate: `${c}: %{x:.1f} %<extra>%{y}</extra>` })),
+    { ...L0, barmode: 'stack', legend: { orientation: 'h', y: 1.25, x: 0, font: { size: 10 } }, margin: { l: 50, r: 6, t: 30, b: 30 }, xaxis: { ticksuffix: '%', range: [0, 100] } }, plotCfg);
+  const sats = SATS.filter(s => (d.satellite[s] || 0) > 0 || !S.sats.has(s));
+  Plotly.react('dSat', [{ type: 'bar', x: sats, y: sats.map(s => d.satellite[s] || 0), marker: { color: sats.map(s => S.sats.has(s) ? (SAT_SENSOR[s] === 'MODIS' ? C.modis : C.viirs) : '#ddd') }, hovertemplate: '%{x}: %{y:,.0f} detections<br>click to switch on/off<extra></extra>' }],
+    { ...L0, margin: { l: 50, r: 6, t: 10, b: 30 }, yaxis: { gridcolor: '#eeede8' } }, plotCfg);
+  bindOnce('dConf', ev => { if (ev.points[0].data.customdata[0] === 'low') { S.incLow = !S.incLow; $('incLow').checked = S.incLow; refresh(); } });
+  bindOnce('dSat', ev => toggleSat(ev.points[0].x));
+}
+
+/* ---------- space x time matrix (canvas) ---------- */
+function matrixRows() {
+  const m = S.matrix; if (!m) return [];
+  const rows = m.rows.map(r => ({ ...r, arr: S.rangeP.map(p => r.values[p] || 0) }));
+  if (S.mSort === 'peak') rows.sort((a, b) => a.arr.indexOf(Math.max(...a.arr)) - b.arr.indexOf(Math.max(...b.arr)));
+  else if (S.mSort === 'lat') rows.sort((a, b) => b.lat - a.lat);
+  else rows.sort((a, b) => b.total - a.total);
+  return rows;
+}
+const deg = (v, n) => `${Math.abs(v).toFixed(1)}°${v >= 0 ? n[0] : n[1]}`;
+function drawMatrix() {
+  const cv = $('matrix'), m = S.matrix, ps = S.rangeP; if (!m || !ps.length) return;
+  const rows = matrixRows(), labW = 160, totW = 56, W = Math.max(cv.parentElement.clientWidth - 2, 500), cw = Math.max(2, (W - labW - totW) / ps.length), rh = 15, H = Math.max(rows.length, 1) * rh + 26;
+  const dpr = devicePixelRatio || 1, cssW = labW + cw * ps.length + totW;
+  cv.width = cssW * dpr; cv.height = H * dpr; cv.style.width = cssW + 'px'; cv.style.height = H + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, cssW, H); ctx.font = '11px system-ui'; ctx.textBaseline = 'middle';
+  if (!rows.length) { ctx.fillStyle = '#888'; ctx.fillText('No detections in this selection', 4, 12); return; }
+  const gmax = quantile(rows.flatMap(r => r.arr).filter(v => v > 0), .97) || 1;
+  rows.forEach((r, i) => {
+    const y = 20 + i * rh, rmax = Math.max(...r.arr) || 1;
+    ctx.fillStyle = '#555'; ctx.textAlign = 'left'; ctx.fillText(`${r.region.slice(0, 10)} ${deg(r.lat, 'NS')} ${deg(r.lon, 'EW')}`, 2, y + rh / 2);
+    r.arr.forEach((v, j) => { const t = S.mNorm === 'row' ? v / rmax : v / gmax; ctx.fillStyle = v > 0 ? viridis(t) : '#f3f2ee'; ctx.fillRect(labW + j * cw, y + 1, Math.max(1, cw - (cw > 4 ? 1 : 0)), rh - 2); });
+    ctx.fillStyle = '#555'; ctx.textAlign = 'right'; ctx.fillText(short(r.total), cssW - 4, y + rh / 2);
+  });
+  ctx.textAlign = 'left'; ctx.fillStyle = '#888'; const step = Math.max(1, Math.ceil(46 / cw));
+  ps.forEach((p, j) => { if (j % step === 0) ctx.fillText(S.gran === 'month' ? (step >= 12 ? p.slice(0, 4) : (p.endsWith('-01') ? p.slice(0, 4) : MONTHS[+p.slice(5, 7) - 1])) : p.slice(5), labW + j * cw, 9); });
+  if (S.mapPeriod) { const j = ps.indexOf(S.mapPeriod); if (j >= 0) { ctx.strokeStyle = '#d55e00'; ctx.lineWidth = 2; ctx.strokeRect(labW + j * cw, 18, cw, rows.length * rh + 2); } }
+  cv._layout = { rows, labW, cw, rh, ps };
+  $('matrixHow').textContent = `Each row is one ${m.res}° grid cell of the selected area (the ${rows.length} most active), each column a ${S.gran === 'day' ? 'day' : 'month'}. Click a row label to zoom there and use the cell as the area; click a coloured box to show that period on the map. “per row” reveals each cell’s own season.`;
+}
+function matrixHit(e) { const cv = $('matrix'), L = cv._layout; if (!L) return null; const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, i = Math.floor((y - 20) / L.rh), j = Math.floor((x - L.labW) / L.cw);
+  if (i < 0 || i >= L.rows.length) return null; return { row: L.rows[i], j: x >= L.labW && j >= 0 && j < L.ps.length ? j : null, L }; }
+$('matrix').addEventListener('mousemove', e => { const h = matrixHit(e); if (!h) return hideTip(); const r = h.row;
+  showTip(e, `${r.region} · ${deg(r.lat, 'NS')} ${deg(r.lon, 'EW')}<br>` + (h.j !== null ? `${plabel(h.L.ps[h.j])}: <b>${fmt(r.arr[h.j])}</b> ${unit()}` : `total <b>${fmt(r.total)}</b> · click to use as area`)); });
+$('matrix').addEventListener('mouseleave', hideTip);
+$('matrix').addEventListener('click', e => { const h = matrixHit(e); if (!h) return; if (h.j !== null) { stopPlay(); selectPeriod(h.L.ps[h.j]); return; }
+  const half = S.matrix.res / 2, r = h.row; applyBox([Math.max(-90, r.lat - half), Math.min(90, r.lat + half), Math.max(-180, r.lon - half), Math.min(180, r.lon + half)]); });
+window.addEventListener('resize', () => { clearTimeout(window._rz); window._rz = setTimeout(drawMatrix, 200); });
+
+/* ---------- satellite timeline (swim lanes) ---------- */
+function renderSwim() {
+  const ps = S.periods, z = SATS.map(s => ps.map(p => { const v = (S.sat[s] || {})[p] || 0; return v > 0 ? Math.log10(v) : null; }));
+  Plotly.react('swim', [{ type: 'heatmap', x: ps.map(xd), y: SATS, z, colorscale: VIRIDIS.map((c, i) => [i / (VIRIDIS.length - 1), c]), showscale: false, hoverongaps: false, xgap: ps.length < 60 ? 1 : 0, ygap: 2,
+    customdata: SATS.map(s => ps.map(p => (S.sat[s] || {})[p] || 0)), hovertemplate: '%{y} · %{x}: %{customdata:,.0f} detections<extra></extra>' }],
+    { ...L0, margin: { l: 50, r: 10, t: 10, b: 30 }, xaxis: { type: 'date' }, yaxis: { autorange: 'reversed' },
+      shapes: [{ type: 'rect', x0: xd2(S.rangeStart, 'start'), x1: xd2(S.rangeEnd, 'end'), yref: 'paper', y0: 0, y1: 1, line: { color: '#d55e00', width: 1.5 }, fillcolor: 'rgba(0,0,0,0)' }] }, plotCfg);
+}
+
+/* ---------- calibration table ---------- */
+function renderCalib() {
+  const h = S.meta.harmonization || {}, rows = h.calibration || [], R = S.region, cur = R ? regionOf((R.minLat + R.maxLat) / 2, (R.minLon + R.maxLon) / 2) : null;
+  const f = (v, d = 2) => v === null || v === undefined ? '–' : (+v).toFixed(d);
+  $('calib').innerHTML = `<div class="note" style="margin-bottom:6px"><b>${h.name || '?'}</b> v${h.version || '?'} · status <b>${h.status || '?'}</b>${h.params ? ' · ' + h.params.factor_source : ''}</div>
+    <table class="calib"><tr><th>Region</th><th>factor count</th><th>25–75 %</th><th>factor FRP</th><th>25–75 %</th><th>r (log FRP)</th><th>cells</th></tr>
+    ${rows.map(r => `<tr class="${r.region === cur ? 'hl' : ''}"><td>${r.region}${r.used_global_fallback ? ' *' : ''}</td><td>${f(r.factor_n)}</td><td>${f(r.factor_n_p25, 1)}–${f(r.factor_n_p75, 1)}</td><td>${f(r.factor_frp)}</td><td>${f(r.factor_frp_p25, 1)}–${f(r.factor_frp_p75, 1)}</td><td>${f(r.r_log_frp)}</td><td>${fmt(r.n_cells)}</td></tr>`).join('')}</table>
+    <div class="note" style="margin-top:6px">* too few cells, global factor used. Regions are placeholder boxes until real regions are delivered. The count factor is much larger than the FRP factor: VIIRS finds many small fires, so FRP is the more robust quantity.</div>`;
+}
+
+/* ---------- map: density or single points ---------- */
+const mapUsesPoints = () => S.mapMode === 'points' || (S.mapMode === 'auto' && map.getZoom() >= 7);
+function heatRes() { const t = 360 / (256 * 2 ** map.getZoom()) * 8; return [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 4].find(r => r >= t * .75) || 4; }
+function viewBbox() {
+  const b = map.getBounds().pad(.2); let v = [Math.max(-180, b.getWest()), Math.max(-90, b.getSouth()), Math.min(180, b.getEast()), Math.min(90, b.getNorth())];
   if (b.getEast() - b.getWest() >= 360) v = [-180, v[1], 180, v[3]];
-  const R = state.region;
-  if (R) v = [Math.max(v[0], R.minLon), Math.max(v[1], R.minLat), Math.min(v[2], R.maxLon), Math.min(v[3], R.maxLat)];
-  if (v[0] >= v[2] || v[1] >= v[3]) return null;
-  return { ...f, bbox: v.map(x => +x.toFixed(4)).join(',') };
+  const R = S.region; if (R) v = [Math.max(v[0], R.minLon), Math.max(v[1], R.minLat), Math.min(v[2], R.maxLon), Math.min(v[3], R.maxLat)];
+  return v[0] < v[2] && v[1] < v[3] ? v.map(x => +x.toFixed(4)).join(',') : null;
 }
-async function refreshHeat(resetRef) {
-  const p = state.provider; if (!p) return;
-  const id = ++state.heatReq, res = heatRes(), f = viewFilters();
-  if (!f) { heat.setLatLngs([]); return; }
+async function refreshMap(resetRef) {
+  const p = S.provider; if (!p || !S.rangeStart) return;
+  const id = ++S.hreq, bbox = viewBbox(), [s, e] = S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+  $('mapLabel').textContent = S.mapPeriod ? plabel(S.mapPeriod) : 'full range';
+  $('mapReset').style.display = S.mapPeriod ? '' : 'none';
+  renderMapLegend();
+  if (!bbox) { heat.setLatLngs([]); pointLayer.clearLayers(); return; }
+  const f = { ...F(), bbox };
   try {
-    let cells, nPer;
-    if (resetRef || !state.heatRef) {
-      const all = await p.heat(f, state.rangeStart, state.rangeEnd, state.view, state.metric, res);
-      if (id !== state.heatReq) return;
-      const n = state.rangePeriods.length;
-      state.heatRef = quantile(all.map(c => c[2] / n), 0.99) || 1;
-      if (!state.mapPeriod) { cells = all; nPer = n; }
+    if (mapUsesPoints()) {
+      const r = await p.points(f, bbox, s, e, 15000); if (id !== S.hreq) return;
+      heat.setLatLngs([]); pointLayer.clearLayers();
+      for (const [lat, lon, sensor, sat, frp, cc, date, time, dn, px, lh] of r.rows) {
+        const col = S.colorBy === 'sensor' ? (sensor === 'MODIS' ? C.modis : C.viirs) : S.colorBy === 'conf' ? C[cc] : viridis(Math.log10(frp + 1) / 3);
+        L.circleMarker([lat, lon], { radius: Math.max(2, Math.min(10, 2 + Math.log10(frp + 1) * 3)), color: '#333', weight: .4, fillColor: col, fillOpacity: .85 })
+          .bindTooltip(`<b>${sensor} · ${sat}</b><br>${date} ${pad(Math.floor(time / 100))}:${pad(time % 100)} UTC · local ${fmt1(lh)} h<br>FRP ${fmt1(frp)} MW · ${cc} confidence · ${dn === 'N' ? 'night' : 'day'}<br>pixel ${fmt1(px)} km²`).addTo(pointLayer); }
+      $('mapNote').textContent = `${fmt(r.count)} raw detections in view` + (r.truncated ? ` · showing the ${fmt(r.rows.length)} strongest` : '');
+    } else {
+      const n = S.mapPeriod ? 1 : S.rangeP.length, res = heatRes(), cells = await p.heat(f, s, e, S.view, S.metric, res); if (id !== S.hreq) return;
+      pointLayer.clearLayers();
+      if (resetRef || !S.heatRef) S.heatRef = quantile(cells.map(c => c[2] / n), .99) || 1;
+      heat.setOptions({ max: S.heatMax, maxZoom: map.getZoom() }); heat.setLatLngs(cells.map(([a, b, v]) => [a, b, v / n / S.heatRef]));
+      $('mapNote').textContent = `density · ${viewName().toLowerCase()} · grid ${res}° (~${Math.round(res * 111)} km)`;
     }
-    if (!cells) {
-      const [s, e] = state.mapPeriod ? periodRange(state.mapPeriod, state.gran) : [state.rangeStart, state.rangeEnd];
-      cells = await p.heat(f, s, e, state.view, state.metric, res);
-      if (id !== state.heatReq) return;
-      nPer = state.mapPeriod ? 1 : state.rangePeriods.length;
-    }
-    heat.setOptions({ max: state.heatMax, maxZoom: map.getZoom() });
-    heat.setLatLngs(cells.map(([la, lo, v]) => [la, lo, v / nPer / state.heatRef]));
-    $('mapLabel').textContent = state.mapPeriod ? `Map: ${plabel(state.mapPeriod)}` : `Map: full range (${state.gran === 'day' ? 'daily' : 'monthly'} average)`;
-    $('mapReset').style.display = state.mapPeriod ? '' : 'none';
   } catch (err) { console.error(err); }
 }
+function renderMapLegend() {
+  $('mapLegend').innerHTML = mapUsesPoints()
+    ? (S.colorBy === 'sensor' ? `<div><span class="dot" style="background:${C.modis}"></span>MODIS (1 km pixel) &nbsp;<span class="dot" style="background:${C.viirs}"></span>VIIRS (375 m)</div>`
+      : S.colorBy === 'conf' ? `<div>${['low', 'nominal', 'high'].map(c => `<span class="dot" style="background:${C[c]}"></span>${c}`).join(' &nbsp;')}</div>`
+      : `<div>FRP</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>1 MW</span><span>1000 MW</span></div>`) + `<div style="margin-top:3px">Size = FRP. Raw detections, never converted.</div>`
+    : `<div>Density · ${viewName()}</div><div class="bar" style="background:${viridisCss}"></div><div style="display:flex;justify-content:space-between"><span>low</span><span>high</span></div><div>Zoom in (level ≥ 7) for single hotspots</div>`;
+}
+$('mapReset').addEventListener('click', () => { stopPlay(); selectPeriod(S.mapPeriod); });
+$('heatMax').addEventListener('input', e => { S.heatMax = +e.target.value; heat.setOptions({ max: S.heatMax }); });
 
 /* ---------- animation ---------- */
-function stopPlay() { state.playing = false; $('playBtn').textContent = '▶ Play'; }
+function stopPlay() { S.playing = false; $('playBtn').textContent = '▶ Play'; }
 $('playBtn').addEventListener('click', async () => {
-  if (state.playing) { stopPlay(); return; }
-  state.playing = true; $('playBtn').textContent = '❚❚ Pause';
-  const ps = state.rangePeriods; let i = state.mapPeriod ? Math.max(0, ps.indexOf(state.mapPeriod)) : 0;
-  while (state.playing && i < ps.length) {
-    const t = Date.now(); await selectMapPeriod(ps[i++]);
-    await new Promise(r => setTimeout(r, Math.max(0, 500 - (Date.now() - t))));
-  }
+  if (S.playing) { stopPlay(); return; } S.playing = true; $('playBtn').textContent = '❚❚ Pause';
+  const ps = S.rangeP; let i = S.mapPeriod ? Math.max(0, ps.indexOf(S.mapPeriod)) : 0;
+  while (S.playing && i < ps.length) { const t = Date.now(); S.mapPeriod = null; await selectPeriod(ps[i++]); await new Promise(r => setTimeout(r, Math.max(0, 600 - (Date.now() - t)))); }
   stopPlay();
 });
-$('mapReset').addEventListener('click', () => { stopPlay(); selectMapPeriod(null); });
 
 /* ---------- controls ---------- */
+function seg(id, fn) { $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(b.dataset.v); }); }
 function setSeg(id, v) { $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === v)); }
-function setGran(g, doRefresh = true) { state.gran = g; setSeg('granSeg', g); state.mapPeriod = null; if (doRefresh) refresh(); }
-$('granSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b && b.dataset.v !== state.gran) setGran(b.dataset.v); });
-$('metricSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.metric = b.dataset.v; setSeg('metricSeg', state.metric); renderAll(); refreshHeat(true); });
-$('viewSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.view = b.dataset.v; setSeg('viewSeg', state.view); renderAll(); refreshHeat(true); });
-$('from').addEventListener('change', e => { if (e.target.value) { state.from = e.target.value; onRangeChange(); } });
-$('to').addEventListener('change', e => { if (e.target.value) { state.to = e.target.value; onRangeChange(); } });
-$('hideLow').addEventListener('change', e => { state.hideLow = e.target.checked; refresh(); });
-$('vegOnly').addEventListener('change', e => { state.vegOnly = e.target.checked; refresh(); });
-$('heatMax').addEventListener('input', e => { state.heatMax = +e.target.value; heat.setOptions({ max: state.heatMax }); });
+function setGran(g, doRefresh = true) { S.gran = g; setSeg('granSeg', g); S.mapPeriod = null; if (doRefresh) refresh(); }
+const rerender = () => { renderTimeline(); renderRange(); };
+seg('granSeg', v => { if (v !== S.gran) setGran(v); });
+seg('metricSeg', v => { S.metric = v; rerender(); });
+seg('viewSeg', v => { S.view = v; rerender(); });
+seg('dnSeg', v => { S.dn = v; refresh(); });
+seg('mapModeSeg', v => { S.mapMode = v; refreshMap(true); });
+seg('colorSeg', v => { S.colorBy = v; refreshMap(false); });
+seg('anomSeg', v => { S.anomMode = v; renderAnomaly(); });
+seg('mSortSeg', v => { S.mSort = v; drawMatrix(); });
+seg('mNormSeg', v => { S.mNorm = v; drawMatrix(); });
+$('perDay').addEventListener('change', e => { S.perDay = e.target.checked; rerender(); });
+$('incLow').addEventListener('change', e => { S.incLow = e.target.checked; refresh(); });
+$('vegOnly').addEventListener('change', e => { S.veg = e.target.checked; refresh(); });
+function renderSatChips() { $('satChips').innerHTML = SATS.map(s => `<span class="chip ${S.sats.has(s) ? 'on' : 'off'}" data-s="${s}" title="${SAT_SENSOR[s]} · since ${SAT_START[s].slice(0, 4)}">${s}</span>`).join(' '); }
+function toggleSat(s) { if (S.sats.has(s)) { if (S.sats.size === 1) { toast('Keep at least one satellite'); return; } S.sats.delete(s); } else S.sats.add(s); renderSatChips(); refresh(); }
+$('satChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) toggleSat(c.dataset.s); });
+renderSatChips();
 
 /* ---------- downloads ---------- */
-$('dlPoints').addEventListener('click', () => state.provider && state.provider.downloadPoints(filters(), state.rangeStart, state.rangeEnd, state.view));
+$('dlPoints').addEventListener('click', () => S.provider && S.provider.downloadPoints(F(), S.rangeStart, S.rangeEnd, S.view));
 $('dlSummary').addEventListener('click', () => {
-  if (!state.provider) return;
-  const info = state.provider.info() || {};
-  const rows = [['period', 'modis_n', 'viirs_n', 'modis_h_n', 'viirs_h_n', 'harm_n', 'modis_frp', 'viirs_frp', 'harm_frp', 'view', 'metric', 'view_value', 'median', 'anomaly', 'harmonization']];
-  for (const p of state.rangePeriods) {
-    const r = state.rows[p] || {}, v = value(p), md = baseline(p, false).med, n = x => +(x || 0).toFixed(3);
-    rows.push([p, n(r.modis_n), n(r.viirs_n), n(r.modis_h_n), n(r.viirs_h_n), n(r.harm_n), n(r.modis_frp), n(r.viirs_frp), n(r.harm_frp), state.view, state.metric, n(v), n(md), n(v - md), `${info.name || ''} ${info.version || ''}`.trim()]);
-  }
-  downloadText(`firecal_summary_${state.gran}_${state.rangeStart}_${state.rangeEnd}.csv`, rows.map(r => r.map(csvCell).join(',')).join('\n'));
+  const h = S.meta.harmonization || {}, R = S.region, n = x => +(x || 0).toFixed(3);
+  const rows = [['period', 'days', 'harmonized_n', 'harmonized_n_p25', 'harmonized_n_p75', 'harmonized_frp', 'share_from_modis', 'modis_n', 'viirs_n', 'modis_frp', 'viirs_frp', 'modis_x_factor_n', 'night_share', 'high_conf_share', 'view', 'metric', 'per_day', 'value', 'median_other', 'anomaly_pct', 'area', 'harmonization', 'data_version']];
+  for (const p of S.rangeP) { const r = S.rows[p] || emptyRow(), v = val(p), b = baseline(p);
+    rows.push([p, daysIn(p), n(r.harm_n), n(r.harm_n_lo), n(r.harm_n_hi), n(r.harm_frp), r.harm_n ? n(r.modis_h_n / r.harm_n) : 0, r.modis_n, r.viirs_n, n(r.modis_frp), n(r.viirs_frp), n(r.modis_cal_n), r.raw_n ? n(r.n_night / r.raw_n) : '', r.raw_n ? n(r.n_high / r.raw_n) : '',
+      S.view, S.metric, S.perDay, n(v), b.med === null ? '' : n(b.med), b.med ? n((v - b.med) / b.med * 100) : '', R ? (R.poly ? 'polygon' : [R.minLon, R.minLat, R.maxLon, R.maxLat].map(x => x.toFixed(3)).join(' ')) : 'all', `${h.name} ${h.version} (${h.status})`, S.meta.data_version]); }
+  downloadText(`firecal_statistics_${S.gran}_${S.rangeStart}_${S.rangeEnd}.csv`, rows.map(r => r.map(csvCell).join(',')).join('\n'));
 });
 
-/* ---------- methodology (content/methodology.md, filled in later) ---------- */
+/* ---------- footer & methodology ---------- */
+function renderFooter() {
+  const m = S.meta, h = m.harmonization || {};
+  $('footer').innerHTML = `Data: NASA LANCE FIRMS (MODIS C6.1 1 km, VIIRS 375 m) · ${m.first_date} → ${m.last_date} · version ${m.data_version || '–'}${h.dropped_partial_day ? ` · incomplete day ${h.dropped_partial_day} removed` : ''} · harmonization: ${h.name || '?'} v${h.version || '?'} (${h.status || '?'}) · map points are raw detections · FireCal team, NASA Space Apps Challenge 2026 · <a href="api-docs.html">API</a> · <a href="https://github.com/Putskev/firecal">GitHub</a>`;
+}
 (async () => {
-  try {
-    const r = await fetch('content/methodology.md', { cache: 'no-store' }); if (!r.ok) throw 0;
-    const md = await r.text();
+  try { const r = await fetch('content/methodology.md', { cache: 'no-store' }); if (!r.ok) throw 0; const md = await r.text();
     $('method').innerHTML = window.marked ? marked.parse(md) : `<pre>${md.replace(/</g, '&lt;')}</pre>`;
     $('method').querySelectorAll('p').forEach(p => { if (/^\s*(TODO|To be added)/i.test(p.textContent)) p.classList.add('todo'); });
   } catch { $('method').innerHTML = '<h1>Methodology</h1><p class="todo">To be added.</p>'; }
@@ -837,7 +996,7 @@ $('dlSummary').addEventListener('click', () => {
 /* ---------- start: API if reachable, otherwise demo ---------- */
 (async () => {
   try { useProvider(await ApiProvider.init()); }
-  catch { useProvider(LocalProvider.load(makeDemo(), 'Demo data (synthetic)', true)); }
+  catch { useProvider(LocalProvider.load(makeDemo(), 'Demo data (synthetic, 2001–2026)', true)); }
 })();
 </script>
 </body>

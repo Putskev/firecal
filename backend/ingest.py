@@ -1,5 +1,6 @@
 """
-Convert raw FIRMS CSV files into canonical Parquet files in data/raw/.
+Convert FIRMS files (raw FIRMS CSV or the team's 'Tabelle A', .csv / .csv.gz / .parquet)
+into canonical Parquet files in data/raw/.
 
     python -m backend.ingest                       # all CSVs in data/incoming/
     python -m backend.ingest path/to/a.csv b.csv   # specific files
@@ -19,10 +20,17 @@ from .data import dedupe, normalize
 from .paths import INCOMING, RAW
 
 
+def _read(path: str) -> pd.DataFrame:
+    return pd.read_parquet(path) if path.endswith(".parquet") else pd.read_csv(path, low_memory=False)
+
+
 def ingest_file(path: str) -> str:
-    df = normalize(pd.read_csv(path, low_memory=False))
+    df = normalize(_read(path))
     df = dedupe(df)
-    name = os.path.splitext(os.path.basename(path))[0]
+    name = os.path.basename(path)
+    for ext in (".csv.gz", ".csv", ".parquet"):
+        if name.endswith(ext):
+            name = name[: -len(ext)]
     out = os.path.join(RAW, f"{name}.parquet")
     df.to_parquet(out, index=False, compression="zstd")
     by = df.groupby(["sensor", "satellite"]).size().to_dict()
@@ -33,7 +41,7 @@ def ingest_file(path: str) -> str:
 
 def main(argv: list[str]) -> None:
     os.makedirs(RAW, exist_ok=True)
-    files = argv or sorted(glob.glob(os.path.join(INCOMING, "*.csv")))
+    files = argv or sorted(sum((glob.glob(os.path.join(INCOMING, p)) for p in ("*.csv", "*.csv.gz", "*.parquet")), []))
     if not files:
         print("[ingest] no CSV files given and none in data/incoming/")
         return

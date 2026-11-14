@@ -34,7 +34,8 @@ import duckdb
 import pandas as pd
 
 from . import harmonization
-from .data import HARMONIZED, dedupe, normalize, validate
+from .data import HARMONIZED, HARMONIZED_EXTRA, dedupe, drop_partial_last_day, normalize, validate
+from .regions import SATELLITES
 from .paths import (CELLS_DAY, CELLS_MONTH, DAY_RES, HARM_INFO, HARMONIZED_DIR, HOTSPOTS_DIR, META,
                     MONTH_RES, PROCESSED, RAW)
 
@@ -62,18 +63,19 @@ def _read(path: str) -> pd.DataFrame:
 def _harmonized_table(mode: str, files: list[str]) -> tuple[pd.DataFrame, dict]:
     if mode == "harmonized":
         df = pd.concat([_read(f) for f in files], ignore_index=True)
-        if "conf_class" not in df.columns or "source" not in df.columns:   # tolerate raw-ish columns
-            extra = df[[c for c in ("weight", "frp_h") if c in df.columns]]
-            df = pd.concat([normalize(df), extra.reset_index(drop=True)], axis=1)
+        extra = df[[c for c in HARMONIZED_EXTRA if c in df.columns]].reset_index(drop=True)
+        df = pd.concat([normalize(df), extra], axis=1)
         validate(df, harmonized=True)
         info_path = os.path.join(HARMONIZED_DIR, "harmonization.json")
         info = json.load(open(info_path)) if os.path.exists(info_path) else \
             {"name": "external", "version": "?", "status": "final", "description": "Table from data/harmonized/"}
         return df, info
-    raw = dedupe(pd.concat([_read(f) for f in files], ignore_index=True))
+    raw = dedupe(pd.concat([normalize(_read(f)) for f in files], ignore_index=True))
+    raw, dropped = drop_partial_last_day(raw)
     validate(raw)
     df, info = harmonization.harmonize(raw)
     validate(df, harmonized=True)
+    info["dropped_partial_day"] = dropped
     return df, info
 
 
@@ -82,10 +84,20 @@ def _cells_sql(period: str, res: float) -> str:
         SELECT {period} AS period,
                floor(latitude / {res}) * {res} + {res / 2}  AS lat,
                floor(longitude / {res}) * {res} + {res / 2} AS lon,
-               sensor, conf_class = 'low' AS low, (type IS NULL OR type = 0) AS veg,
+               sensor, satellite, conf_class = 'low' AS low, (type IS NULL OR type = 0) AS veg,
+               daynight = 'N' AS night,
                count(*)::INTEGER AS n, sum(frp)::DOUBLE AS frp,
-               sum(weight)::DOUBLE AS w, sum(frp_h)::DOUBLE AS fh
+               count(*) FILTER (WHERE conf_class = 'high')::INTEGER AS n_high,
+               sum(weight)::DOUBLE AS w, sum(weight_lo)::DOUBLE AS w_lo, sum(weight_hi)::DOUBLE AS w_hi,
+               sum(frp_h)::DOUBLE AS fh, sum(frp_h_lo)::DOUBLE AS fh_lo, sum(frp_h_hi)::DOUBLE AS fh_hi,
+               sum(weight_cal)::DOUBLE AS wc, sum(frp_cal)::DOUBLE AS fc
         FROM t GROUP BY ALL ORDER BY period"""
+
+
+def _sat_info(df: pd.DataFrame, s: dict) -> dict:
+    part = df.loc[df.satellite == s["satellite"], "acq_date"]
+    return dict(s, first_date=part.min() if len(part) else None, last_date=part.max() if len(part) else None,
+                rows=int(len(part)))
 
 
 def build(force: bool = False) -> dict:
@@ -120,12 +132,14 @@ def build(force: bool = False) -> dict:
     with open(HARM_INFO, "w") as f:
         json.dump(info, f, indent=2, default=str)
     meta = {
+        "data_version": datetime.now(timezone.utc).strftime("%Y%m%d-%H%M"),
         "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "rows": int(len(df)),
         "first_date": df["acq_date"].min(), "last_date": df["acq_date"].max(),
         "bbox": [float(df.longitude.min()), float(df.latitude.min()), float(df.longitude.max()), float(df.latitude.max())],
         "by_satellite": {f"{s}/{sat}": int(n) for (s, sat), n in df.groupby(["sensor", "satellite"]).size().items()},
         "has_type": bool(df["type"].notna().any()),
+        "satellites": [_sat_info(df, s) for s in SATELLITES],
         "storage": {"cells_month_rows": int(n_month), "cells_day_rows": int(n_day),
                     "month_res": MONTH_RES, "day_res": DAY_RES},
         "harmonization": info,

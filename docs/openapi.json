@@ -3,7 +3,7 @@
   "info": {
     "title": "FireCal API",
     "description": "Harmonized MODIS + VIIRS active fire hotspots (NASA FIRMS). This is a static copy of the documentation: run the backend locally (`uvicorn backend.main:app`) and open /docs to try the endpoints.",
-    "version": "1.1"
+    "version": "2.0"
   },
   "paths": {
     "/api/health": {
@@ -25,7 +25,7 @@
     "/api/meta": {
       "get": {
         "summary": "Meta",
-        "description": "Dataset span, counts per satellite, bounding box and the active harmonization method.",
+        "description": "Data span and version, counts per satellite, satellite timeline, harmonization method and\ncalibration table (factor per region with 25-75 % band).",
         "operationId": "meta_api_meta_get",
         "responses": {
           "200": {
@@ -42,7 +42,7 @@
     "/api/timeseries": {
       "get": {
         "summary": "Timeseries",
-        "description": "Raw and harmonized totals per period over the WHOLE data span (for calendar, anomalies, comparison).\nFields: modis_n, viirs_n, modis_frp, viirs_frp (raw) and modis_h_n, viirs_h_n, modis_h_frp,\nviirs_h_frp, harm_n, harm_frp (harmonized).",
+        "description": "Per period over the WHOLE data span (start/end are applied in the app, medians need history).\n\nraw (respects satellites/daynight): modis_n, viirs_n, modis_frp, viirs_frp, raw_n, raw_frp, n_night, n_high\nharmonized (VIIRS level, all satellites): harm_n, harm_n_lo, harm_n_hi, harm_frp, harm_frp_lo, harm_frp_hi,\nmodis_h_n / viirs_h_n (share of harm_n from calibrated MODIS / native VIIRS), modis_cal_n, modis_cal_frp\n(MODIS x factor for every period, also after the VIIRS start).",
         "operationId": "timeseries_api_timeseries_get",
         "parameters": [
           {
@@ -101,9 +101,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
+              "description": "drop low-confidence detections",
               "default": true,
               "title": "Exclude Low"
-            }
+            },
+            "description": "drop low-confidence detections"
           },
           {
             "name": "vegetation_only",
@@ -111,9 +113,42 @@
             "required": false,
             "schema": {
               "type": "boolean",
+              "description": "keep type = 0 (rows without type are kept)",
               "default": false,
               "title": "Vegetation Only"
-            }
+            },
+            "description": "keep type = 0 (rows without type are kept)"
+          },
+          {
+            "name": "satellites",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)",
+              "title": "Satellites"
+            },
+            "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)"
+          },
+          {
+            "name": "daynight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|D|N)$",
+              "description": "raw values and map only",
+              "default": "all",
+              "title": "Daynight"
+            },
+            "description": "raw values and map only"
           }
         ],
         "responses": {
@@ -141,7 +176,7 @@
     "/api/heatmap": {
       "get": {
         "summary": "Heatmap",
-        "description": "Hotspots aggregated to grid cells: cells = [[lat, lon, value], ...] (cell centres).\nPass the visible map area as bbox to keep responses small.",
+        "description": "Grid cells [[lat, lon, value], ...] for the map. Pass the visible map area as bbox.",
         "operationId": "heatmap_api_heatmap_get",
         "parameters": [
           {
@@ -151,6 +186,7 @@
             "schema": {
               "enum": [
                 "harm",
+                "raw",
                 "modis",
                 "viirs"
               ],
@@ -263,9 +299,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
+              "description": "drop low-confidence detections",
               "default": true,
               "title": "Exclude Low"
-            }
+            },
+            "description": "drop low-confidence detections"
           },
           {
             "name": "vegetation_only",
@@ -273,9 +311,688 @@
             "required": false,
             "schema": {
               "type": "boolean",
+              "description": "keep type = 0 (rows without type are kept)",
               "default": false,
               "title": "Vegetation Only"
+            },
+            "description": "keep type = 0 (rows without type are kept)"
+          },
+          {
+            "name": "satellites",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)",
+              "title": "Satellites"
+            },
+            "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)"
+          },
+          {
+            "name": "daynight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|D|N)$",
+              "description": "raw values and map only",
+              "default": "all",
+              "title": "Daynight"
+            },
+            "description": "raw values and map only"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/points": {
+      "get": {
+        "summary": "Points",
+        "description": "Single RAW hotspots for the map (never harmonized). If more than `limit` match, the strongest\n`limit` by FRP are returned and truncated = true.\ncolumns: lat, lon, sensor, satellite, frp, conf_class, acq_date, acq_time, daynight, pixel_km2, local_hour",
+        "operationId": "points_api_points_get",
+        "parameters": [
+          {
+            "name": "bbox",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "west,south,east,north (visible map area)",
+              "title": "Bbox"
+            },
+            "description": "west,south,east,north (visible map area)"
+          },
+          {
+            "name": "polygon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "lat,lon;lat,lon;...",
+              "title": "Polygon"
+            },
+            "description": "lat,lon;lat,lon;..."
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "exclude_low",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "drop low-confidence detections",
+              "default": true,
+              "title": "Exclude Low"
+            },
+            "description": "drop low-confidence detections"
+          },
+          {
+            "name": "vegetation_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "keep type = 0 (rows without type are kept)",
+              "default": false,
+              "title": "Vegetation Only"
+            },
+            "description": "keep type = 0 (rows without type are kept)"
+          },
+          {
+            "name": "satellites",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)",
+              "title": "Satellites"
+            },
+            "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)"
+          },
+          {
+            "name": "daynight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|D|N)$",
+              "description": "raw values and map only",
+              "default": "all",
+              "title": "Daynight"
+            },
+            "description": "raw values and map only"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 1,
+              "default": 20000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/distributions": {
+      "get": {
+        "summary": "Distributions",
+        "description": "Distributions of the RAW hotspots in area and period, split by sensor:\nfrp (MW, bins frp_edges), local_hour (24 bins), conf_class, satellite, daynight.\nLow-confidence detections are included in conf_class even if exclude_low is set.",
+        "operationId": "distributions_api_distributions_get",
+        "parameters": [
+          {
+            "name": "bbox",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "west,south,east,north",
+              "title": "Bbox"
+            },
+            "description": "west,south,east,north"
+          },
+          {
+            "name": "polygon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "lat,lon;lat,lon;...",
+              "title": "Polygon"
+            },
+            "description": "lat,lon;lat,lon;..."
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "exclude_low",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "drop low-confidence detections",
+              "default": true,
+              "title": "Exclude Low"
+            },
+            "description": "drop low-confidence detections"
+          },
+          {
+            "name": "vegetation_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "keep type = 0 (rows without type are kept)",
+              "default": false,
+              "title": "Vegetation Only"
+            },
+            "description": "keep type = 0 (rows without type are kept)"
+          },
+          {
+            "name": "satellites",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)",
+              "title": "Satellites"
+            },
+            "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)"
+          },
+          {
+            "name": "daynight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|D|N)$",
+              "description": "raw values and map only",
+              "default": "all",
+              "title": "Daynight"
+            },
+            "description": "raw values and map only"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/matrix": {
+      "get": {
+        "summary": "Matrix",
+        "description": "Space x time matrix: the `top` most active cells in the area (rows) x periods (columns).",
+        "operationId": "matrix_api_matrix_get",
+        "parameters": [
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "month",
+                "day"
+              ],
+              "type": "string",
+              "default": "month",
+              "title": "Granularity"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "harm",
+                "raw",
+                "modis",
+                "viirs"
+              ],
+              "type": "string",
+              "default": "harm",
+              "title": "View"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "count",
+                "frp"
+              ],
+              "type": "string",
+              "default": "count",
+              "title": "Metric"
+            }
+          },
+          {
+            "name": "res",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 20,
+                  "minimum": 0.25
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "cell size in degrees (auto if empty)",
+              "title": "Res"
+            },
+            "description": "cell size in degrees (auto if empty)"
+          },
+          {
+            "name": "top",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 30,
+              "title": "Top"
+            }
+          },
+          {
+            "name": "bbox",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "west,south,east,north",
+              "title": "Bbox"
+            },
+            "description": "west,south,east,north"
+          },
+          {
+            "name": "polygon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "lat,lon;lat,lon;...",
+              "title": "Polygon"
+            },
+            "description": "lat,lon;lat,lon;..."
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "exclude_low",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "drop low-confidence detections",
+              "default": true,
+              "title": "Exclude Low"
+            },
+            "description": "drop low-confidence detections"
+          },
+          {
+            "name": "vegetation_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "keep type = 0 (rows without type are kept)",
+              "default": false,
+              "title": "Vegetation Only"
+            },
+            "description": "keep type = 0 (rows without type are kept)"
+          },
+          {
+            "name": "satellites",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)",
+              "title": "Satellites"
+            },
+            "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)"
+          },
+          {
+            "name": "daynight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|D|N)$",
+              "description": "raw values and map only",
+              "default": "all",
+              "title": "Daynight"
+            },
+            "description": "raw values and map only"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/satellites": {
+      "get": {
+        "summary": "Satellites Timeline",
+        "description": "RAW hotspot count per period and satellite (swim lanes; shows when satellites start or drop out).",
+        "operationId": "satellites_timeline_api_satellites_get",
+        "parameters": [
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "month",
+                "day"
+              ],
+              "type": "string",
+              "default": "month",
+              "title": "Granularity"
+            }
+          },
+          {
+            "name": "bbox",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "west,south,east,north",
+              "title": "Bbox"
+            },
+            "description": "west,south,east,north"
+          },
+          {
+            "name": "polygon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "lat,lon;lat,lon;...",
+              "title": "Polygon"
+            },
+            "description": "lat,lon;lat,lon;..."
+          },
+          {
+            "name": "exclude_low",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "drop low-confidence detections",
+              "default": true,
+              "title": "Exclude Low"
+            },
+            "description": "drop low-confidence detections"
+          },
+          {
+            "name": "vegetation_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "keep type = 0 (rows without type are kept)",
+              "default": false,
+              "title": "Vegetation Only"
+            },
+            "description": "keep type = 0 (rows without type are kept)"
           }
         ],
         "responses": {
@@ -303,7 +1020,7 @@
     "/api/hotspots.csv": {
       "get": {
         "summary": "Hotspots Csv",
-        "description": "Download the filtered hotspots incl. harmonized weight and frp_h.",
+        "description": "Filtered hotspots in the column layout of 'Tabelle A' plus region, weight and frp_h.",
         "operationId": "hotspots_csv_api_hotspots_csv_get",
         "parameters": [
           {
@@ -313,6 +1030,7 @@
             "schema": {
               "enum": [
                 "harm",
+                "raw",
                 "modis",
                 "viirs"
               ],
@@ -397,9 +1115,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
+              "description": "drop low-confidence detections",
               "default": true,
               "title": "Exclude Low"
-            }
+            },
+            "description": "drop low-confidence detections"
           },
           {
             "name": "vegetation_only",
@@ -407,9 +1127,42 @@
             "required": false,
             "schema": {
               "type": "boolean",
+              "description": "keep type = 0 (rows without type are kept)",
               "default": false,
               "title": "Vegetation Only"
-            }
+            },
+            "description": "keep type = 0 (rows without type are kept)"
+          },
+          {
+            "name": "satellites",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)",
+              "title": "Satellites"
+            },
+            "description": "comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)"
+          },
+          {
+            "name": "daynight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|D|N)$",
+              "description": "raw values and map only",
+              "default": "all",
+              "title": "Daynight"
+            },
+            "description": "raw values and map only"
           }
         ],
         "responses": {
@@ -437,7 +1190,7 @@
     "/api/reload": {
       "post": {
         "summary": "Reload",
-        "description": "Rebuild (if inputs changed) and reload the data without restarting the server.\nProtected by the environment variable FIRECAL_RELOAD_TOKEN (disabled if unset).",
+        "description": "Rebuild (if inputs changed) and reload. Needs the environment variable FIRECAL_RELOAD_TOKEN.",
         "operationId": "reload_api_reload_post",
         "parameters": [
           {

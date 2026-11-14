@@ -1,6 +1,6 @@
 # FireCal: Projektstand
 
-Stand: Samstag, 14.11.2026, 13:30 Uhr · NASA Space Apps Challenge 2026 (14.–15.11.)
+Stand: Samstag, 14.11.2026, 15:30 Uhr · NASA Space Apps Challenge 2026 (14.–15.11.)
 Challenge: **Harmonization of MODIS and VIIRS Hot Spots**
 
 ## Links
@@ -23,62 +23,59 @@ den historischen Median und einen CSV-Download zeigt.
 
 ## Was fertig ist
 
-### Frontend (`index.html`)
-- Graue Grundkarte mit Heatmap (Gauß-Kerne, barrierefreie Viridis-Farben), Auflösung passt sich dem Zoom an,
-  lädt nur den sichtbaren Ausschnitt
-- Gebiet wählen: Rechteck oder Polygon zeichnen, oder Bounding Box per Lat/Lon
-- Zeitraum, Monats- oder Tagesansicht (Tagesansicht automatisch bei kurzen Zeiträumen)
-- Brandkalender (Jahr × Monat bzw. Woche × Wochentag), Klick auf eine Zelle zeigt sie auf der Karte, „Play“
-  spielt die Perioden ab
-- Kennzahlen: Summe, stärkste Periode, stärkstes Jahr bzw. Tagesdurchschnitt, letzte Periode gegen Median
-- Diagramme: Anomalie gegen Median, Harmonisierungs-Check (MODIS roh, VIIRS roh, VIIRS harmonisiert, gesamt)
-- Umschalter: harmonisiert / MODIS roh / VIIRS roh, Anzahl / FRP-Summe
-- Filter: niedrige Konfidenz ausschließen, nur Vegetationsfeuer (sobald Archivdaten da sind)
-- Downloads: Hotspots als CSV, Zusammenfassung als CSV, Diagramme als PNG
-- Methodik-Abschnitt, gerendert aus `content/methodology.md` (noch leer)
-- Quellenangabe NASA FIRMS
+### Frontend: interaktives Dashboard (`index.html`)
+Nach dem Vorbild des VIS-Stuttgart-Tools (VAST Challenge 2012): verknüpfte Ansichten, die alle an einer
+Auswahl aus Gebiet, Zeitraum und Filtern hängen.
+- Filterleiste mit Trefferzahl: Anzahl/FRP, pro Tag, harmonisiert/roh/MODIS/VIIRS, Satelliten, Tag/Nacht,
+  Konfidenz, Vegetation, Monat/Tag
+- Zeitleiste mit Schieber (Brushing), schraffierte umgerechnete Perioden, Linien bei neuen Satelliten, Play
+- Karte: Dichte oder echte Einzelpunkte (Farbe Sensor/Konfidenz/FRP, Größe FRP), Gebiet zeichnen, km-Maßstab
+- Kennzahlen mit Unsicherheit, Nacht- und High-Confidence-Anteil, automatisch formulierte Erkenntnisse, Warnungen
+- Brandkalender, Anomalie (Median ohne eigenes Jahr), Saisonmuster, Jahresvergleich mit Trend
+- Harmonisierungs-Check mit Unsicherheitsband
+- Verteilungen: FRP, Ortszeit, Konfidenz, Satellit (Klick filtert global)
+- Raum-Zeit-Matrix (Zellen × Perioden), Satelliten-Zeitleiste, Kalibriertabelle
+- Downloads: Hotspots (Format Tabelle A) und Statistik-CSV; Methodik-Abschnitt (noch leer)
 
 ### Backend (`backend/`)
-- **FastAPI + DuckDB**, liest Parquet-Dateien direkt von der Platte
-- Einlesen beliebiger FIRMS-CSVs (MODIS/VIIRS, NRT/Archiv) in ein einheitliches Format (`backend/ingest.py`)
-- Daten nach Jahr/Monat aufgeteilt, dazu vorberechnete Summen pro Monat × 0,1° und Tag × 0,25°
-- Endpunkte: `/api/meta`, `/api/timeseries`, `/api/heatmap`, `/api/hotspots.csv`
-- **Platz für die Harmonisierung**: Funktion `backend/harmonization.py` ersetzen oder fertige Tabelle nach
-  `data/harmonized/` legen. Bis dahin läuft ein Platzhalter (einfacher Faktor MODIS/VIIRS)
-- Getestet mit 10,4 Mio. Hotspots: 0,3 GB RAM, Antworten unter 0,1 s
+- FastAPI + DuckDB, liest Parquet direkt (10 Mio. Hotspots: 0,3 GB RAM, Antworten < 0,1 s)
+- Liest rohe FIRMS-Dateien **und** Tabelle A des Datenteams (.csv, .csv.gz, .parquet)
+- Harmonisierung wie im Handoff: VIIRS-Niveau, MODIS × Faktor je Region mit 25–75-%-Band; nimmt die
+  Kalibriertabelle des Teams automatisch, sobald sie in `data/calibration/` liegt
+- Entfernt den unvollständigen letzten NRT-Tag automatisch
+- 8 Endpunkte, Doku unter `/docs` und online
 
 ### Daten
-- Echte FIRMS-NRT-Daten, global, 07.–14.11.2026: **869.189 Hotspots**
-  (MODIS Terra/Aqua 75.923 · VIIRS NOAA-20 399.584 · VIIRS NOAA-21 393.682)
-- Liegen als Parquet in `data/raw/` (15 MB statt 73 MB CSV)
-- Hinweis: Der 14.11. ist im Download unvollständig und erscheint deshalb niedriger
+- Echte FIRMS-NRT-Daten, global, 07.–13.11.2026: **849.393 Hotspots** (MODIS Terra/Aqua, VIIRS NOAA-20/21)
 
 ### Infrastruktur
-- GitHub-Repo, GitHub Pages (Demo), täglicher GitHub-Workflow für neue FIRMS-Daten (wartet auf MAP_KEY)
-- `Dockerfile` für späteres Hosting (Render, Hugging Face Spaces o. ä.)
+- GitHub-Repo, GitHub Pages (Demo), API-Doku online, täglicher Workflow (wartet auf MAP_KEY), Dockerfile
 
 ## Wichtige Entscheidungen
 
 | Entscheidung | Begründung |
 |---|---|
-| VIIRS wird auf MODIS-Niveau gebracht, nicht umgekehrt | MODIS kann kleine Feuer, die es nie gesehen hat, nicht nachträglich „erfinden“ |
-| Harmonisierung als Gewicht pro Hotspot (`weight`, `frp_h`) | Jede Ansicht ist dann eine einfache Summe: Kalender, Karte, Export und jedes Gebiet sind automatisch harmonisiert |
+| Harmonisierung auf **VIIRS-Niveau** (MODIS × Faktor je Region) | Vorgabe des Datenteams (Handoff); VIIRS ist der laufende Sensor |
+| Karte zeigt nur Rohpunkte, Statistik nur für Gebiete | Faktoren gelten nur für Gebiete zuverlässig (Korrelation bei 2-km-Zellen nur 0,29) |
+| Faktor intern als Gewicht pro Hotspot | Jede Ansicht und jedes gezeichnete Gebiet ist dann eine einfache Summe |
 | DuckDB + Parquet statt PostgreSQL | Die App macht fast nur Summen über Millionen Zeilen; dafür ist eine analytische Datenbank schneller, braucht keinen eigenen Server und ist für eine nur lesende App ausreichend |
 | Website spricht nur mit der API, nie direkt mit der Datenbank | Datenbank austauschbar, sicher, klare Schnittstelle |
-| FRP nur als Zusatz, Hauptmaß ist die Hotspot-Anzahl | Die Challenge fragt nach Anzahl; FRP ist zwischen den Sensoren schwerer vergleichbar |
+| Anzahl und FRP gleichwertig umschaltbar | Handoff: FRP ist zwischen den Sensoren robuster (Faktor ~2–4 statt ~7–11) |
 
 ## Was noch offen ist
 
 | # | Aufgabe | Wichtigkeit | Zuständig |
 |---|---|---|---|
-| 1 | **Echte Harmonisierung** liefern (siehe `docs/AGENT_HANDOFF.md`) | kritisch, Kern der Challenge | Harmonisierung |
-| 2 | **Validierung**: r, Bias, MAE vor/nach im Überlappungszeitraum | kritisch für die Jury | Harmonisierung |
-| 3 | **Archivdaten** (mehrere Jahre) einlesen: `data/incoming/` → `python -m backend.ingest` | hoch, sonst kein Mehrjahreskalender | Team |
-| 4 | **Methodik-Text** in `content/methodology.md` (Englisch) | hoch | Team / Harmonisierung |
-| 5 | **Öffentliches Hosting** mit Backend (Dockerfile liegt bereit) | mittel, für Jury-Link | Team |
-| 6 | **FIRMS MAP_KEY** als GitHub-Secret `FIRMS_MAP_KEY` | niedrig für die Abgabe | Putu |
+| 1 | **Tabelle A mit der Historie** (ab 2000) liefern → `data/incoming/` | kritisch | Datenteam |
+| 2 | **Kalibriertabelle** (Tabelle C) → `data/calibration/`, inkl. Korrektur je Satelliten-Kombination | kritisch | Datenteam |
+| 3 | **Validierung** (r, Bias, MAE vor/nach) und **Methodik-Text** in `content/methodology.md` | hoch | Datenteam / Team |
+| 4 | Echte Regionen (`regions.geojson`) statt Platzhalter-Boxen | mittel | Datenteam |
+| 5 | **Öffentliches Hosting** mit Backend (Dockerfile liegt bereit) | mittel | Team |
+| 6 | Pilotregion(en) und Story für die Präsentation | mittel | Team |
 | 7 | **Abgabe**: Projektseite, Demo-Video (2–3 Min.), Pitch | kritisch | Team |
-| 8 | Pilotregion(en) für die Präsentation festlegen | mittel | Team |
+| 8 | FIRMS MAP_KEY als GitHub-Secret | niedrig | Putu |
+
+Details und offene Fragen an das Datenteam: `docs/AGENT_HANDOFF.md`, Abschnitt 4 und 7.
 
 Empfohlener Feature-Freeze: **Sonntag 12:00 Uhr**, danach nur noch Abgabe, Video, Pitch.
 
