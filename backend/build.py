@@ -46,6 +46,7 @@ from .regions import SATELLITES, VIIRS_START
 WORK = PROCESSED + ".new"   # a build is written here and swapped in at the end: the app keeps serving meanwhile
 CANON = ["latitude", "longitude", "acq_date", "acq_time", "satellite", "sensor", "confidence", "conf_class",
          "frp", "brightness_k", "pixel_km2", "local_hour", "daynight", "type", "version", "source"]
+KEY = ["latitude", "longitude", "acq_date", "acq_time", "satellite"]
 EXTRA = ["region", "weight", "frp_h", "weight_lo", "weight_hi", "frp_h_lo", "frp_h_hi", "weight_cal", "frp_cal"]
 
 
@@ -220,6 +221,11 @@ def _connect(tmp: str) -> duckdb.DuckDBPyConnection:
     con.execute(f"SET memory_limit = {_lit(mem)}")
     con.execute(f"SET temp_directory = {_lit(tmp)}")
     con.execute("SET preserve_insertion_order = false")
+    # few threads and few open partition files keep the memory flat (each thread / open file holds buffers)
+    con.execute(f"SET threads = {int(os.environ.get('FIRECAL_DUCKDB_THREADS', '2'))}")
+    con.execute("SET partitioned_write_max_open_files = 24")
+    con.execute("SET partitioned_write_flush_threshold = 131072")
+    _log(f"DuckDB memory limit {mem}, threads {os.environ.get('FIRECAL_DUCKDB_THREADS', '2')}")
     return con
 
 
@@ -235,7 +241,15 @@ def _part(folder: str, y: int, m: int) -> str:
     return os.path.join(folder, f"y={y}", f"m={m}")
 
 
+def _stage_glob(stage: str, y: int, m: int) -> str:
+    return os.path.join(stage, "f*", f"y={y}", f"m={m}", "*.parquet")
+
+
+PROGRESS: dict = {}   # read by the API (/api/meta -> rebuilding.progress) while a build runs
+
+
 def _log(msg: str) -> None:
+    PROGRESS.update(message=msg, time=datetime.now(timezone.utc).strftime("%H:%M:%S"))
     print(f"[build] {msg}", flush=True)
 
 
@@ -259,42 +273,47 @@ def build(force: bool = False, linked: bool = True) -> dict:
     extra = mode == "harmonized"
 
     # 1) stage: all inputs -> canonical columns, partitioned by year / month (one pass over the inputs)
-    union = "\nUNION ALL\n".join(normalize_sql(f, extra) for f in files)
-    _log(f"stage: {len(files)} input files ...")
-    con.execute(f"""COPY (SELECT *, CAST(substr(acq_date, 1, 4) AS INTEGER) AS y, CAST(substr(acq_date, 6, 2) AS INTEGER) AS m
-                          FROM ({union}))
-                    TO {_lit(STAGE)} (FORMAT parquet, PARTITION_BY (y, m), COMPRESSION zstd)""")
-    months = _months(STAGE)
+    os.makedirs(STAGE, exist_ok=True)
+    for i, f in enumerate(files):   # one input file at a time -> _stage/f<i>/y=/m=/
+        _log(f"stage: file {i + 1}/{len(files)} {os.path.basename(f)} ({time.time() - t0:.0f} s)")
+        con.execute(f"""COPY (SELECT *, CAST(substr(acq_date, 1, 4) AS INTEGER) AS y, CAST(substr(acq_date, 6, 2) AS INTEGER) AS m
+                              FROM ({normalize_sql(f, extra)}))
+                        TO {_lit(os.path.join(STAGE, f"f{i:04d}"))} (FORMAT parquet, PARTITION_BY (y, m), COMPRESSION zstd)""")
+    months = sorted({ym for d in glob.glob(os.path.join(STAGE, "f*")) for ym in _months(d)})
     if not months:
         raise ValueError("the input files contain no valid hotspots")
 
     # newest day: drop it if it only has NRT rows (incomplete download)
     ly, lm = months[-1]
+    lastsrc = f"read_parquet({_lit(_stage_glob(STAGE, ly, lm))})"
     last, only_nrt = con.execute(f"""SELECT max(acq_date), bool_and(source = 'NRT') FILTER (WHERE acq_date =
-        (SELECT max(acq_date) FROM read_parquet({_lit(_part(STAGE, ly, lm) + '/*.parquet')})))
-        FROM read_parquet({_lit(_part(STAGE, ly, lm) + '/*.parquet')})""").fetchone()
+        (SELECT max(acq_date) FROM {lastsrc})) FROM {lastsrc}""").fetchone()
     dropped = last if (only_nrt and not extra) else None
 
     # 2) dedupe per month (+ collect calibration sums)
     cal = None if extra else harmonization.load_calibration()
     calib_parts = []
-    first_viirs = con.execute(f"""SELECT min(acq_date) FROM read_parquet({_lit(STAGE + '/**/*.parquet')}, hive_partitioning = true)
+    first_viirs = con.execute(f"""SELECT min(acq_date) FROM read_parquet({_lit(STAGE + '/*/*/*/*.parquet')}, hive_partitioning = true)
                                   WHERE sensor = 'VIIRS' AND acq_date >= {_lit(VIIRS_START)}""").fetchone()[0]
     for i, (y, m) in enumerate(months):
-        src = f"read_parquet({_lit(_part(STAGE, y, m) + '/*.parquet')})"
+        src = f"read_parquet({_lit(_stage_glob(STAGE, y, m))}, union_by_name = true)"
         out = _part(DEDUP, y, m)
         os.makedirs(out, exist_ok=True)
         keep = f"WHERE acq_date <> {_lit(dropped)}" if dropped else ""
-        con.execute(f"""COPY (SELECT * EXCLUDE (y, m) FROM {src} {keep}
-                              QUALIFY row_number() OVER (PARTITION BY latitude, longitude, acq_date, acq_time, satellite
-                                                         ORDER BY CASE source WHEN 'SP' THEN 0 WHEN 'NRT' THEN 1 ELSE 2 END) = 1)
+        others = [c for c in CANON if c not in KEY] + (EXTRA if extra else [])
+        # duplicates: same pixel, time, satellite; keep SP (archive) over NRT. Hash aggregation can spill to disk.
+        con.execute(f"""COPY (SELECT {", ".join(KEY)}, UNNEST(r) FROM (
+                                SELECT {", ".join(KEY)},
+                                       arg_min(struct_pack({", ".join(others)}),
+                                               CASE source WHEN 'SP' THEN 0 WHEN 'NRT' THEN 1 ELSE 2 END) AS r
+                                FROM {src} {keep} GROUP BY {", ".join(KEY)}))
                         TO {_lit(out + '/data.parquet')} (FORMAT parquet, COMPRESSION zstd)""")
-        shutil.rmtree(_part(STAGE, y, m), ignore_errors=True)
+        for d in glob.glob(os.path.join(STAGE, "f*")):
+            shutil.rmtree(_part(d, y, m), ignore_errors=True)
         if cal is None and first_viirs:
             calib_parts.append(con.execute(harmonization.calibration_sums_sql(
                 f"read_parquet({_lit(out + '/data.parquet')})", first_viirs)).df())
-        if (i + 1) % 12 == 0 or i + 1 == len(months):
-            _log(f"dedupe: {i + 1}/{len(months)} months ({time.time() - t0:.0f} s)")
+        _log(f"dedupe: {i + 1}/{len(months)} months ({time.time() - t0:.0f} s)")
     shutil.rmtree(STAGE, ignore_errors=True)
 
     # 3) calibration table
@@ -341,8 +360,7 @@ def build(force: bool = False, linked: bool = True) -> dict:
               min(longitude) AS w, min(latitude) AS s, max(longitude) AS e, max(latitude) AS n_,
               bool_or(type IS NOT NULL) AS has_type, count(*) FILTER (WHERE sensor = 'MODIS' AND weight > 0) AS mcal
               FROM {h} GROUP BY ALL""").df())
-        if (i + 1) % 12 == 0 or i + 1 == len(months):
-            _log(f"harmonize: {i + 1}/{len(months)} months ({time.time() - t0:.0f} s)")
+        _log(f"harmonize: {i + 1}/{len(months)} months ({time.time() - t0:.0f} s)")
     shutil.rmtree(DEDUP, ignore_errors=True)
     import pandas as pd
     a = pd.concat(agg, ignore_index=True)

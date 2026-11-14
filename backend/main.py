@@ -290,7 +290,9 @@ def meta():
     """Data span and version, counts per satellite, satellite timeline, harmonization method and
     calibration table (factor per region with 25-75 % band)."""
     cur()
-    return {"api": "firecal", "version": API_VERSION, **_meta, "rebuilding": dict(_build_state)}
+    from .build import PROGRESS
+    return {"api": "firecal", "version": API_VERSION, **_meta,
+            "rebuilding": {**_build_state, "progress": dict(PROGRESS) if _build_state["running"] else None}}
 
 
 @app.get("/api/timeseries")

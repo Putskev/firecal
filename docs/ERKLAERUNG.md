@@ -68,8 +68,10 @@ dieselben Spalten gebracht:
   nur aus NRT-Zeilen, wird er weggelassen (aktuell: 14.11.2026).
 
 ### 3.3 Warum es mit großen Datenmengen geht
-Alles läuft in DuckDB **Monat für Monat** mit Speicherlimit (Standard: halber RAM, max. 8 GB, einstellbar mit
-`FIRECAL_DUCKDB_MEMORY`). Was nicht in den Speicher passt, lagert DuckDB auf die Platte aus.
+Alles läuft in DuckDB **Datei für Datei und Monat für Monat** mit Speicherlimit (Standard: halber RAM, max. 8 GB,
+einstellbar mit `FIRECAL_DUCKDB_MEMORY`) und 2 Threads (`FIRECAL_DUCKDB_THREADS`). Duplikate werden per
+Gruppierung entfernt, die auf die Platte auslagern kann. Getestet: 10,9 Mio. Hotspots in einem Monat mit 600 MB,
+26,5 Mio. über 192 Monate mit 300 MB Speicher.
 Test: 42,7 Mio. Hotspots in 2¼ Minuten mit 1,3 GB RAM. Euer Server-Archiv (317 Mio.) braucht geschätzt 15–20 Minuten.
 Neu gebaut wird in `data/processed.new/`, erst am Ende wird umgeschaltet: **Die App läuft während des Baus mit
 den alten Daten weiter.**
