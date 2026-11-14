@@ -1460,7 +1460,8 @@ async function cmpMapData() {
     if (id !== S.creq) return;
     const na = dayDiff(a1, a2) + 1, nb = dayDiff(b1, b2) + 1;   // per day, so spans of different length compare
     const ref = quantile([...ca.map(c => c[2] / na), ...cb.map(c => c[2] / nb)], .99) || 1;
-    cmpHeat[0].setOptions({ gradient: heatGrad() }); cmpHeat[1].setOptions({ gradient: heatGrad() });
+    // leaflet.heat weakens points by 2^(maxZoom - zoom): set maxZoom to the current zoom, as on the main map
+    cmpHeat.forEach((h, i) => h.setOptions({ gradient: heatGrad(), maxZoom: cmpMaps[i].getZoom() }));
     cmpHeat[0].setLatLngs(ca.map(([x, y, v]) => [x, y, v / na / ref])); cmpHeat[1].setLatLngs(cb.map(([x, y, v]) => [x, y, v / nb / ref]));
   } catch (e) { console.error(e); }
 }
