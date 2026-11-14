@@ -26,7 +26,7 @@
    "versionNonce": 647892280,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "FireCal – Architektur",
@@ -62,7 +62,7 @@
    "versionNonce": 207388625,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Harmonisierter MODIS + VIIRS Brandkalender · NASA Space Apps Challenge 2026 · Stand: 14.11.2026, 14:00",
@@ -100,7 +100,7 @@
    "versionNonce": 404285458,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -127,7 +127,7 @@
    "versionNonce": 249103478,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "① Datenquellen · NASA FIRMS",
@@ -174,7 +174,7 @@
      "id": "arr070"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -201,7 +201,7 @@
    "versionNonce": 1862494043,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "FIRMS-Downloads (CSV)\n\nMODIS C6.1 · 1 km · Terra + Aqua (ab 2000)\nVIIRS 375 m · S-NPP (2012)\nNOAA-20 (2018) · NOAA-21 (2023)\nNRT: letzte 7 Tage · Archiv per Antrag",
@@ -248,7 +248,7 @@
      "id": "arr072"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -275,7 +275,7 @@
    "versionNonce": 389609434,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "FIRMS Area-API\n\n/api/area/csv/{KEY}/{QUELLE}/{GEBIET}/{TAGE}\nMAP_KEY als GitHub-Secret\nmax. 10 Tage pro Anfrage\n5.000 Abfragen pro 10 Minuten",
@@ -322,7 +322,7 @@
      "id": "arr074"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -349,7 +349,7 @@
    "versionNonce": 958804058,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Harmonisierungs-Methode (Freund)\n\nnoch offen · Kern der Challenge\nliefert weight + frp_h pro Hotspot\nAnleitung: docs/AGENT_HANDOFF.md",
@@ -387,7 +387,7 @@
    "versionNonce": 1703729685,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -414,7 +414,7 @@
    "versionNonce": 949539217,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "② Einlesen (Python)",
@@ -465,7 +465,7 @@
      "id": "arr076"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -492,7 +492,7 @@
    "versionNonce": 1800188483,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "backend/ingest.py\n\nliest data/incoming/*.csv (pandas)\nerkennt Sensor (instrument)\nKonfidenz → low / nominal / high\nentfernt Duplikate → Parquet (zstd)",
@@ -543,7 +543,7 @@
      "id": "arr077"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -570,7 +570,7 @@
    "versionNonce": 776213900,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "update.py + GitHub Action\n\ntäglich 06:17 UTC\nholt alle Tage seit letztem Stand\nMODIS · S-NPP · NOAA-20 · NOAA-21\n⏸ wartet auf MAP_KEY",
@@ -621,7 +621,7 @@
      "id": "arr079"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -648,7 +648,7 @@
    "versionNonce": 418461139,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Weg B: fertige Tabelle\n\nMethode läuft außerhalb\n(Notebook, R, großer Rechner)\nCSV oder Parquet\n+ harmonization.json",
@@ -686,7 +686,7 @@
    "versionNonce": 255985077,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -713,7 +713,7 @@
    "versionNonce": 2132084005,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "③ Rohdaten-Speicher (im Git)",
@@ -768,7 +768,7 @@
      "id": "arr080"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -795,7 +795,7 @@
    "versionNonce": 1946412081,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "data/raw/*.parquet · 15 MB · nicht harmonisiert\n\nkanonisches Schema, 1 Zeile pro Hotspot:\nlatitude · longitude · acq_date · acq_time · satellite · sensor\nconfidence · conf_class · frp · daynight · type · version · source\n\naktuell: 869.189 Hotspots · 07.–14.11.2026 · global",
@@ -846,7 +846,7 @@
      "id": "arr081"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -873,7 +873,7 @@
    "versionNonce": 772092315,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "data/harmonized/ (optional)\n\nkanonisches Schema\n+ weight + frp_h\nwird 1:1 übernommen\nInfo aus harmonization.json",
@@ -911,7 +911,7 @@
    "versionNonce": 351564608,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -938,7 +938,7 @@
    "versionNonce": 2126508551,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "④ Build · backend/build.py (automatisch beim Serverstart, wenn sich Eingaben ändern)",
@@ -989,7 +989,7 @@
      "id": "arr083"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1016,7 +1016,7 @@
    "versionNonce": 314395343,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "1. Laden\n\nalle data/raw/*.parquet\nDuplikate entfernen\n(Archiv schlägt NRT)",
@@ -1067,7 +1067,7 @@
      "id": "arr084"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1094,7 +1094,7 @@
    "versionNonce": 1469118511,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "2. harmonize(df) · Weg A\nbackend/harmonization.py\n\n+ weight  + frp_h\nPLATZHALTER:\nk = Σ MODIS / Σ VIIRS (Überlappung)",
@@ -1145,7 +1145,7 @@
      "id": "arr085"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1172,7 +1172,7 @@
    "versionNonce": 168393880,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "3. validate()\n\nalle Spalten da\nkeine NaN\nweight ≥ 0",
@@ -1235,7 +1235,7 @@
      "id": "arr088"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1262,7 +1262,7 @@
    "versionNonce": 1504004732,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "4. Schreiben → data/processed/\n\nHotspots nach Jahr / Monat\nSummen je Monat × 0,1°-Zelle\nSummen je Tag × 0,25°-Zelle\nmeta.json + harmonization.json",
@@ -1300,7 +1300,7 @@
    "versionNonce": 1959386987,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1327,7 +1327,7 @@
    "versionNonce": 401991736,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "⑤ data/processed/ (wird gebaut, nicht im Git)",
@@ -1378,7 +1378,7 @@
      "id": "arr089"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1405,7 +1405,7 @@
    "versionNonce": 260573196,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "hotspots/y=2026/m=11/*.parquet\n\nalle Hotspots + weight + frp_h\nnach Jahr / Monat aufgeteilt\n→ CSV-Export\n→ Karte stark hineingezoomt",
@@ -1456,7 +1456,7 @@
      "id": "arr091"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1483,7 +1483,7 @@
    "versionNonce": 1656961616,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "cells_month.parquet\n\nperiod (Monat) · lat · lon (0,1°)\nsensor · low · veg\nn · frp · w = Σweight · fh = Σfrp_h\n→ Monatskalender, Anomalien, Karte",
@@ -1534,7 +1534,7 @@
      "id": "arr092"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1561,7 +1561,7 @@
    "versionNonce": 1526706730,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "cells_day.parquet\n\nperiod (Tag) · 0,25°-Zellen\ngleiche Spalten\n→ Tageskalender, Karte\n\n+ meta.json · harmonization.json",
@@ -1599,7 +1599,7 @@
    "versionNonce": 502922617,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1626,7 +1626,7 @@
    "versionNonce": 253207297,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "⑥ Backend · FastAPI + DuckDB (backend/main.py)",
@@ -1685,7 +1685,7 @@
      "id": "arr093"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1712,7 +1712,7 @@
    "versionNonce": 1063497604,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "DuckDB\n\nViews direkt auf den Parquet-Dateien:\npoints · cells_month · cells_day\nlädt nichts komplett in den RAM\n(0,3 GB auch bei 10 Mio. Hotspots)\nPolygon: Zellmittelpunkt zählt",
@@ -1765,13 +1765,9 @@
     {
      "type": "arrow",
      "id": "arr096"
-    },
-    {
-     "type": "arrow",
-     "id": "arr105"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1798,7 +1794,7 @@
    "versionNonce": 346094056,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "FastAPI-Endpunkte\n\nGET /api/meta → Zeitraum, Satelliten, Methode\nGET /api/timeseries → Summen je Monat / Tag\nGET /api/heatmap → Rasterzellen für die Karte\nGET /api/hotspots.csv → einzelne Hotspots\nPOST /api/reload → neu laden (mit Token)\nGET /docs → API-Doku (automatisch)",
@@ -1845,7 +1841,7 @@
      "id": "arr095"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1872,7 +1868,7 @@
    "versionNonce": 1193309984,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Gemeinsame Filter\n\nbbox · polygon\nstart · end\nexclude_low\nvegetation_only\n\nCORS offen · GZip",
@@ -1910,7 +1906,7 @@
    "versionNonce": 1849076401,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -1937,7 +1933,7 @@
    "versionNonce": 1783684942,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "⑦ Frontend · index.html (läuft im Browser)",
@@ -2000,7 +1996,7 @@
      "id": "arr101"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2027,7 +2023,7 @@
    "versionNonce": 648200382,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Datenquelle (Provider)\n\nApiProvider → FastAPI\nLocalProvider → Demo / CSV\n\nautomatisch: API, wenn\nerreichbar, sonst Demo",
@@ -2078,7 +2074,7 @@
      "id": "arr103"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2105,7 +2101,7 @@
    "versionNonce": 996247159,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Karte\n\nLeaflet + Esri-Graukarte\nHeatmap (Gauß, Viridis)\nGebiet zeichnen / Lat-Lon\nlädt nur sichtbaren Teil",
@@ -2152,7 +2148,7 @@
      "id": "arr099"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2179,7 +2175,7 @@
    "versionNonce": 783156688,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Analyse (Plotly)\n\nKalender Monat / Tag\nKennzahlen · Anomalie\nHarmonisierungs-Check\nPlay-Animation",
@@ -2226,7 +2222,7 @@
      "id": "arr100"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2253,7 +2249,7 @@
    "versionNonce": 625675343,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Ausgabe\n\nCSV: Hotspots, Summen\nPNG der Diagramme\nMethodik aus\ncontent/methodology.md",
@@ -2291,7 +2287,7 @@
    "versionNonce": 1585932014,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2318,7 +2314,7 @@
    "versionNonce": 538981927,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "⑧ Zugriff",
@@ -2365,7 +2361,7 @@
      "id": "arr101"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2392,7 +2388,7 @@
    "versionNonce": 1709696036,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "App lokal\n\nhttp://localhost:8000\nPowerShell: uvicorn\n✔ echte Daten",
@@ -2439,7 +2435,7 @@
      "id": "arr103"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2466,7 +2462,7 @@
    "versionNonce": 2068124765,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "GitHub Pages\n\nputskev.github.io/firecal\n⚠ nur Demodaten\n?api=… → echtes Backend",
@@ -2509,7 +2505,7 @@
      "id": "tex067"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2536,7 +2532,7 @@
    "versionNonce": 289255806,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "API-Doku\n\n/docs · lokal, ausprobieren\napi-docs.html · online, lesen",
@@ -2577,13 +2573,9 @@
     {
      "type": "text",
      "id": "tex069"
-    },
-    {
-     "type": "arrow",
-     "id": "arr105"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
@@ -2610,7 +2602,7 @@
    "versionNonce": 472138490,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Hosting (geplant)\n\nDockerfile vorhanden\nRender / Hugging Face\n→ Link für die Jury",
@@ -2640,9 +2632,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1460519318,
    "version": 1,
    "versionNonce": 225810526,
@@ -2653,7 +2643,7 @@
      "id": "tex071"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -2704,7 +2694,7 @@
    "versionNonce": 1001929,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "CSV",
@@ -2734,9 +2724,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 649677952,
    "version": 1,
    "versionNonce": 435786141,
@@ -2747,7 +2735,7 @@
      "id": "tex073"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -2798,7 +2786,7 @@
    "versionNonce": 109525499,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "HTTP",
@@ -2828,9 +2816,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 302003102,
    "version": 1,
    "versionNonce": 893149981,
@@ -2841,7 +2827,7 @@
      "id": "tex075"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -2892,7 +2878,7 @@
    "versionNonce": 638019486,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Weg B",
@@ -2922,15 +2908,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1083438815,
    "version": 1,
    "versionNonce": 1492026738,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -2983,9 +2967,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1564070057,
    "version": 1,
    "versionNonce": 2036465043,
@@ -2996,7 +2978,7 @@
      "id": "tex078"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3055,7 +3037,7 @@
    "versionNonce": 495439556,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "nrt_cache.parquet",
@@ -3085,15 +3067,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 2096236325,
    "version": 1,
    "versionNonce": 2001409496,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3138,15 +3118,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 2063281257,
    "version": 1,
    "versionNonce": 2078054028,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3191,9 +3169,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1339395519,
    "version": 1,
    "versionNonce": 368871839,
@@ -3204,7 +3180,7 @@
      "id": "tex082"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3263,7 +3239,7 @@
    "versionNonce": 438892468,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "1:1",
@@ -3293,15 +3269,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1471609727,
    "version": 1,
    "versionNonce": 1137122203,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3346,15 +3320,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 2055665571,
    "version": 1,
    "versionNonce": 693373551,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3399,15 +3371,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 99195380,
    "version": 1,
    "versionNonce": 881391735,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3452,15 +3422,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1553714998,
    "version": 1,
    "versionNonce": 629653100,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3513,15 +3481,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 116146606,
    "version": 1,
    "versionNonce": 1280285447,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3574,15 +3540,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 390887331,
    "version": 1,
    "versionNonce": 1121481225,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3635,9 +3599,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1574963608,
    "version": 1,
    "versionNonce": 717440071,
@@ -3648,7 +3610,7 @@
      "id": "tex090"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3707,7 +3669,7 @@
    "versionNonce": 956887592,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "liest",
@@ -3737,15 +3699,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1415900355,
    "version": 1,
    "versionNonce": 957956675,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3798,15 +3758,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 838145800,
    "version": 1,
    "versionNonce": 1028162214,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3859,9 +3817,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1720926263,
    "version": 1,
    "versionNonce": 973838694,
@@ -3872,7 +3828,7 @@
      "id": "tex094"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -3923,7 +3879,7 @@
    "versionNonce": 2116481899,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "SQL",
@@ -3953,15 +3909,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1527129487,
    "version": 1,
    "versionNonce": 124468791,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -4006,9 +3960,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 119988829,
    "version": 1,
    "versionNonce": 1200093500,
@@ -4019,7 +3971,7 @@
      "id": "tex097"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -4078,7 +4030,7 @@
    "versionNonce": 1113145427,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "HTTP · JSON",
@@ -4108,15 +4060,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 831698693,
    "version": 1,
    "versionNonce": 1478675320,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -4161,15 +4111,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1920828234,
    "version": 1,
    "versionNonce": 1501175504,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -4214,15 +4162,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 1566099206,
    "version": 1,
    "versionNonce": 345908636,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -4267,9 +4213,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 946878465,
    "version": 1,
    "versionNonce": 438761610,
@@ -4280,7 +4224,7 @@
      "id": "tex102"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -4339,7 +4283,7 @@
    "versionNonce": 2018978167,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "öffnet",
@@ -4369,9 +4313,7 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
+   "roundness": null,
    "seed": 844846558,
    "version": 1,
    "versionNonce": 1450571438,
@@ -4382,7 +4324,7 @@
      "id": "tex104"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -4441,7 +4383,7 @@
    "versionNonce": 2072980150,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "öffnet",
@@ -4455,109 +4397,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "arr105",
-   "type": "arrow",
-   "x": 1239.0,
-   "y": 2506,
-   "width": 225.0,
-   "height": 552,
-   "angle": 0,
-   "strokeColor": "#868e96",
-   "backgroundColor": "transparent",
-   "fillStyle": "solid",
-   "strokeWidth": 2,
-   "strokeStyle": "dashed",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": {
-    "type": 2
-   },
-   "seed": 8196149,
-   "version": 1,
-   "versionNonce": 2059322682,
-   "isDeleted": false,
-   "boundElements": [
-    {
-     "type": "text",
-     "id": "tex106"
-    }
-   ],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     0,
-     -86
-    ],
-    [
-     -225.0,
-     -86
-    ],
-    [
-     -225.0,
-     -552
-    ]
-   ],
-   "lastCommittedPoint": null,
-   "startBinding": {
-    "elementId": "rec068",
-    "focus": 0,
-    "gap": 4
-   },
-   "endBinding": {
-    "elementId": "rec046",
-    "focus": 0,
-    "gap": 4
-   },
-   "startArrowhead": null,
-   "endArrowhead": "arrow",
-   "elbowed": false
-  },
-  {
-   "id": "tex106",
-   "type": "text",
-   "x": 986.56,
-   "y": 2178.25,
-   "width": 54.88,
-   "height": 17.5,
-   "angle": 0,
-   "strokeColor": "#868e96",
-   "backgroundColor": "transparent",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "strokeStyle": "solid",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": null,
-   "seed": 1477498383,
-   "version": 1,
-   "versionNonce": 364120812,
-   "isDeleted": false,
-   "boundElements": [],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false,
-   "text": "geplant",
-   "fontSize": 14,
-   "fontFamily": 5,
-   "textAlign": "center",
-   "verticalAlign": "middle",
-   "containerId": "arr105",
-   "originalText": "geplant",
-   "autoResize": true,
-   "lineHeight": 1.25
-  },
-  {
-   "id": "rec107",
+   "id": "rec105",
    "type": "rectangle",
    "x": 1620,
    "y": 0,
@@ -4576,17 +4416,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 514982154,
+   "seed": 8196149,
    "version": 1,
-   "versionNonce": 1668748296,
+   "versionNonce": 2059322682,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex108",
+   "id": "tex106",
    "type": "text",
    "x": 1640,
    "y": 14,
@@ -4603,12 +4443,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 856070306,
+   "seed": 1477498383,
    "version": 1,
-   "versionNonce": 2053134994,
+   "versionNonce": 364120812,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Legende & Status",
@@ -4622,7 +4462,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec109",
+   "id": "rec107",
    "type": "rectangle",
    "x": 1650,
    "y": 70,
@@ -4641,17 +4481,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 766744960,
+   "seed": 514982154,
    "version": 1,
-   "versionNonce": 1863693998,
+   "versionNonce": 1668748296,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex110",
+   "id": "tex108",
    "type": "text",
    "x": 1712,
    "y": 74,
@@ -4668,12 +4508,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1428150522,
+   "seed": 856070306,
    "version": 1,
-   "versionNonce": 372587780,
+   "versionNonce": 2053134994,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Code (Python)",
@@ -4687,7 +4527,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec111",
+   "id": "rec109",
    "type": "rectangle",
    "x": 1650,
    "y": 112,
@@ -4706,17 +4546,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1700113407,
+   "seed": 766744960,
    "version": 1,
-   "versionNonce": 1989259376,
+   "versionNonce": 1863693998,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex112",
+   "id": "tex110",
    "type": "text",
    "x": 1712,
    "y": 116,
@@ -4733,12 +4573,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1723943247,
+   "seed": 1428150522,
    "version": 1,
-   "versionNonce": 364725392,
+   "versionNonce": 372587780,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Daten (Parquet-Dateien)",
@@ -4752,7 +4592,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec113",
+   "id": "rec111",
    "type": "rectangle",
    "x": 1650,
    "y": 154,
@@ -4771,17 +4611,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 682281554,
+   "seed": 1700113407,
    "version": 1,
-   "versionNonce": 730160160,
+   "versionNonce": 1989259376,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex114",
+   "id": "tex112",
    "type": "text",
    "x": 1712,
    "y": 158,
@@ -4798,12 +4638,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 545625653,
+   "seed": 1723943247,
    "version": 1,
-   "versionNonce": 118321418,
+   "versionNonce": 364725392,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Backend (FastAPI + DuckDB)",
@@ -4817,7 +4657,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec115",
+   "id": "rec113",
    "type": "rectangle",
    "x": 1650,
    "y": 196,
@@ -4836,17 +4676,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 649187325,
+   "seed": 682281554,
    "version": 1,
-   "versionNonce": 1998679711,
+   "versionNonce": 730160160,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex116",
+   "id": "tex114",
    "type": "text",
    "x": 1712,
    "y": 200,
@@ -4863,12 +4703,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 627813882,
+   "seed": 545625653,
    "version": 1,
-   "versionNonce": 2037347502,
+   "versionNonce": 118321418,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Frontend (Browser)",
@@ -4882,7 +4722,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec117",
+   "id": "rec115",
    "type": "rectangle",
    "x": 1650,
    "y": 238,
@@ -4901,17 +4741,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1504988819,
+   "seed": 649187325,
    "version": 1,
-   "versionNonce": 669638768,
+   "versionNonce": 1998679711,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex118",
+   "id": "tex116",
    "type": "text",
    "x": 1712,
    "y": 242,
@@ -4928,12 +4768,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 562571391,
+   "seed": 627813882,
    "version": 1,
-   "versionNonce": 91898035,
+   "versionNonce": 2037347502,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "offen / Aufgabe fürs Team",
@@ -4947,7 +4787,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec119",
+   "id": "rec117",
    "type": "rectangle",
    "x": 1650,
    "y": 280,
@@ -4966,17 +4806,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 61172930,
+   "seed": 1504988819,
    "version": 1,
-   "versionNonce": 441402618,
+   "versionNonce": 669638768,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex120",
+   "id": "tex118",
    "type": "text",
    "x": 1712,
    "y": 284,
@@ -4993,12 +4833,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 598077321,
+   "seed": 562571391,
    "version": 1,
-   "versionNonce": 1863197322,
+   "versionNonce": 91898035,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Quellen und Zugriff",
@@ -5012,7 +4852,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "lin121",
+   "id": "lin119",
    "type": "line",
    "x": 2030,
    "y": 89,
@@ -5029,12 +4869,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 836682997,
+   "seed": 61172930,
    "version": 1,
-   "versionNonce": 906419965,
+   "versionNonce": 441402618,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -5052,7 +4892,7 @@
    "endArrowhead": null
   },
   {
-   "id": "tex122",
+   "id": "tex120",
    "type": "text",
    "x": 2105,
    "y": 77,
@@ -5069,12 +4909,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 120232147,
+   "seed": 598077321,
    "version": 1,
-   "versionNonce": 1081622283,
+   "versionNonce": 1863197322,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "geplant",
@@ -5088,7 +4928,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "tex123",
+   "id": "tex121",
    "type": "text",
    "x": 2030,
    "y": 120,
@@ -5105,12 +4945,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 913882254,
+   "seed": 836682997,
    "version": 1,
-   "versionNonce": 1258282194,
+   "versionNonce": 906419965,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "dicker gelber Rand =\nPlatzhalter, wird ersetzt",
@@ -5124,7 +4964,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec124",
+   "id": "rec122",
    "type": "rectangle",
    "x": 1650,
    "y": 340,
@@ -5133,6 +4973,76 @@
    "angle": 0,
    "strokeColor": "#495057",
    "backgroundColor": "#ffffff",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 120232147,
+   "version": 1,
+   "versionNonce": 1081622283,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "type": "text",
+     "id": "tex123"
+    }
+   ],
+   "updated": 1794661352002,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "tex123",
+   "type": "text",
+   "x": 1655,
+   "y": 391.875,
+   "width": 330,
+   "height": 131.25,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "roundness": null,
+   "seed": 913882254,
+   "version": 1,
+   "versionNonce": 1258282194,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1794661352002,
+   "link": null,
+   "locked": false,
+   "text": "✔ läuft\n\nEinlesen · Build · API\nKarte · Kalender · Diagramme\nCSV / PNG-Export\nGitHub Repo + Pages\nAPI-Doku online",
+   "fontSize": 15,
+   "fontFamily": 5,
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "rec122",
+   "originalText": "✔ läuft\n\nEinlesen · Build · API\nKarte · Kalender · Diagramme\nCSV / PNG-Export\nGitHub Repo + Pages\nAPI-Doku online",
+   "autoResize": true,
+   "lineHeight": 1.25
+  },
+  {
+   "id": "rec124",
+   "type": "rectangle",
+   "x": 2010,
+   "y": 340,
+   "width": 340,
+   "height": 235,
+   "angle": 0,
+   "strokeColor": "#e67700",
+   "backgroundColor": "#fff3bf",
    "fillStyle": "solid",
    "strokeWidth": 1,
    "strokeStyle": "solid",
@@ -5153,14 +5063,14 @@
      "id": "tex125"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
    "id": "tex125",
    "type": "text",
-   "x": 1655,
+   "x": 2015,
    "y": 391.875,
    "width": 330,
    "height": 131.25,
@@ -5180,77 +5090,7 @@
    "versionNonce": 1799645191,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false,
-   "text": "✔ läuft\n\nEinlesen · Build · API\nKarte · Kalender · Diagramme\nCSV / PNG-Export\nGitHub Repo + Pages\nAPI-Doku online",
-   "fontSize": 15,
-   "fontFamily": 5,
-   "textAlign": "center",
-   "verticalAlign": "middle",
-   "containerId": "rec124",
-   "originalText": "✔ läuft\n\nEinlesen · Build · API\nKarte · Kalender · Diagramme\nCSV / PNG-Export\nGitHub Repo + Pages\nAPI-Doku online",
-   "autoResize": true,
-   "lineHeight": 1.25
-  },
-  {
-   "id": "rec126",
-   "type": "rectangle",
-   "x": 2010,
-   "y": 340,
-   "width": 340,
-   "height": 235,
-   "angle": 0,
-   "strokeColor": "#e67700",
-   "backgroundColor": "#fff3bf",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "strokeStyle": "solid",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": {
-    "type": 3
-   },
-   "seed": 562957180,
-   "version": 1,
-   "versionNonce": 261582917,
-   "isDeleted": false,
-   "boundElements": [
-    {
-     "type": "text",
-     "id": "tex127"
-    }
-   ],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false
-  },
-  {
-   "id": "tex127",
-   "type": "text",
-   "x": 2015,
-   "y": 391.875,
-   "width": 330,
-   "height": 131.25,
-   "angle": 0,
-   "strokeColor": "#1e1e1e",
-   "backgroundColor": "transparent",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "strokeStyle": "solid",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": null,
-   "seed": 1519490801,
-   "version": 1,
-   "versionNonce": 1967786446,
-   "isDeleted": false,
-   "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "⏳ offen\n\n1. echte Harmonisierung\n2. Validierung (r, Bias, MAE)\n3. Archivdaten (Jahre)\n4. Methodik-Text\n5. Hosting · 6. MAP_KEY",
@@ -5258,13 +5098,13 @@
    "fontFamily": 5,
    "textAlign": "center",
    "verticalAlign": "middle",
-   "containerId": "rec126",
+   "containerId": "rec124",
    "originalText": "⏳ offen\n\n1. echte Harmonisierung\n2. Validierung (r, Bias, MAE)\n3. Archivdaten (Jahre)\n4. Methodik-Text\n5. Hosting · 6. MAP_KEY",
    "autoResize": true,
    "lineHeight": 1.25
   },
   {
-   "id": "rec128",
+   "id": "rec126",
    "type": "rectangle",
    "x": 1620,
    "y": 640,
@@ -5283,17 +5123,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1806584668,
+   "seed": 562957180,
    "version": 1,
-   "versionNonce": 561623934,
+   "versionNonce": 261582917,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex129",
+   "id": "tex127",
    "type": "text",
    "x": 1640,
    "y": 654,
@@ -5310,12 +5150,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 652132316,
+   "seed": 1519490801,
    "version": 1,
-   "versionNonce": 80336782,
+   "versionNonce": 1967786446,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Repo-Struktur (github.com/Putskev/firecal)",
@@ -5329,7 +5169,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "tex130",
+   "id": "tex128",
    "type": "text",
    "x": 1650,
    "y": 700,
@@ -5346,12 +5186,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1890322093,
+   "seed": 1806584668,
    "version": 1,
-   "versionNonce": 786442398,
+   "versionNonce": 561623934,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "firecal/\n├─ index.html            Frontend (App)\n├─ api-docs.html         API-Doku für GitHub Pages\n├─ backend/\n│  ├─ main.py            FastAPI + DuckDB\n│  ├─ build.py           Build-Schritt\n│  ├─ harmonization.py   ← Methode einbauen (Weg A)\n│  ├─ data.py            Schema, Prüfung\n│  ├─ ingest.py          CSV → Parquet\n│  └─ paths.py           Ordner\n├─ data/\n│  ├─ incoming/          rohe CSVs (nicht im Git)\n│  ├─ raw/               Parquet, nicht harmonisiert\n│  ├─ harmonized/        ← fertige Tabelle (Weg B)\n│  └─ processed/         gebaut (nicht im Git)\n├─ content/methodology.md   ← Methodik-Text\n├─ docs/  AGENT_HANDOFF · PROJEKTSTAND · openapi\n├─ update.py · config.json  tägliches Update\n├─ .github/workflows/update.yml\n└─ Dockerfile · requirements.txt",
@@ -5365,7 +5205,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec131",
+   "id": "rec129",
    "type": "rectangle",
    "x": 1620,
    "y": 1320,
@@ -5384,17 +5224,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 16889874,
+   "seed": 652132316,
    "version": 1,
-   "versionNonce": 643396776,
+   "versionNonce": 80336782,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex132",
+   "id": "tex130",
    "type": "text",
    "x": 1640,
    "y": 1334,
@@ -5411,12 +5251,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 740223520,
+   "seed": 1890322093,
    "version": 1,
-   "versionNonce": 607991153,
+   "versionNonce": 786442398,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Kennzahlen",
@@ -5430,7 +5270,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "tex133",
+   "id": "tex131",
    "type": "text",
    "x": 1650,
    "y": 1380,
@@ -5447,12 +5287,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 2033636663,
+   "seed": 16889874,
    "version": 1,
-   "versionNonce": 516841822,
+   "versionNonce": 643396776,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Echte Daten:  869.189 Hotspots, 8 Tage, weltweit\n  MODIS Terra + Aqua     75.923\n  VIIRS NOAA-20         399.584\n  VIIRS NOAA-21         393.682\n\nCSV 73 MB  →  Parquet 15 MB\nSummen: ~140.000 Zeilen statt 870.000\n\nBelastungstest 10,4 Mio. Hotspots:\n  API-Speicher 0,3 GB · Antworten 50–110 ms",
@@ -5466,7 +5306,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec134",
+   "id": "rec132",
    "type": "rectangle",
    "x": 1620,
    "y": 1800,
@@ -5485,17 +5325,17 @@
    "roundness": {
     "type": 3
    },
-   "seed": 265236939,
+   "seed": 740223520,
    "version": 1,
-   "versionNonce": 1400082662,
+   "versionNonce": 607991153,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex135",
+   "id": "tex133",
    "type": "text",
    "x": 1640,
    "y": 1814,
@@ -5512,12 +5352,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 2072265938,
+   "seed": 2033636663,
    "version": 1,
-   "versionNonce": 455736474,
+   "versionNonce": 516841822,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "Beispiel: Nutzer zeichnet ein Gebiet in Australien",
@@ -5531,7 +5371,7 @@
    "lineHeight": 1.25
   },
   {
-   "id": "rec136",
+   "id": "rec134",
    "type": "rectangle",
    "x": 1680,
    "y": 1860,
@@ -5540,6 +5380,80 @@
    "angle": 0,
    "strokeColor": "#1971c2",
    "backgroundColor": "#d0ebff",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 265236939,
+   "version": 1,
+   "versionNonce": 1400082662,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "type": "text",
+     "id": "tex135"
+    },
+    {
+     "type": "arrow",
+     "id": "arr138"
+    }
+   ],
+   "updated": 1794661352002,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "tex135",
+   "type": "text",
+   "x": 1685,
+   "y": 1891.875,
+   "width": 630,
+   "height": 56.25,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "roundness": null,
+   "seed": 2072265938,
+   "version": 1,
+   "versionNonce": 455736474,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1794661352002,
+   "link": null,
+   "locked": false,
+   "text": "1. Website fragt an\nGET /api/timeseries?granularity=day\n&bbox=110,-45,155,-10",
+   "fontSize": 15,
+   "fontFamily": 3,
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "rec134",
+   "originalText": "1. Website fragt an\nGET /api/timeseries?granularity=day\n&bbox=110,-45,155,-10",
+   "autoResize": true,
+   "lineHeight": 1.25
+  },
+  {
+   "id": "rec136",
+   "type": "rectangle",
+   "x": 1680,
+   "y": 2025,
+   "width": 640,
+   "height": 120,
+   "angle": 0,
+   "strokeColor": "#e8590c",
+   "backgroundColor": "#ffe8cc",
    "fillStyle": "solid",
    "strokeWidth": 1,
    "strokeStyle": "solid",
@@ -5561,93 +5475,19 @@
     },
     {
      "type": "arrow",
-     "id": "arr140"
+     "id": "arr138"
+    },
+    {
+     "type": "arrow",
+     "id": "arr141"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
    "id": "tex137",
-   "type": "text",
-   "x": 1685,
-   "y": 1891.875,
-   "width": 630,
-   "height": 56.25,
-   "angle": 0,
-   "strokeColor": "#1e1e1e",
-   "backgroundColor": "transparent",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "strokeStyle": "solid",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": null,
-   "seed": 821653593,
-   "version": 1,
-   "versionNonce": 1189349777,
-   "isDeleted": false,
-   "boundElements": [],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false,
-   "text": "1. Website fragt an\nGET /api/timeseries?granularity=day\n&bbox=110,-45,155,-10",
-   "fontSize": 15,
-   "fontFamily": 3,
-   "textAlign": "center",
-   "verticalAlign": "middle",
-   "containerId": "rec136",
-   "originalText": "1. Website fragt an\nGET /api/timeseries?granularity=day\n&bbox=110,-45,155,-10",
-   "autoResize": true,
-   "lineHeight": 1.25
-  },
-  {
-   "id": "rec138",
-   "type": "rectangle",
-   "x": 1680,
-   "y": 2025,
-   "width": 640,
-   "height": 120,
-   "angle": 0,
-   "strokeColor": "#e8590c",
-   "backgroundColor": "#ffe8cc",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "strokeStyle": "solid",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": {
-    "type": 3
-   },
-   "seed": 181242850,
-   "version": 1,
-   "versionNonce": 419812754,
-   "isDeleted": false,
-   "boundElements": [
-    {
-     "type": "text",
-     "id": "tex139"
-    },
-    {
-     "type": "arrow",
-     "id": "arr140"
-    },
-    {
-     "type": "arrow",
-     "id": "arr143"
-    }
-   ],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false
-  },
-  {
-   "id": "tex139",
    "type": "text",
    "x": 1685,
    "y": 2066.25,
@@ -5664,12 +5504,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1942080813,
+   "seed": 821653593,
    "version": 1,
-   "versionNonce": 119682499,
+   "versionNonce": 1189349777,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "2. FastAPI prüft Parameter\nund baut eine SQL-Abfrage",
@@ -5677,13 +5517,13 @@
    "fontFamily": 5,
    "textAlign": "center",
    "verticalAlign": "middle",
-   "containerId": "rec138",
+   "containerId": "rec136",
    "originalText": "2. FastAPI prüft Parameter\nund baut eine SQL-Abfrage",
    "autoResize": true,
    "lineHeight": 1.25
   },
   {
-   "id": "arr140",
+   "id": "arr138",
    "type": "arrow",
    "x": 2000.0,
    "y": 1984,
@@ -5699,15 +5539,142 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
+   "roundness": null,
+   "seed": 181242850,
+   "version": 1,
+   "versionNonce": 419812754,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1794661352002,
+   "link": null,
+   "locked": false,
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0.0,
+     37
+    ]
+   ],
+   "lastCommittedPoint": null,
+   "startBinding": {
+    "elementId": "rec134",
+    "focus": 0,
+    "gap": 4
    },
+   "endBinding": {
+    "elementId": "rec136",
+    "focus": 0,
+    "gap": 4
+   },
+   "startArrowhead": null,
+   "endArrowhead": "arrow",
+   "elbowed": false
+  },
+  {
+   "id": "rec139",
+   "type": "rectangle",
+   "x": 1680,
+   "y": 2190,
+   "width": 640,
+   "height": 120,
+   "angle": 0,
+   "strokeColor": "#e8590c",
+   "backgroundColor": "#ffe8cc",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "roundness": {
+    "type": 3
+   },
+   "seed": 1942080813,
+   "version": 1,
+   "versionNonce": 119682499,
+   "isDeleted": false,
+   "boundElements": [
+    {
+     "type": "text",
+     "id": "tex140"
+    },
+    {
+     "type": "arrow",
+     "id": "arr141"
+    },
+    {
+     "type": "arrow",
+     "id": "arr144"
+    }
+   ],
+   "updated": 1794661352002,
+   "link": null,
+   "locked": false
+  },
+  {
+   "id": "tex140",
+   "type": "text",
+   "x": 1685,
+   "y": 2231.25,
+   "width": 630,
+   "height": 37.5,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 1,
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "roundness": null,
    "seed": 272167094,
    "version": 1,
    "versionNonce": 1903737355,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
+   "link": null,
+   "locked": false,
+   "text": "3. DuckDB liest nur cells_day.parquet,\nnur Zellen in Australien (~20 ms)",
+   "fontSize": 15,
+   "fontFamily": 5,
+   "textAlign": "center",
+   "verticalAlign": "middle",
+   "containerId": "rec139",
+   "originalText": "3. DuckDB liest nur cells_day.parquet,\nnur Zellen in Australien (~20 ms)",
+   "autoResize": true,
+   "lineHeight": 1.25
+  },
+  {
+   "id": "arr141",
+   "type": "arrow",
+   "x": 2000.0,
+   "y": 2149,
+   "width": 0,
+   "height": 37,
+   "angle": 0,
+   "strokeColor": "#1e1e1e",
+   "backgroundColor": "transparent",
+   "fillStyle": "solid",
+   "strokeWidth": 2,
+   "strokeStyle": "solid",
+   "roughness": 1,
+   "opacity": 100,
+   "groupIds": [],
+   "frameId": null,
+   "roundness": null,
+   "seed": 1398499908,
+   "version": 1,
+   "versionNonce": 856430244,
+   "isDeleted": false,
+   "boundElements": [],
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -5727,7 +5694,7 @@
     "gap": 4
    },
    "endBinding": {
-    "elementId": "rec138",
+    "elementId": "rec139",
     "focus": 0,
     "gap": 4
    },
@@ -5736,138 +5703,7 @@
    "elbowed": false
   },
   {
-   "id": "rec141",
-   "type": "rectangle",
-   "x": 1680,
-   "y": 2190,
-   "width": 640,
-   "height": 120,
-   "angle": 0,
-   "strokeColor": "#e8590c",
-   "backgroundColor": "#ffe8cc",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "strokeStyle": "solid",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": {
-    "type": 3
-   },
-   "seed": 1398499908,
-   "version": 1,
-   "versionNonce": 856430244,
-   "isDeleted": false,
-   "boundElements": [
-    {
-     "type": "text",
-     "id": "tex142"
-    },
-    {
-     "type": "arrow",
-     "id": "arr143"
-    },
-    {
-     "type": "arrow",
-     "id": "arr146"
-    }
-   ],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false
-  },
-  {
-   "id": "tex142",
-   "type": "text",
-   "x": 1685,
-   "y": 2231.25,
-   "width": 630,
-   "height": 37.5,
-   "angle": 0,
-   "strokeColor": "#1e1e1e",
-   "backgroundColor": "transparent",
-   "fillStyle": "solid",
-   "strokeWidth": 1,
-   "strokeStyle": "solid",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": null,
-   "seed": 1190502837,
-   "version": 1,
-   "versionNonce": 1942810372,
-   "isDeleted": false,
-   "boundElements": [],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false,
-   "text": "3. DuckDB liest nur cells_day.parquet,\nnur Zellen in Australien (~20 ms)",
-   "fontSize": 15,
-   "fontFamily": 5,
-   "textAlign": "center",
-   "verticalAlign": "middle",
-   "containerId": "rec141",
-   "originalText": "3. DuckDB liest nur cells_day.parquet,\nnur Zellen in Australien (~20 ms)",
-   "autoResize": true,
-   "lineHeight": 1.25
-  },
-  {
-   "id": "arr143",
-   "type": "arrow",
-   "x": 2000.0,
-   "y": 2149,
-   "width": 0,
-   "height": 37,
-   "angle": 0,
-   "strokeColor": "#1e1e1e",
-   "backgroundColor": "transparent",
-   "fillStyle": "solid",
-   "strokeWidth": 2,
-   "strokeStyle": "solid",
-   "roughness": 1,
-   "opacity": 100,
-   "groupIds": [],
-   "frameId": null,
-   "roundness": {
-    "type": 2
-   },
-   "seed": 2053150340,
-   "version": 1,
-   "versionNonce": 1063673567,
-   "isDeleted": false,
-   "boundElements": [],
-   "updated": 1794661251151,
-   "link": null,
-   "locked": false,
-   "points": [
-    [
-     0,
-     0
-    ],
-    [
-     0.0,
-     37
-    ]
-   ],
-   "lastCommittedPoint": null,
-   "startBinding": {
-    "elementId": "rec138",
-    "focus": 0,
-    "gap": 4
-   },
-   "endBinding": {
-    "elementId": "rec141",
-    "focus": 0,
-    "gap": 4
-   },
-   "startArrowhead": null,
-   "endArrowhead": "arrow",
-   "elbowed": false
-  },
-  {
-   "id": "rec144",
+   "id": "rec142",
    "type": "rectangle",
    "x": 1680,
    "y": 2355,
@@ -5886,30 +5722,30 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1114940396,
+   "seed": 1190502837,
    "version": 1,
-   "versionNonce": 870111104,
+   "versionNonce": 1942810372,
    "isDeleted": false,
    "boundElements": [
     {
      "type": "text",
-     "id": "tex145"
+     "id": "tex143"
     },
     {
      "type": "arrow",
-     "id": "arr146"
+     "id": "arr144"
     },
     {
      "type": "arrow",
-     "id": "arr149"
+     "id": "arr147"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex145",
+   "id": "tex143",
    "type": "text",
    "x": 1685,
    "y": 2386.875,
@@ -5926,12 +5762,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1922119102,
+   "seed": 2053150340,
    "version": 1,
-   "versionNonce": 588987925,
+   "versionNonce": 1063673567,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "4. Antwort als JSON\n{\"2026-11-08\": {\"modis_n\": 1894,\n \"viirs_n\": 25340, \"harm_n\": 2643.4}}",
@@ -5939,13 +5775,13 @@
    "fontFamily": 3,
    "textAlign": "center",
    "verticalAlign": "middle",
-   "containerId": "rec144",
+   "containerId": "rec142",
    "originalText": "4. Antwort als JSON\n{\"2026-11-08\": {\"modis_n\": 1894,\n \"viirs_n\": 25340, \"harm_n\": 2643.4}}",
    "autoResize": true,
    "lineHeight": 1.25
   },
   {
-   "id": "arr146",
+   "id": "arr144",
    "type": "arrow",
    "x": 2000.0,
    "y": 2314,
@@ -5961,15 +5797,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
-   "seed": 1789442529,
+   "roundness": null,
+   "seed": 1114940396,
    "version": 1,
-   "versionNonce": 522362321,
+   "versionNonce": 870111104,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -5984,12 +5818,12 @@
    ],
    "lastCommittedPoint": null,
    "startBinding": {
-    "elementId": "rec141",
+    "elementId": "rec139",
     "focus": 0,
     "gap": 4
    },
    "endBinding": {
-    "elementId": "rec144",
+    "elementId": "rec142",
     "focus": 0,
     "gap": 4
    },
@@ -5998,7 +5832,7 @@
    "elbowed": false
   },
   {
-   "id": "rec147",
+   "id": "rec145",
    "type": "rectangle",
    "x": 1680,
    "y": 2520,
@@ -6017,26 +5851,26 @@
    "roundness": {
     "type": 3
    },
-   "seed": 1685192165,
+   "seed": 1922119102,
    "version": 1,
-   "versionNonce": 1898882740,
+   "versionNonce": 588987925,
    "isDeleted": false,
    "boundElements": [
     {
      "type": "text",
-     "id": "tex148"
+     "id": "tex146"
     },
     {
      "type": "arrow",
-     "id": "arr149"
+     "id": "arr147"
     }
    ],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false
   },
   {
-   "id": "tex148",
+   "id": "tex146",
    "type": "text",
    "x": 1685,
    "y": 2561.25,
@@ -6053,12 +5887,12 @@
    "groupIds": [],
    "frameId": null,
    "roundness": null,
-   "seed": 1357122901,
+   "seed": 1789442529,
    "version": 1,
-   "versionNonce": 311583110,
+   "versionNonce": 522362321,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "text": "5. Website zeichnet Kalender,\nKennzahlen, Anomalie und Check",
@@ -6066,13 +5900,13 @@
    "fontFamily": 5,
    "textAlign": "center",
    "verticalAlign": "middle",
-   "containerId": "rec147",
+   "containerId": "rec145",
    "originalText": "5. Website zeichnet Kalender,\nKennzahlen, Anomalie und Check",
    "autoResize": true,
    "lineHeight": 1.25
   },
   {
-   "id": "arr149",
+   "id": "arr147",
    "type": "arrow",
    "x": 2000.0,
    "y": 2479,
@@ -6088,15 +5922,13 @@
    "opacity": 100,
    "groupIds": [],
    "frameId": null,
-   "roundness": {
-    "type": 2
-   },
-   "seed": 1033535610,
+   "roundness": null,
+   "seed": 1685192165,
    "version": 1,
-   "versionNonce": 1839700616,
+   "versionNonce": 1898882740,
    "isDeleted": false,
    "boundElements": [],
-   "updated": 1794661251151,
+   "updated": 1794661352002,
    "link": null,
    "locked": false,
    "points": [
@@ -6111,12 +5943,12 @@
    ],
    "lastCommittedPoint": null,
    "startBinding": {
-    "elementId": "rec144",
+    "elementId": "rec142",
     "focus": 0,
     "gap": 4
    },
    "endBinding": {
-    "elementId": "rec147",
+    "elementId": "rec145",
     "focus": 0,
     "gap": 4
    },
