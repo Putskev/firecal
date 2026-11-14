@@ -6,3 +6,5 @@ data/processed/
 data/incoming/*.csv.gz
 data/incoming/*.parquet
 data/incoming/*.zip
+data/processed.new/
+data/processed.old/

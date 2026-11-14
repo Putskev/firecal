@@ -4,6 +4,8 @@ Harmonisierter MODIS- und VIIRS-Brandkalender für die NASA Space Apps Challenge
 („Harmonization of MODIS and VIIRS Hot Spots“). Interaktives Dashboard mit verknüpften Ansichten,
 Backend mit FastAPI und DuckDB.
 
+> **Wie funktioniert jede Zahl?** Alle Formeln und Zeiträume: [`docs/ERKLAERUNG.md`](docs/ERKLAERUNG.md).
+>
 > **Was ist der Stand?** Siehe [`docs/PROJEKTSTAND.md`](docs/PROJEKTSTAND.md).
 >
 > **Daten/Harmonisierung liefern?** Handoff des Datenteams: [`docs/HANDOFF_Frontend.md`](docs/HANDOFF_Frontend.md),

@@ -73,6 +73,12 @@ table.calib th,table.calib td{border-bottom:1px solid var(--line);padding:4px 6p
 table.calib th:first-child,table.calib td:first-child{text-align:left}
 table.calib tr.hl{background:#e8f2f5;font-weight:600}
 td.ok{color:#1b7a3a}td.off{color:#b3261e;font-weight:600}
+.tbadge{font-size:11px;background:#eef3f6;color:#24525f;border:1px solid #cfe0e8;border-radius:999px;padding:1px 8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tbadge:empty{display:none}
+.info{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1px solid #9bb;color:#24525f;font-size:11px;font-weight:700;cursor:help;background:#fff}
+#helpPop{position:fixed;z-index:3500;max-width:420px;background:#1d1f24;color:#eee;font-size:12.5px;line-height:1.5;border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.3);display:none}
+#helpPop b{color:#fff}
+.frpctl{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:11.5px;margin:-2px 0 6px}.frpctl select,.frpctl input{font-size:11.5px}
 .teamctl{display:none;gap:4px;align-items:center}.teamctl select{font-size:12px}
 #matrixWrap{position:relative;overflow-x:auto}
 #matrix{display:block;cursor:pointer}
@@ -144,7 +150,8 @@ body.side.collapsed #paneTab{display:flex}
 <div class="filters" id="filters">
   <div class="fg"><span class="l">Metric</span><div class="seg" id="metricSeg"><button data-v="count" class="on">Hotspots</button><button data-v="frp">FRP (MW)</button></div>
     <label class="fg" title="Divide by the days in each period, so months and partial periods are comparable"><input type="checkbox" id="perDay"> per day</label></div>
-  <div class="fg"><span class="l">Values</span><div class="seg" id="viewSeg"><button data-v="harm" class="on" title="Harmonized on VIIRS level">Harmonized</button><button data-v="raw">Raw all</button><button data-v="modis">MODIS</button><button data-v="viirs">VIIRS</button></div></div>
+  <div class="fg"><span class="l">Values</span><div class="seg" id="viewSeg"><button data-v="harm" class="on" title="One continuous series on VIIRS level: real VIIRS detections from 20 Jan 2012, before that MODIS x calibration factor of the region. Use it to compare years.">Harmonized</button><button data-v="raw" title="MODIS + VIIRS detections simply added up. Not comparable over time: VIIRS sees about 9x more (small) fires.">Raw all</button><button data-v="modis" title="Only MODIS (Terra + Aqua, 1 km pixels), as detected">MODIS</button><button data-v="viirs" title="Only VIIRS (375 m pixels), as detected">VIIRS</button></div>
+    <span class="info" data-help="values">?</span></div>
   <div class="fg"><span class="l">Satellites</span><span id="satChips"></span></div>
   <div class="fg"><span class="l">Time of day</span><div class="seg" id="dnSeg"><button data-v="all" class="on">All</button><button data-v="D">Day</button><button data-v="N">Night</button></div></div>
   <label class="fg"><input type="checkbox" id="incLow"> incl. low confidence</label>
@@ -157,7 +164,7 @@ body.side.collapsed #paneTab{display:flex}
 <main>
 <div id="mainCol">
   <div class="card">
-    <div class="head"><h3>Timeline</h3><span class="grow"></span>
+    <div class="head"><h3>Timeline</h3><span class="tbadge" id="tb_tl" title="Time span this view uses"></span><span class="grow"></span>
       <span class="note" id="rangeLabel"></span>
       <input id="from" type="date" title="Start"><input id="to" type="date" title="End">
       <button id="playBtn" class="btn small">▶ Play</button>
@@ -168,7 +175,7 @@ body.side.collapsed #paneTab{display:flex}
 
   <div class="grid g-map">
     <div class="card">
-      <div class="head"><h3>Map</h3><span class="grow"></span><span class="note" id="mapNote"></span></div>
+      <div class="head"><h3>Map</h3><span class="tbadge" id="tb_map" title="Time span this view uses"></span><span class="grow"></span><span class="note" id="mapNote"></span></div>
       <p class="how">Draw a rectangle or polygon (toolbar on the left) to analyse an area. Zoomed out: density of hotspots. Zoomed in (or “Points”): the real detections, never converted.</p>
       <div id="mapwrap">
         <div id="map" role="region" aria-label="Map"></div>
@@ -198,7 +205,7 @@ body.side.collapsed #paneTab{display:flex}
       </div>
     </div>
     <div class="card">
-      <h3>Key figures for the selection</h3>
+      <div class="head"><h3>Key figures for the selection</h3><span class="tbadge" id="tb_kpi" title="Time span this view uses"></span></div>
       <p class="how">Area from the map, period from the timeline. Harmonized values are on VIIRS level.</p>
       <div class="kpis" id="kpis"></div>
       <div id="warnBox" style="margin-top:8px"></div>
@@ -214,7 +221,7 @@ body.side.collapsed #paneTab{display:flex}
     <select id="paneJump" title="Jump to a statistic"></select>
     <button id="paneClose" class="btn small" title="Close the panel (S)">Close ▸</button></div>
   <div class="card">
-    <div class="head"><h3>Burning activity calendar</h3><span class="grow"></span><span class="note" id="calNote"></span></div>
+    <div class="head"><h3>Burning activity calendar</h3><span class="tbadge" id="tb_cal" title="Time span this view uses"></span><span class="grow"></span><span class="note" id="calNote"></span></div>
     <p class="how" id="calHow"></p>
     <div class="cal" id="cal"></div>
     <div class="legendrow"><span>0</span><div class="bar" id="calLegendBar"></div><span id="calLegendMax"></span>
@@ -223,35 +230,40 @@ body.side.collapsed #paneTab{display:flex}
   </div>
 
   <div class="grid g2">
-    <div class="card"><div class="head"><h3>Anomaly vs history</h3><span class="grow"></span><div class="seg" id="anomSeg"><button data-v="pct" class="on">%</button><button data-v="abs">absolute</button></div></div>
+    <div class="card"><div class="head"><h3>Anomaly vs history</h3><span class="tbadge" id="tb_anom" title="Time span this view uses"></span><span class="grow"></span><div class="seg" id="anomSeg"><button data-v="pct" class="on">%</button><button data-v="abs">absolute</button></div></div>
       <p class="how" id="anomHow"></p><div id="anomaly" class="chart"></div></div>
-    <div class="card"><h3>Seasonal pattern</h3><p class="how">Typical year: median of each calendar month over all other years (band = middle 50 %), compared with the latest year. Shows when the fire season is.</p>
+    <div class="card"><div class="head"><h3>Seasonal pattern</h3><span class="tbadge" id="tb_season" title="Time span this view uses"></span></div><p class="how">Typical year: median of each calendar month over all other years (band = middle 50 %), compared with the latest year. Shows when the fire season is.</p>
       <div id="season" class="chart"></div></div>
   </div>
 
   <div class="grid g2">
-    <div class="card"><h3>Years compared</h3><p class="how">Total per year with a linear trend over complete years. Hatched = mostly converted from MODIS, light = incomplete year.</p>
+    <div class="card"><div class="head"><h3>Years compared</h3><span class="tbadge" id="tb_years" title="Time span this view uses"></span></div><p class="how">Total per year with a linear trend over complete years. Hatched = mostly converted from MODIS, light = incomplete year.</p>
       <div id="yearly" class="chart"></div></div>
-    <div class="card"><h3>Harmonization check</h3><p class="how">Raw MODIS and VIIRS, MODIS converted with the calibration factor, and the harmonized series with its uncertainty band. Converted MODIS should run close to VIIRS where both exist.</p>
+    <div class="card"><div class="head"><h3>Harmonization check</h3><span class="tbadge" id="tb_check" title="Time span this view uses"></span></div><p class="how">Raw MODIS and VIIRS, MODIS converted with the calibration factor, and the harmonized series with its uncertainty band. Converted MODIS should run close to VIIRS where both exist.</p>
       <div id="check" class="chart"></div></div>
   </div>
 
   <div class="card" id="teamCard" style="display:none">
-    <div class="head"><h3>Cross-check with the data team (Tabelle B)</h3><span class="grow"></span>
+    <div class="head"><h3>Cross-check with the data team (Tabelle B)</h3><span class="tbadge" id="tb_team" title="Time span this view uses"></span><span class="grow"></span>
       <span class="note">Grid</span><select id="teamCheckGrid"></select></div>
-    <p class="how">The data team delivers aggregated cells per time window (“Tabelle B”). FireCal recomputes the same sums from the single hotspots for the selected area (without low confidence, like the team table). Green = equal within 0.5 %. Team cells count when their centre is inside the area, so small differences at the edge of a drawn area are expected.</p>
+    <p class="how"><b>What this is:</b> a control that FireCal and the data team compute the same numbers. The data team delivers sums per grid cell and fixed time window (“Tabelle B”). FireCal recomputes the same sums from the single hotspots, for the area selected on the map, without low confidence (like the team table). Green = equal within 0.5 %.<br>
+      <b>Time span:</b> the windows of the team table (shown in the first column), <i>not</i> the timeline selection. <b>FRP</b> = sum of the fire radiative power of all detections in that window (MW); “per day” divides by the days of the window. Team cells count when their centre is inside the area, so small differences at the edge of a drawn area are expected.</p>
     <div id="teamCheck"></div>
   </div>
 
   <div class="grid g4">
-    <div class="card"><h3>Fire intensity (FRP)</h3><p class="how">Share of detections per FRP class. VIIRS sees many small fires that MODIS misses.</p><div id="dFrp" class="chart s"></div></div>
-    <div class="card"><h3>Local time of detection</h3><p class="how">Satellites pass at fixed local times (Terra ~10:30 / 22:30, Aqua and VIIRS ~13:30 / 01:30). Peaks are overpasses, not fire behaviour.</p><div id="dHour" class="chart s"></div></div>
-    <div class="card"><h3>Confidence</h3><p class="how">Share of low / nominal / high per sensor. Click “low” to include or exclude it everywhere.</p><div id="dConf" class="chart s"></div></div>
-    <div class="card"><h3>Satellites</h3><p class="how">Detections per satellite. Click a bar to switch that satellite on or off (raw values and map).</p><div id="dSat" class="chart s"></div></div>
+    <div class="card"><div class="head"><h3>Fire intensity (FRP)</h3><span class="tbadge" id="tb_frp" title="Time span this view uses"></span></div><p class="how">Share of detections per FRP class (fire radiative power of one detection, MW). VIIRS sees many small fires that MODIS misses.</p>
+      <div class="frpctl"><span class="note">Period</span><select id="frpPeriod" title="Time span for this chart">
+        <option value="sel">timeline selection</option><option value="map">day / period on the map</option><option value="7">last 7 days</option>
+        <option value="30">last 30 days</option><option value="365">last 12 months</option><option value="all">whole data</option><option value="custom">custom …</option></select>
+        <span id="frpCustom" style="display:none"><input type="date" id="frpFrom"> – <input type="date" id="frpTo"></span></div><div id="dFrp" class="chart s"></div></div>
+    <div class="card"><div class="head"><h3>Local time of detection</h3><span class="tbadge" id="tb_hour" title="Time span this view uses"></span></div><p class="how">Satellites pass at fixed local times (Terra ~10:30 / 22:30, Aqua and VIIRS ~13:30 / 01:30). Peaks are overpasses, not fire behaviour.</p><div id="dHour" class="chart s"></div></div>
+    <div class="card"><div class="head"><h3>Confidence</h3><span class="tbadge" id="tb_conf" title="Time span this view uses"></span></div><p class="how">Share of low / nominal / high per sensor. Click “low” to include or exclude it everywhere.</p><div id="dConf" class="chart s"></div></div>
+    <div class="card"><div class="head"><h3>Satellites</h3><span class="tbadge" id="tb_sat" title="Time span this view uses"></span></div><p class="how">Detections per satellite. Click a bar to switch that satellite on or off (raw values and map).</p><div id="dSat" class="chart s"></div></div>
   </div>
 
   <div class="card">
-    <div class="head"><h3>Where and when: space × time matrix</h3><span class="grow"></span>
+    <div class="head"><h3>Where and when: space × time matrix</h3><span class="tbadge" id="tb_mx" title="Time span this view uses"></span><span class="grow"></span>
       <span class="note">Sort</span><div class="seg" id="mSortSeg"><button data-v="total" class="on">total</button><button data-v="peak">peak time</button><button data-v="lat">north → south</button></div>
       <span class="note">Colour</span><div class="seg" id="mNormSeg"><button data-v="global" class="on">absolute</button><button data-v="row">per row</button></div></div>
     <p class="how" id="matrixHow"></p>
@@ -259,9 +271,9 @@ body.side.collapsed #paneTab{display:flex}
   </div>
 
   <div class="grid g2">
-    <div class="card"><h3>Satellite timeline</h3><p class="how">Raw detections per satellite and period (log colour). New satellites (S-NPP 2012, NOAA-20 2018, NOAA-21 2023) raise raw counts without more fire, which is why raw counts are not comparable over time. The orange frame is the selected period.</p>
+    <div class="card"><div class="head"><h3>Satellite timeline</h3><span class="tbadge" id="tb_swim" title="Time span this view uses"></span></div><p class="how">Raw detections per satellite and period (log colour). New satellites (NOAA-20 2018, NOAA-21 2023; S-NPP 2012 in older data) raise raw counts without more fire, which is why raw counts are not comparable over time. The orange frame is the selected period.</p>
       <div id="swim" class="chart s"></div></div>
-    <div class="card"><h3>Calibration factors (MODIS → VIIRS)</h3><p class="how">Factor = VIIRS / MODIS in cells where both detect fire. The band (25–75 %) is the uncertainty used above. The region of the selected area is highlighted.</p>
+    <div class="card"><div class="head"><h3>Calibration factors (MODIS → VIIRS)</h3><span class="tbadge" id="tb_calib" title="Time span this view uses"></span></div><p class="how">Factor = VIIRS / MODIS in cells where both detect fire. The band (25–75 %) is the uncertainty used above. The region of the selected area is highlighted.</p>
       <div id="calib"></div></div>
   </div>
 
@@ -271,6 +283,7 @@ body.side.collapsed #paneTab{display:flex}
 <button id="paneTab" title="Open the statistics panel (S)">◂ Statistics</button>
 <footer id="footer"></footer>
 <div id="tip"></div>
+<div id="helpPop" role="tooltip"></div>
 <div id="toast" role="status"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -308,6 +321,13 @@ const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const SATS = ['Terra','Aqua','SNPP','N20','N21'];
 const SAT_SENSOR = {Terra:'MODIS', Aqua:'MODIS', SNPP:'VIIRS', N20:'VIIRS', N21:'VIIRS'};
 const SAT_START = {Terra:'2000-11-01', Aqua:'2002-07-04', SNPP:'2012-01-20', N20:'2018-01-01', N21:'2023-01-01'};
+// satellites with detections in the loaded data (e.g. S-NPP only appears if the archive contains it)
+function availSats() {
+  const m = S.meta || {}, bs = m.by_satellite || {}, keys = Object.keys(bs).map(k => k.split('/').pop());
+  if (keys.length) return SATS.filter(s => keys.includes(s) && bs[`${SAT_SENSOR[s]}/${s}`] > 0);
+  const rows = (m.satellites || []).filter(x => x.rows > 0).map(x => x.satellite);
+  return rows.length ? SATS.filter(s => rows.includes(s)) : SATS;
+}
 const VIIRS_START = '2012-01-20';
 const VIRIDIS = ['#440154','#482878','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'];
 const C = { modis:'#e69f00', viirs:'#0072b2', modisCal:'#cc79a7', harm:'#1f1f1d', warm:'#d55e00', cool:'#1b6fb5', low:'#b9b9b9', nominal:'#56b4e9', high:'#d55e00' };
@@ -318,7 +338,7 @@ const S = {
   metric:'count', view:'harm', perDay:false, sats:new Set(SATS), dn:'all', incLow:false, veg:false,
   rows:{}, sat:{}, periods:[], rangeP:[], mapPeriod:null, mapMode:'auto', colorBy:'sensor',
   heatMax:1, heatRef:null, anomMode:'pct', mSort:'total', mNorm:'global', matrix:null, dist:null,
-  req:0, rreq:0, hreq:0, treq:0, team:null, playing:false
+  req:0, rreq:0, hreq:0, treq:0, freq:0, team:null, distFrp:null, playing:false
 };
 
 /* ---------- helpers ---------- */
@@ -375,7 +395,7 @@ function F() {
     bbox: R ? [R.minLon, R.minLat, R.maxLon, R.maxLat].map(v => +v.toFixed(5)).join(',') : null,
     polygon: R && R.poly ? R.poly.map(([a, b]) => `${a.toFixed(5)},${b.toFixed(5)}`).join(';') : null,
     exclude_low: !S.incLow, vegetation_only: S.veg,
-    satellites: S.sats.size === SATS.length ? null : [...S.sats].join(','), daynight: S.dn, region: R, satSet: S.sats
+    satellites: availSats().every(s => S.sats.has(s)) ? null : availSats().filter(s => S.sats.has(s)).join(','), daynight: S.dn, region: R, satSet: S.sats
   };
 }
 const apiF = f => ({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, satellites: f.satellites, daynight: f.daynight });
@@ -388,7 +408,9 @@ const ApiProvider = {
     if (m.api !== 'firecal' || !m.harmonization || !m.harmonization.params || m.harmonization.params.target_level !== 'VIIRS') throw 0; this.m = m; return this; },
   meta() { return this.m; },
   label() { return `API · ${fmt(this.m.rows)} hotspots · ${this.m.first_date} → ${this.m.last_date}`; },
-  async series(f, gran) { return (await getJSON(`${API}/api/timeseries?${qs({ ...apiF(f), granularity: gran })}`)).rows; },
+  async series(f, gran) {   // daily: the last ~13 months only (fast on a long archive)
+    const w = gran === 'day' ? dayWindow() : {};
+    return (await getJSON(`${API}/api/timeseries?${qs({ ...apiF(f), granularity: gran, ...w })}`)).rows; },
   async satellites(f, gran) { return (await getJSON(`${API}/api/satellites?${qs({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, granularity: gran })}`)).satellites; },
   async heat(f, start, end, view, metric, res) { return (await getJSON(`${API}/api/heatmap?${qs({ ...apiF(f), start, end, view, metric, res })}`)).cells; },
   async points(f, bbox, start, end, limit) { return getJSON(`${API}/api/points?${qs({ ...apiF(f), bbox, start, end, limit })}`); },
@@ -722,7 +744,7 @@ function inRegion(p, R) { if (!R) return true; if (p.lat < R.minLat || p.lat > R
 
 /* ---------- provider switch ---------- */
 function useProvider(p) {
-  stopPlay(); S.provider = p; S.meta = p.meta();
+  stopPlay(); S.provider = p; S.meta = p.meta(); S.sats = new Set(availSats()); renderSatChips();
   const first = S.meta.first_date, last = S.meta.last_date;
   $('source').textContent = p.label(); $('source').className = 'pill ' + (p.name === 'api' ? 'api' : (p.isDemo ? 'demo' : ''));
   $('apiBtn').style.display = ApiProvider.m && p.name !== 'api' ? '' : 'none';
@@ -748,11 +770,12 @@ async function refresh() {
 }
 function onRange() { computeRange(); markTimeline(); renderRange(); }
 function renderRange() {
-  renderKPIs(); renderCalendar(); renderAnomaly(); renderSeason(); renderYearly(); renderCheck(); renderSwim(); renderCalib(); renderInsights();
+  renderKPIs(); renderCalendar(); renderAnomaly(); renderSeason(); renderYearly(); renderCheck(); renderSwim(); renderCalib(); renderInsights(); renderTimeBadges();
   loadRangeViews(); refreshMap(true);
 }
+function dayWindow() { const last = S.meta.last_date, a = addDays(last, -400); return { start: a > S.meta.first_date ? a : S.meta.first_date, end: last }; }
 function computeRange() {
-  const first = S.meta.first_date, last = S.meta.last_date;
+  const last = S.meta.last_date, first = S.gran === 'day' ? dayWindow().start : S.meta.first_date;
   let a = S.from < first ? first : S.from, b = S.to > last ? last : S.to; if (a > b) [a, b] = [b, a];
   if (S.gran === 'day' && dayDiff(a, b) > 366) { a = addDays(b, -365); S.from = a; toast('Daily view: limited to 1 year'); }
   S.rangeStart = a; S.rangeEnd = b; $('from').value = a; $('to').value = b;
@@ -764,7 +787,7 @@ async function loadRangeViews() {
   const id = ++S.rreq, f = F(), p = S.provider;
   try {
     const [dist, mx] = await Promise.all([p.distributions(f, S.rangeStart, S.rangeEnd), p.matrix(f, S.gran, S.view, S.metric, S.rangeStart, S.rangeEnd, 30)]);
-    if (id !== S.rreq) return; S.dist = dist; S.matrix = mx; renderDist(); drawMatrix(); renderInsights();
+    if (id !== S.rreq) return; S.dist = dist; S.matrix = mx; await loadFrpDist(true); renderDist(); drawMatrix(); renderInsights(); renderTimeBadges();
   } catch (e) { console.error(e); }
 }
 
@@ -828,7 +851,42 @@ function selectPeriod(p) {
   document.querySelectorAll('.cell.sel').forEach(c => c.classList.remove('sel'));
   if (S.mapPeriod) { const c = document.querySelector(`.cell[data-p="${S.mapPeriod}"]`); if (c) c.classList.add('sel'); }
   tlLock = true; Plotly.relayout('timeline', { shapes: timelineShapes() }).then(() => setTimeout(() => tlLock = false, 50));
-  drawMatrix(); return refreshMap(false);
+  drawMatrix(); renderTimeBadges();
+  if ($('frpPeriod').value === 'map') loadFrpDist(false);
+  return refreshMap(false);
+}
+
+/* ---------- time span of every view (badge next to the title) ---------- */
+const DM = d => { if (!d) return '?'; const [y, m, dd] = d.split('-'); return `${+dd} ${MONTHS[+m - 1]} ${y}`; };
+function span(a, b) { if (!a || !b) return ''; const n = dayDiff(a, b) + 1; return a === b ? DM(a) : `${DM(a)} – ${DM(b)} (${fmt(n)} days)`; }
+function renderTimeBadges() {
+  if (!S.meta || !S.rangeStart) return;
+  const set = (id, t, tip) => { const e = $('tb_' + id); if (e) { e.textContent = t; if (tip) e.title = tip; } };
+  const all = span(S.meta.first_date, S.meta.last_date), sel = span(S.rangeStart, S.rangeEnd);
+  const [ms, me] = S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+  const loaded = S.periods.length ? span(pRange(S.periods[0], S.gran)[0], pRange(S.periods[S.periods.length - 1], S.gran)[1]) : all;
+  set('tl', `🕒 ${loaded}`, 'Time span shown in the timeline; the handles choose the selection for all views');
+  set('map', `🕒 ${span(ms, me)}`, S.mapPeriod ? 'Period clicked in the timeline or calendar' : 'Timeline selection');
+  set('kpi', `🕒 ${sel}`, 'Timeline selection');
+  set('cal', `🕒 ${sel}`, 'Timeline selection; one cell per ' + (S.gran === 'day' ? 'day' : 'month'));
+  set('anom', `🕒 ${sel} · baseline: ${S.gran === 'month' ? 'same month in all other years' : 'other days of the selection'}`,
+    S.gran === 'month' ? `Median of the same calendar month in the other years of ${all}` : 'Median of the other days in the selection');
+  const ly = latestYear();
+  set('season', S.gran === 'month' ? `🕒 median ${S.meta.first_date.slice(0, 4)}–${S.meta.last_date.slice(0, 4)} without ${ly} · line: ${ly}` : '🕒 monthly view only',
+    'Median and band from all other years; the dotted line is the latest year');
+  const ys = [...new Set(S.rangeP.map(p => p.slice(0, 4)))];
+  set('years', S.gran === 'month' ? `🕒 ${ys[0]}–${ys[ys.length - 1]}` : `🕒 ${sel}`, 'Years inside the timeline selection; the trend uses complete years only');
+  set('check', `🕒 ${sel}`, 'Timeline selection');
+  const fs = S.distFrp || S.dist;
+  if (fs) set('frp', `🕒 ${span(fs.start || S.rangeStart, fs.end || S.rangeEnd)}${fs.exact === false ? ' · whole months' : ''}`, fs.basis || 'Exact, from the single detections');
+  if (S.dist) { const t = `🕒 ${span(S.dist.start || S.rangeStart, S.dist.end || S.rangeEnd)}${S.dist.exact === false ? ' · whole months' : ''}`;
+    ['hour', 'conf', 'sat'].forEach(i => set(i, t, S.dist.basis || 'Timeline selection, exact')); }
+  set('mx', `🕒 ${sel}`, 'Timeline selection');
+  set('swim', `🕒 ${loaded}`, 'All loaded periods; the orange frame is the selection');
+  const hp = (S.meta.harmonization || {}).params || {};
+  set('calib', `🕒 ${hp.window_days || 7}-day windows · VIIRS period from ${DM(hp.viirs_start || '2012-01-20')}`, `Factors: ${hp.factor_source || '?'}`);
+  const g = S.team && S.team.grids && S.team.grids.find(x => x.grid === $('teamCheckGrid').value);
+  if (g) set('team', `🕒 fixed windows: ${g.periods.map(x => `${DM(x.start)} – ${DM(x.end)}`).join(' and ')}`, 'Time windows of the team table, independent of the timeline');
 }
 
 /* ---------- KPIs, warnings, insights ---------- */
@@ -978,14 +1036,35 @@ function renderCheck() {
     { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_harmonization_check' } });
 }
 
+/* ---------- FRP chart: its own time span ---------- */
+function frpSpan() {
+  const v = $('frpPeriod').value, last = S.meta.last_date, first = S.meta.first_date, clip = d => d < first ? first : d;
+  if (v === 'map') return S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+  if (v === '7' || v === '30' || v === '365') return [clip(addDays(last, -(+v) + 1)), last];
+  if (v === 'all') return [first, last];
+  if (v === 'custom') { const a = $('frpFrom').value || S.rangeStart, b = $('frpTo').value || S.rangeEnd; return a <= b ? [clip(a), b > last ? last : b] : [clip(b), a]; }
+  return [S.rangeStart, S.rangeEnd];
+}
+async function loadFrpDist(fromRange) {
+  const [a, b] = frpSpan();
+  if (a === S.rangeStart && b === S.rangeEnd) { S.distFrp = S.dist; return; }
+  try { const id = ++S.freq, d = await S.provider.distributions(F(), a, b); if (id === S.freq) S.distFrp = { ...d, start: d.start || a, end: d.end || b }; }
+  catch (e) { console.error(e); S.distFrp = S.dist; }
+  if (!fromRange) { renderDist(); renderTimeBadges(); }
+}
+$('frpPeriod').addEventListener('change', () => { const c = $('frpPeriod').value === 'custom'; $('frpCustom').style.display = c ? '' : 'none';
+  if (c && !$('frpFrom').value) { $('frpFrom').value = S.rangeStart; $('frpTo').value = S.rangeEnd; } loadFrpDist(false); });
+['frpFrom', 'frpTo'].forEach(id => $(id).addEventListener('change', () => loadFrpDist(false)));
+
 /* ---------- distributions (linked: clicks change global filters) ---------- */
 function bindOnce(id, fn) { const el = $(id); if (el._b) return; el._b = true; el.on('plotly_click', fn); }
 function renderDist() {
   const d = S.dist; if (!d) return;
+  const df = S.distFrp || d;
   const norm = a => { const s = a.reduce((x, y) => x + y, 0); return a.map(v => s ? v / s * 100 : 0); };
   const labels = FRP_EDGES.slice(0, -1).map((e, i) => FRP_EDGES[i + 1] === Infinity ? `≥${e}` : `${e}–${FRP_EDGES[i + 1]}`);
-  const st = d.stats || {}, med = s => st[s] && st[s].frp_median !== null ? ` (median ${fmt1(st[s].frp_median)} MW)` : '';
-  Plotly.react('dFrp', [{ type: 'bar', x: labels, y: norm(d.frp.MODIS), name: 'MODIS' + med('MODIS'), marker: { color: C.modis } }, { type: 'bar', x: labels, y: norm(d.frp.VIIRS), name: 'VIIRS' + med('VIIRS'), marker: { color: C.viirs } }],
+  const st = df.stats || {}, med = s => st[s] && st[s].frp_median !== null && st[s].frp_median !== undefined ? ` (median ${fmt1(st[s].frp_median)} MW)` : '';
+  Plotly.react('dFrp', [{ type: 'bar', x: labels, y: norm(df.frp.MODIS), name: 'MODIS' + med('MODIS'), marker: { color: C.modis } }, { type: 'bar', x: labels, y: norm(df.frp.VIIRS), name: 'VIIRS' + med('VIIRS'), marker: { color: C.viirs } }],
     { ...L0, barmode: 'group', bargap: .15, legend: { orientation: 'h', y: 1.25, x: 0, font: { size: 10 } }, margin: { l: 36, r: 6, t: 32, b: 54 }, xaxis: { tickangle: -45, title: { text: 'FRP (MW)', font: { size: 10 } } }, yaxis: { ticksuffix: '%', gridcolor: '#eeede8' } }, plotCfg);
   const hrs = Array.from({ length: 24 }, (_, i) => i);
   Plotly.react('dHour', [{ type: 'bar', x: hrs, y: norm(d.local_hour.MODIS), name: 'MODIS', marker: { color: C.modis } }, { type: 'bar', x: hrs, y: norm(d.local_hour.VIIRS), name: 'VIIRS', marker: { color: C.viirs } }],
@@ -994,7 +1073,7 @@ function renderDist() {
   Plotly.react('dConf', cls.map(c => ({ type: 'bar', orientation: 'h', y: ['MODIS', 'VIIRS'], x: ['MODIS', 'VIIRS'].map(s => tot(s) ? (d.conf_class[`${s}|${c}`] || 0) / tot(s) * 100 : 0), name: c + (c === 'low' && !S.incLow ? ' (excluded)' : ''),
       marker: { color: C[c], opacity: c === 'low' && !S.incLow ? .45 : 1 }, customdata: [c, c], hovertemplate: `${c}: %{x:.1f} %<extra>%{y}</extra>` })),
     { ...L0, barmode: 'stack', legend: { orientation: 'h', y: 1.25, x: 0, font: { size: 10 } }, margin: { l: 50, r: 6, t: 30, b: 30 }, xaxis: { ticksuffix: '%', range: [0, 100] } }, plotCfg);
-  const sats = SATS.filter(s => (d.satellite[s] || 0) > 0 || !S.sats.has(s));
+  const sats = availSats();
   Plotly.react('dSat', [{ type: 'bar', x: sats, y: sats.map(s => d.satellite[s] || 0), marker: { color: sats.map(s => S.sats.has(s) ? (SAT_SENSOR[s] === 'MODIS' ? C.modis : C.viirs) : '#ddd') }, hovertemplate: '%{x}: %{y:,.0f} detections<br>click to switch on/off<extra></extra>' }],
     { ...L0, margin: { l: 50, r: 6, t: 10, b: 30 }, yaxis: { gridcolor: '#eeede8' } }, plotCfg);
   bindOnce('dConf', ev => { if (ev.points[0].data.customdata[0] === 'low') { S.incLow = !S.incLow; $('incLow').checked = S.incLow; refresh(); } });
@@ -1042,9 +1121,9 @@ window.addEventListener('resize', () => { clearTimeout(window._rz); window._rz =
 
 /* ---------- satellite timeline (swim lanes) ---------- */
 function renderSwim() {
-  const ps = S.periods, z = SATS.map(s => ps.map(p => { const v = (S.sat[s] || {})[p] || 0; return v > 0 ? Math.log10(v) : null; }));
-  Plotly.react('swim', [{ type: 'heatmap', x: ps.map(xd), y: SATS, z, colorscale: VIRIDIS.map((c, i) => [i / (VIRIDIS.length - 1), c]), showscale: false, hoverongaps: false, xgap: ps.length < 60 ? 1 : 0, ygap: 2,
-    customdata: SATS.map(s => ps.map(p => (S.sat[s] || {})[p] || 0)), hovertemplate: '%{y} · %{x}: %{customdata:,.0f} detections<extra></extra>' }],
+  const SW = availSats(), ps = S.periods, z = SW.map(s => ps.map(p => { const v = (S.sat[s] || {})[p] || 0; return v > 0 ? Math.log10(v) : null; }));
+  Plotly.react('swim', [{ type: 'heatmap', x: ps.map(xd), y: SW, z, colorscale: VIRIDIS.map((c, i) => [i / (VIRIDIS.length - 1), c]), showscale: false, hoverongaps: false, xgap: ps.length < 60 ? 1 : 0, ygap: 2,
+    customdata: SW.map(s => ps.map(p => (S.sat[s] || {})[p] || 0)), hovertemplate: '%{y} · %{x}: %{customdata:,.0f} detections<extra></extra>' }],
     { ...L0, margin: { l: 50, r: 10, t: 10, b: 30 }, xaxis: { type: 'date' }, yaxis: { autorange: 'reversed' },
       shapes: [{ type: 'rect', x0: xd2(S.rangeStart, 'start'), x1: xd2(S.rangeEnd, 'end'), yref: 'paper', y0: 0, y1: 1, line: { color: '#d55e00', width: 1.5 }, fillcolor: 'rgba(0,0,0,0)' }] }, plotCfg);
 }
@@ -1151,14 +1230,14 @@ async function renderTeamCheck() {
   const id = ++S.treq; $('teamCheck').innerHTML = '<p class="note">Comparing…</p>';
   try {
     const d = await p.teamCheck($('teamCheckGrid').value, F()); if (id !== S.treq) return;
-    const Q = [['n_modis', 'MODIS hotspots', ''], ['n_viirs', 'VIIRS hotspots', ''], ['frp_modis', 'MODIS FRP', ' MW'], ['frp_viirs', 'VIIRS FRP', ' MW'],
-      ['n_harmonized', 'harmonized count', ''], ['frp_harmonized', 'harmonized FRP', ' MW'], ['n_modis_calibrated', 'MODIS × factor (count)', ''], ['frp_modis_calibrated', 'MODIS × factor (FRP)', ' MW']];
+    const Q = [['n_modis', 'MODIS hotspots (count)', ''], ['n_viirs', 'VIIRS hotspots (count)', ''], ['frp_modis', 'MODIS FRP (sum)', ' MW'], ['frp_viirs', 'VIIRS FRP (sum)', ' MW'],
+      ['n_harmonized', 'harmonized count', ''], ['frp_harmonized', 'harmonized FRP (sum)', ' MW'], ['n_modis_calibrated', 'MODIS × factor (count)', ''], ['frp_modis_calibrated', 'MODIS × factor (FRP sum)', ' MW']];
     const diff = (a, b) => { const d = b === 0 ? (a === 0 ? 0 : 100) : (a - b) / b * 100; return `<td class="${Math.abs(d) <= .5 ? 'ok' : 'off'}">${d >= 0 ? '+' : ''}${d.toFixed(2)} %</td>`; };
-    let html = `<table class="calib"><tr><th>Window</th><th>Quantity</th><th>Data team</th><th>FireCal</th><th>Difference</th></tr>`;
-    for (const w of d.windows) Q.forEach(([k, lab, u], i) => { html += `<tr>${i === 0 ? `<td rowspan="${Q.length}">${w.start} → ${w.end}<br><span class="note">${w.n_days} days</span></td>` : ''}<td style="text-align:left">${lab}</td><td>${fmt(w.team[k])}${u}</td><td>${fmt(w.firecal[k])}${u}</td>${diff(w.firecal[k], w.team[k])}</tr>`; });
+    let html = `<table class="calib"><tr><th>Time window</th><th>Quantity</th><th>Data team</th><th>FireCal</th><th>Difference</th><th>FireCal per day</th></tr>`;
+    for (const w of d.windows) Q.forEach(([k, lab, u], i) => { html += `<tr>${i === 0 ? `<td rowspan="${Q.length}"><b>${DM(w.start)} – ${DM(w.end)}</b><br><span class="note">${w.n_days} days (${w.start} to ${w.end}, UTC)</span></td>` : ''}<td style="text-align:left">${lab}${u ? `<br><span class="note">${DM(w.start)} – ${DM(w.end)}</span>` : ''}</td><td>${fmt(w.team[k])}${u}</td><td>${fmt(w.firecal[k])}${u}</td>${diff(w.firecal[k], w.team[k])}<td>${fmt(w.firecal[k] / w.n_days)}${u}</td></tr>`; });
     html += '</table>';
     if (d.regions && d.regions.length) {
-      html += `<h3 style="margin-top:12px">Per region (all windows)</h3><table class="calib"><tr><th>Region</th><th>MODIS team / FireCal</th><th></th><th>VIIRS team / FireCal</th><th></th><th>harmonized FRP team / FireCal</th><th></th><th>MODIS × factor team / FireCal</th><th></th></tr>`;
+      html += `<h3 style="margin-top:12px">Per region · ${DM(d.windows[0].start)} – ${DM(d.windows[d.windows.length - 1].end)} (all windows)</h3><table class="calib"><tr><th>Region</th><th>MODIS team / FireCal</th><th></th><th>VIIRS team / FireCal</th><th></th><th>harmonized FRP team / FireCal</th><th></th><th>MODIS × factor team / FireCal</th><th></th></tr>`;
       for (const r of d.regions) html += `<tr><td>${r.region}</td>` + ['n_modis', 'n_viirs', 'frp_harmonized', 'n_modis_calibrated'].map(k => `<td>${fmt(r.team[k])} / ${fmt(r.firecal[k])}</td>${diff(r.firecal[k], r.team[k])}`).join('') + '</tr>';
       html += '</table>';
     }
@@ -1168,7 +1247,7 @@ async function renderTeamCheck() {
 }
 $('teamGrid').addEventListener('change', () => { fillTeamPeriods(); refreshMap(true); });
 $('teamPeriod').addEventListener('change', () => refreshMap(true));
-$('teamCheckGrid').addEventListener('change', renderTeamCheck);
+$('teamCheckGrid').addEventListener('change', () => { renderTeamCheck(); renderTimeBadges(); });
 
 /* ---------- layout: page or side panel (statistics on the right, collapsible, resizable) ---------- */
 function relayout() {
@@ -1212,6 +1291,23 @@ new ResizeObserver(() => { setStickyTop(); }).observe($('filters'));
 document.documentElement.style.setProperty('--paneW', (+store.get('paneW', 560) || 560) + 'px');
 if (store.get('layout', 'page') === 'side' || qp.get('layout') === 'side') setLayout(true, store.get('collapsed', '0') === '1');
 
+/* ---------- help popovers ---------- */
+const HELP = {
+  values: `<b>Harmonized</b> = one series that can be compared over all years, on <b>VIIRS level</b>.<br>
+    · From 20 Jan 2012 (VIIRS available): the real VIIRS detections are counted.<br>
+    · Before that (MODIS only): every MODIS detection counts as <b>factor</b> detections, factor = VIIRS / MODIS of its region
+    (from cells and weeks where both sensors saw fire, e.g. Africa ≈ 11 for counts, ≈ 3.6 for FRP).<br>
+    · The grey band = 25–75 % range of that factor (uncertainty). Hatched cells/bars = converted from MODIS.<br>
+    <b>Raw all</b> = MODIS + VIIRS simply added up (jumps whenever a satellite starts). <b>MODIS</b> / <b>VIIRS</b> = one sensor only, as detected.<br>
+    The map always shows the real detections. Details: docs/ERKLAERUNG.md`,
+};
+document.addEventListener('click', e => {
+  const i = e.target.closest('.info[data-help]'), pop = $('helpPop');
+  if (!i) { pop.style.display = 'none'; return; }
+  pop.innerHTML = HELP[i.dataset.help] || ''; pop.style.display = 'block';
+  const r = i.getBoundingClientRect(); pop.style.left = Math.min(window.innerWidth - 440, r.left) + 'px'; pop.style.top = (r.bottom + 8) + 'px';
+});
+
 /* ---------- animation ---------- */
 function stopPlay() { S.playing = false; $('playBtn').textContent = '▶ Play'; }
 $('playBtn').addEventListener('click', async () => {
@@ -1238,8 +1334,8 @@ seg('mNormSeg', v => { S.mNorm = v; drawMatrix(); });
 $('perDay').addEventListener('change', e => { S.perDay = e.target.checked; rerender(); });
 $('incLow').addEventListener('change', e => { S.incLow = e.target.checked; refresh(); });
 $('vegOnly').addEventListener('change', e => { S.veg = e.target.checked; refresh(); });
-function renderSatChips() { $('satChips').innerHTML = SATS.map(s => `<span class="chip ${S.sats.has(s) ? 'on' : 'off'}" data-s="${s}" title="${SAT_SENSOR[s]} · since ${SAT_START[s].slice(0, 4)}">${s}</span>`).join(' '); }
-function toggleSat(s) { if (S.sats.has(s)) { if (S.sats.size === 1) { toast('Keep at least one satellite'); return; } S.sats.delete(s); } else S.sats.add(s); renderSatChips(); refresh(); }
+function renderSatChips() { $('satChips').innerHTML = availSats().map(s => `<span class="chip ${S.sats.has(s) ? 'on' : 'off'}" data-s="${s}" title="${SAT_SENSOR[s]} · since ${SAT_START[s].slice(0, 4)}">${s}</span>`).join(' '); }
+function toggleSat(s) { if (S.sats.has(s)) { if (availSats().filter(x => S.sats.has(x)).length === 1) { toast('Keep at least one satellite'); return; } S.sats.delete(s); } else S.sats.add(s); renderSatChips(); refresh(); }
 $('satChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) toggleSat(c.dataset.s); });
 renderSatChips();
 
@@ -1262,7 +1358,8 @@ function serverNote(sd) {
 }
 function renderFooter() {
   const m = S.meta, h = m.harmonization || {};
-  $('footer').innerHTML = `Data: NASA LANCE FIRMS (MODIS C6.1 1 km, VIIRS 375 m) · ${m.first_date} → ${m.last_date} · version ${m.data_version || '–'}${h.dropped_partial_day ? ` · incomplete day ${h.dropped_partial_day} removed` : ''} · harmonization: ${h.name || '?'} v${h.version || '?'} (${h.status || '?'}) · map points are raw detections${serverNote(m.server_data)} · FireCal team, NASA Space Apps Challenge 2026 · <a href="api-docs.html">API</a> · <a href="https://github.com/Putskev/firecal">GitHub</a>`;
+  const rb = m.rebuilding && m.rebuilding.running ? ` · <b>updating the data in the background since ${m.rebuilding.started} UTC</b> (reload later)` : '';
+  $('footer').innerHTML = `Data: NASA LANCE FIRMS (MODIS C6.1 1 km, VIIRS 375 m) · ${m.first_date} → ${m.last_date} · version ${m.data_version || '–'}${h.dropped_partial_day ? ` · incomplete day ${h.dropped_partial_day} removed` : ''} · harmonization: ${h.name || '?'} v${h.version || '?'} (${h.status || '?'}) · map points are raw detections${serverNote(m.server_data)} ${rb} · FireCal team, NASA Space Apps Challenge 2026 · <a href="api-docs.html">API</a> · <a href="https://github.com/Putskev/firecal">GitHub</a>`;
 }
 (async () => {
   try { const r = await fetch('content/methodology.md', { cache: 'no-store' }); if (!r.ok) throw 0; const md = await r.text();

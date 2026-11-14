@@ -90,9 +90,10 @@ Die Grenzen bei −30/−20/110 liegen in Datenlücken, dort ist der genaue Wert
 
 ### 2d. Alternativen (falls eure Methode anders aussieht)
 
-- **Eigene Funktion:** `harmonize(df) -> (df, info)` in `backend/harmonization.py` ersetzen. Ausgabe pro
-  Hotspot: `region, weight, frp_h, weight_lo, weight_hi, frp_h_lo, frp_h_hi, weight_cal, frp_cal`
-  (Bedeutung in `backend/data.py`). Harmonisierter Wert eines Gebiets = Summe von `weight` bzw. `frp_h`.
+- **Eigene Methode:** Die Harmonisierung läuft jetzt in SQL (DuckDB, Monat für Monat, auch für 300+ Mio. Punkte):
+  `weights_sql()` (Gewichte pro Hotspot) und `calibration_table()` in `backend/harmonization.py` anpassen. Ausgabe pro
+  Hotspot: `region, weight, frp_h, weight_lo, weight_hi, frp_h_lo, frp_h_hi, weight_cal, frp_cal`.
+  Harmonisierter Wert eines Gebiets = Summe von `weight` bzw. `frp_h`. Alle Formeln: `docs/ERKLAERUNG.md`.
 - **Fertige Tabelle:** Tabelle A + diese Spalten nach `data/harmonized/` (wird 1:1 genutzt).
 
 **Tabelle B** (`fire_activity_*`) braucht die App nicht zum Rechnen (die Aggregate baut `backend/build.py` aus

@@ -25,7 +25,9 @@ from __future__ import annotations
 
 import calendar
 import glob
+import json
 import math
+import time
 import os
 import tempfile
 import threading
@@ -42,7 +44,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.background import BackgroundTask
 
 from .build import build
-from .paths import CELLS_DAY, CELLS_MONTH, DAY_RES, HOTSPOTS_DIR, MONTH_RES, ROOT, TEAM
+from .paths import (CELLS_DAY, CELLS_MONTH, DAY_RES, DIST_MONTH, DIST_RES, FRP_EDGES, HOTSPOTS_DIR, META, MONTH_RES,
+                    ROOT, SERIES_DAY, SERIES_MONTH, TEAM)
 
 API_VERSION = "2.0"
 app = FastAPI(title="FireCal API", version=API_VERSION,
@@ -57,38 +60,73 @@ _lock = threading.Lock()
 ALL_SATS = ["Terra", "Aqua", "SNPP", "N20", "N21"]
 
 
-def load() -> None:
-    """(Re)build if needed and register the Parquet files as views."""
+_build_state = {"running": False, "started": None, "error": None}
+
+
+def _register(meta: dict) -> None:
+    """Open a new DuckDB connection with views on data/processed/ and swap it in."""
     global _db, _meta
-    with _lock:
+    con = duckdb.connect(":memory:")
+    con.execute(f"""CREATE VIEW points AS SELECT * FROM read_parquet('{HOTSPOTS_DIR}/**/*.parquet',
+                    hive_partitioning = true)""")
+    con.execute(f"CREATE VIEW cells_month AS SELECT * FROM read_parquet('{CELLS_MONTH}/*.parquet')")
+    con.execute(f"CREATE VIEW cells_day AS SELECT * FROM read_parquet('{CELLS_DAY}/*.parquet')")
+    con.execute(f"CREATE VIEW dist_month AS SELECT * FROM read_parquet('{DIST_MONTH}/*.parquet')")
+    con.execute(f"CREATE VIEW series_month AS SELECT * FROM read_parquet('{SERIES_MONTH}/*.parquet')")
+    con.execute(f"CREATE VIEW series_day AS SELECT * FROM read_parquet('{SERIES_DAY}/*.parquet')")
+    team = {}
+    from .sources import summary, team_files
+    found = {os.path.basename(f): f for f in sorted(glob.glob(os.path.join(TEAM, "fire_activity_*.parquet")))}
+    found.update({os.path.basename(f): f for f in team_files()})   # server files win over the repo copies
+    for f in found.values():
+        grid = os.path.basename(f)[len("fire_activity_"):-len(".parquet")].split("_", 1)[-1]  # 7d_0.5deg -> 0.5deg
+        view = "team_" + "".join(ch if ch.isalnum() else "_" for ch in grid)
+        con.execute(f"CREATE VIEW {view} AS SELECT * FROM read_parquet('{f}')")
+        per = con.execute(f"""SELECT CAST(period_start AS VARCHAR), CAST(period_end AS VARCHAR), max(n_days)
+                              FROM {view} GROUP BY 1, 2 ORDER BY 1""").fetchall()
+        team[grid] = {"view": view, "file": os.path.relpath(f, ROOT) if f.startswith(ROOT) else f,
+                      "rows": con.execute(f"SELECT count(*) FROM {view}").fetchone()[0],
+                      "periods": [{"start": a, "end": b, "n_days": int(n)} for a, b, n in per]}
+    try:
+        meta = {**meta, "server_data": summary()}
+    except Exception as ex:          # never let the summary break the app
+        meta = {**meta, "server_data": {"error": str(ex)}}
+    old, _db, _meta = _db, con, meta
+    _team.clear(); _team.update(team)
+    if old is not None:
+        old.close()
+
+
+def _background_build() -> None:
+    try:
         meta = build()
-        con = duckdb.connect(":memory:")
-        con.execute(f"""CREATE VIEW points AS SELECT * FROM read_parquet('{HOTSPOTS_DIR}/**/*.parquet',
-                        hive_partitioning = true)""")
-        con.execute(f"CREATE VIEW cells_month AS SELECT * FROM read_parquet('{CELLS_MONTH}')")
-        con.execute(f"CREATE VIEW cells_day AS SELECT * FROM read_parquet('{CELLS_DAY}')")
-        team = {}
-        from .sources import team_files
-        found = {os.path.basename(f): f for f in sorted(glob.glob(os.path.join(TEAM, "fire_activity_*.parquet")))}
-        found.update({os.path.basename(f): f for f in team_files()})   # server files win over the repo copies
-        for f in found.values():
-            grid = os.path.basename(f)[len("fire_activity_"):-len(".parquet")].split("_", 1)[-1]  # 7d_0.5deg -> 0.5deg
-            view = "team_" + "".join(ch if ch.isalnum() else "_" for ch in grid)
-            con.execute(f"CREATE VIEW {view} AS SELECT * FROM read_parquet('{f}')")
-            per = con.execute(f"""SELECT CAST(period_start AS VARCHAR), CAST(period_end AS VARCHAR), max(n_days)
-                                  FROM {view} GROUP BY 1, 2 ORDER BY 1""").fetchall()
-            team[grid] = {"view": view, "file": os.path.relpath(f, ROOT) if f.startswith(ROOT) else f,
-                          "rows": con.execute(f"SELECT count(*) FROM {view}").fetchone()[0],
-                          "periods": [{"start": a, "end": b, "n_days": int(n)} for a, b, n in per]}
-        from .sources import summary
-        try:
-            meta = {**meta, "server_data": summary()}
-        except Exception as ex:          # never let the summary break the app
-            meta = {**meta, "server_data": {"error": str(ex)}}
-        old, _db, _meta = _db, con, meta
-        _team.clear(); _team.update(team)
-        if old is not None:
-            old.close()
+        with _lock:
+            _register(meta)
+        _build_state["error"] = None
+    except Exception as ex:
+        _build_state["error"] = str(ex)
+        print(f"[api] background build failed: {ex}")
+    finally:
+        _build_state["running"] = False
+
+
+def load() -> None:
+    """Serve data/processed/. If the inputs changed and an older complete build exists, keep serving it and
+    rebuild in the background (a build of the full archive takes minutes); otherwise build first."""
+    from .build import needs_build, ready
+    from .sources import hotspot_files, load_hotspots
+    with _lock:
+        if not ready() and load_hotspots() and hotspot_files():
+            _register(build(force=True, linked=False))    # quick start with the repo data, full archive below
+        if needs_build() and ready():
+            if _db is None:
+                with open(META) as f:
+                    _register(json.load(f))
+            if not _build_state["running"]:
+                _build_state.update(running=True, started=time.strftime("%Y-%m-%d %H:%M:%S"), error=None)
+                threading.Thread(target=_background_build, daemon=True).start()
+            return
+        _register(build())
 
 
 @app.on_event("startup")
@@ -154,6 +192,10 @@ SOURCES = {
                     "veg": "(type IS NULL OR type = 0)", "date": "acq_date", "night": "daynight = 'N'"},
     "cells_month": {"lat": "lat", "lon": "lon", "low": "low", "veg": "veg", "date": "period", "night": "night"},
     "cells_day":   {"lat": "lat", "lon": "lon", "low": "low", "veg": "veg", "date": "period", "night": "night"},
+    "series_month": {"lat": None, "lon": None, "low": "low", "veg": "veg", "date": "period", "night": "night"},
+    "series_day":   {"lat": None, "lon": None, "low": "low", "veg": "veg", "date": "period", "night": "night"},
+    "dist_month":  {"lat": "lat", "lon": "lon", "low": "conf_class = 'low'", "veg": "veg", "date": "period",
+                    "night": "daynight = 'N'"},
 }
 
 
@@ -193,7 +235,7 @@ def selection(c, source, bbox, polygon, start, end, exclude_low, vegetation_only
     if box:
         where.append(f"{s['lon']} BETWEEN {_lit(box[0])} AND {_lit(box[2])} "
                      f"AND {s['lat']} BETWEEN {_lit(box[1])} AND {_lit(box[3])}")
-    if source == "cells_month":
+    if source in ("cells_month", "dist_month", "series_month"):
         start, end = (start[:7] if start else None), (end[:7] if end else None)
     if start:
         where.append(f"{s['date']} >= {_lit(start)}")
@@ -248,23 +290,27 @@ def meta():
     """Data span and version, counts per satellite, satellite timeline, harmonization method and
     calibration table (factor per region with 25-75 % band)."""
     cur()
-    return {"api": "firecal", "version": API_VERSION, **_meta}
+    return {"api": "firecal", "version": API_VERSION, **_meta, "rebuilding": dict(_build_state)}
 
 
 @app.get("/api/timeseries")
 def timeseries(granularity: Literal["month", "day"] = "month",
                bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
+               start: str | None = Q["start"], end: str | None = Q["end"],
                exclude_low: bool = Q["exclude_low"], vegetation_only: bool = Q["vegetation_only"],
                satellites: str | None = Q["satellites"], daynight: str = Q["daynight"]):
-    """Per period over the WHOLE data span (start/end are applied in the app, medians need history).
+    """Per period. Monthly: over the WHOLE data span (medians need history). Daily: start/end (if given) limit
+    the window, which keeps daily requests fast on a long archive.
 
     raw (respects satellites/daynight): modis_n, viirs_n, modis_frp, viirs_frp, raw_n, raw_frp, n_night, n_high
     harmonized (VIIRS level, all satellites): harm_n, harm_n_lo, harm_n_hi, harm_frp, harm_frp_lo, harm_frp_hi,
     modis_h_n / viirs_h_n (share of harm_n from calibrated MODIS / native VIIRS), modis_cal_n, modis_cal_frp
     (MODIS x factor for every period, also after the VIIRS start)."""
     c = cur()
-    source = "cells_month" if granularity == "month" else "cells_day"
-    rel = selection(c, source, bbox, polygon, None, None, exclude_low, vegetation_only)
+    source = ("cells_" if (bbox or polygon) else "series_") + granularity   # no area: the small global series
+    # monthly: always the whole span (the medians need every year); daily: start/end limit the window
+    rel = selection(c, source, bbox, polygon, start if granularity == "day" else None,
+                    end if granularity == "day" else None, exclude_low, vegetation_only)
     rc = raw_cond(source, satellites, daynight)
     df = c.execute(f"""
         SELECT period,
@@ -350,7 +396,22 @@ def points(bbox: str = Query(..., description="west,south,east,north (visible ma
                         "daynight", "pixel_km2", "local_hour"], "rows": _rows(df)}
 
 
-FRP_EDGES = [0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 1000, 1e9]
+
+
+EXACT_DAYS = 62   # periods up to this length use the single hotspots (exact), longer ones the histogram cells
+
+
+def _hist_quantile(counts: list[int], q: float) -> float | None:
+    total = sum(counts)
+    if not total:
+        return None
+    goal, acc = q * total, 0
+    for i, c in enumerate(counts):
+        if acc + c >= goal and c:
+            lo, hi = FRP_EDGES[i], FRP_EDGES[i + 1] if FRP_EDGES[i + 1] < 1e9 else FRP_EDGES[i] * 2
+            return round(lo + (hi - lo) * (goal - acc) / c, 2)
+        acc += c
+    return None
 
 
 @app.get("/api/distributions")
@@ -360,12 +421,15 @@ def distributions(bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon
                   satellites: str | None = Q["satellites"], daynight: str = Q["daynight"]):
     """Distributions of the RAW hotspots in area and period, split by sensor:
     frp (MW, bins frp_edges), local_hour (24 bins), conf_class, satellite, daynight.
-    Low-confidence detections are included in conf_class even if exclude_low is set."""
+    Low-confidence detections are included in conf_class even if exclude_low is set.
+    Periods up to 62 days: exact, from the single hotspots. Longer periods: from the histogram cells
+    (whole months, area by 1-degree cell centre); basis tells which one was used."""
     c = cur()
-    rc = raw_cond("points", satellites, daynight)
-    rel = selection(c, "points", bbox, polygon, start, end, False, vegetation_only, extra=rc)
+    s0, e0 = start or _meta.get("first_date"), end or _meta.get("last_date")
+    days = (np.datetime64(e0) - np.datetime64(s0)).astype(int) + 1 if s0 and e0 else 10 ** 6
+    exact = days <= EXACT_DAYS
     lowf = "conf_class <> 'low'" if exclude_low else "TRUE"
-    case = " ".join(f"WHEN frp < {FRP_EDGES[i + 1]} THEN {i}" for i in range(len(FRP_EDGES) - 1))
+    nb = len(FRP_EDGES) - 1
 
     def grid(sql, n):
         out = {"MODIS": [0] * n, "VIIRS": [0] * n}
@@ -374,15 +438,31 @@ def distributions(bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon
                 out[sensor][int(b)] = int(cnt)
         return out
 
-    frp = grid(f"SELECT sensor, CASE {case} END, count(*) FROM {rel} WHERE {lowf} GROUP BY 1, 2", len(FRP_EDGES) - 1)
-    hour = grid(f"SELECT sensor, floor(local_hour)::INT % 24, count(*) FROM {rel} WHERE {lowf} AND local_hour IS NOT NULL GROUP BY 1, 2", 24)
-    conf = {f"{a}|{b}": int(n) for a, b, n in c.execute(f"SELECT sensor, conf_class, count(*) FROM {rel} GROUP BY 1, 2").fetchall()}
-    sat = {a: int(n) for a, n in c.execute(f"SELECT satellite, count(*) FROM {rel} WHERE {lowf} GROUP BY 1").fetchall()}
-    dn = {f"{a}|{b}": int(n) for a, b, n in c.execute(f"SELECT sensor, daynight, count(*) FROM {rel} WHERE {lowf} GROUP BY 1, 2").fetchall()}
-    stats = c.execute(f"""SELECT sensor, count(*), median(frp), quantile_cont(frp, 0.9), max(frp), avg(pixel_km2)
-                          FROM {rel} WHERE {lowf} GROUP BY 1""").fetchall()
+    if exact:
+        rel = selection(c, "points", bbox, polygon, start, end, False, vegetation_only,
+                        extra=raw_cond("points", satellites, daynight))
+        case = " ".join(f"WHEN frp < {FRP_EDGES[i + 1]} THEN {i}" for i in range(nb))
+        frp = grid(f"SELECT sensor, CASE {case} END, count(*) FROM {rel} WHERE {lowf} GROUP BY 1, 2", nb)
+        hour = grid(f"SELECT sensor, floor(local_hour)::INT % 24, count(*) FROM {rel} WHERE {lowf} AND local_hour IS NOT NULL GROUP BY 1, 2", 24)
+        cnt, frps, pxs = "count(*)", "frp", "pixel_km2"
+        stats = c.execute(f"""SELECT sensor, count(*), median(frp), quantile_cont(frp, 0.9), max(frp), avg(pixel_km2)
+                              FROM {rel} WHERE {lowf} GROUP BY 1""").fetchall()
+    else:
+        rel = selection(c, "dist_month", bbox, polygon, start, end, False, vegetation_only,
+                        extra=raw_cond("dist_month", satellites, daynight))
+        frp = grid(f"SELECT sensor, fbin, sum(n) FROM {rel} WHERE {lowf} GROUP BY 1, 2", nb)
+        hour = grid(f"SELECT sensor, hour, sum(n) FROM {rel} WHERE {lowf} AND hour IS NOT NULL GROUP BY 1, 2", 24)
+        cnt = "sum(n)"
+        stats = [(s, int(n), _hist_quantile(frp.get(s, [0] * nb), .5), _hist_quantile(frp.get(s, [0] * nb), .9), mx, px / n if n else None)
+                 for s, n, mx, px in c.execute(f"SELECT sensor, sum(n), max(frp_max), sum(px) FROM {rel} WHERE {lowf} GROUP BY 1").fetchall()]
+    conf = {f"{a}|{b}": int(n) for a, b, n in c.execute(f"SELECT sensor, conf_class, {cnt} FROM {rel} GROUP BY 1, 2").fetchall()}
+    sat = {a: int(n) for a, n in c.execute(f"SELECT satellite, {cnt} FROM {rel} WHERE {lowf} GROUP BY 1").fetchall()}
+    dn = {f"{a}|{b}": int(n) for a, b, n in c.execute(f"SELECT sensor, daynight, {cnt} FROM {rel} WHERE {lowf} GROUP BY 1, 2").fetchall()}
+    basis = ("exact: single hotspots" if exact else
+             f"histogram cells: whole months {str(s0)[:7]} to {str(e0)[:7]}, area by {DIST_RES:g} degree cell centre, "
+             "median / 90th percentile interpolated within the FRP classes")
     return {"frp_edges": FRP_EDGES[:-1] + [None], "frp": frp, "local_hour": hour, "conf_class": conf,
-            "satellite": sat, "daynight": dn,
+            "satellite": sat, "daynight": dn, "start": s0, "end": e0, "exact": bool(exact), "basis": basis,
             "stats": {s: {"n": int(n), "frp_median": med, "frp_p90": p90, "frp_max": mx, "pixel_km2_mean": px}
                       for s, n, med, p90, mx, px in stats}}
 
@@ -427,7 +507,7 @@ def satellites_timeline(granularity: Literal["month", "day"] = "month",
                         bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
                         exclude_low: bool = Q["exclude_low"], vegetation_only: bool = Q["vegetation_only"]):
     """RAW hotspot count per period and satellite (swim lanes; shows when satellites start or drop out)."""
-    source = "cells_month" if granularity == "month" else "cells_day"
+    source = ("cells_" if (bbox or polygon) else "series_") + granularity
     c = cur()
     rel = selection(c, source, bbox, polygon, None, None, exclude_low, vegetation_only)
     out: dict = {}
@@ -604,7 +684,7 @@ def reload(token: str = ""):
     if not expected or token != expected:
         raise HTTPException(403, "reload disabled or wrong token")
     load()
-    return {"ok": True, "rows": _meta.get("rows")}
+    return {"ok": True, "rows": _meta.get("rows"), "rebuilding": dict(_build_state)}
 
 
 # ---------------------------------------------------------------- frontend

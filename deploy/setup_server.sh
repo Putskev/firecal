@@ -7,8 +7,9 @@
 #                looks for candidate folders and uses one only if it is unambiguous.
 #   --domain     domain that points to this server (DNS A record), used for HTTPS.
 #   --link-only  connect the data folder (shown in the app: files, rows, dates) but do not load its hotspots yet.
-#   --load       load the hotspots of the data folder into the app (needs enough RAM, see the check).
-#                Default: load if the RAM is enough, otherwise link only.
+#   --load       load the hotspots of the data folder into the app. The first build runs in the background
+#                (the app keeps serving the previous data), roughly 1 min per 15-20 million hotspots.
+#                Default: load if there is enough free disk space, otherwise link only.
 #
 # Safe with other websites on the server: an existing Caddy gets an extra site via 'import', an existing
 # nginx/apache is not touched (FireCal then listens on port 8080). Running it again updates everything.
@@ -131,11 +132,15 @@ if other:
     print(f"  not used ({len(other)}), e.g.: " + ", ".join(os.path.basename(f) for f in other[:5]))
 if hot:
     print("  columns of the first hotspot file:", ", ".join(sorted(sources._columns(hot[0]))))
+import shutil
 mem = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 1e9
-need = 0.5 + rows / 1e6 * 0.45
-print(f"RAM: {mem:.1f} GB, estimated for the build step: {need:.1f} GB")
-if need > mem * 0.85:
-    print("Too little RAM to load all of it at once with the current build step.")
+free = shutil.disk_usage("/opt/firecal").free / 1e9
+need = 3 * size + 1
+minutes = max(1, round(rows / 20e6 * 1.2))
+print(f"RAM: {mem:.1f} GB (the build works month by month with a memory limit, RAM is not the limit)")
+print(f"disk: {free:.0f} GB free, about {need:.0f} GB needed while building; build time roughly {minutes} min")
+if free < need:
+    print("Not enough free disk space to load the folder.")
     sys.exit(3)
 PY
   RC=$?
@@ -146,7 +151,7 @@ PY
   if [ "$LOAD" = 0 ]; then
     warn "Data folder is LINKED ONLY: the app shows what is in it, but uses the data in the repo. Load later with --load."
   else
-    echo "Data folder will be LOADED into the app."
+    echo "Data folder will be LOADED into the app (built in the background, see: journalctl -u firecal -f)."
   fi
 fi
 LOAD="${LOAD:-1}"

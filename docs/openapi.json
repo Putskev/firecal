@@ -42,7 +42,7 @@
     "/api/timeseries": {
       "get": {
         "summary": "Timeseries",
-        "description": "Per period over the WHOLE data span (start/end are applied in the app, medians need history).\n\nraw (respects satellites/daynight): modis_n, viirs_n, modis_frp, viirs_frp, raw_n, raw_frp, n_night, n_high\nharmonized (VIIRS level, all satellites): harm_n, harm_n_lo, harm_n_hi, harm_frp, harm_frp_lo, harm_frp_hi,\nmodis_h_n / viirs_h_n (share of harm_n from calibrated MODIS / native VIIRS), modis_cal_n, modis_cal_frp\n(MODIS x factor for every period, also after the VIIRS start).",
+        "description": "Per period. Monthly: over the WHOLE data span (medians need history). Daily: start/end (if given) limit\nthe window, which keeps daily requests fast on a long archive.\n\nraw (respects satellites/daynight): modis_n, viirs_n, modis_frp, viirs_frp, raw_n, raw_frp, n_night, n_high\nharmonized (VIIRS level, all satellites): harm_n, harm_n_lo, harm_n_hi, harm_frp, harm_frp_lo, harm_frp_hi,\nmodis_h_n / viirs_h_n (share of harm_n from calibrated MODIS / native VIIRS), modis_cal_n, modis_cal_frp\n(MODIS x factor for every period, also after the VIIRS start).",
         "operationId": "timeseries_api_timeseries_get",
         "parameters": [
           {
@@ -94,6 +94,40 @@
               "title": "Polygon"
             },
             "description": "lat,lon;lat,lon;..."
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
           },
           {
             "name": "exclude_low",
@@ -533,7 +567,7 @@
     "/api/distributions": {
       "get": {
         "summary": "Distributions",
-        "description": "Distributions of the RAW hotspots in area and period, split by sensor:\nfrp (MW, bins frp_edges), local_hour (24 bins), conf_class, satellite, daynight.\nLow-confidence detections are included in conf_class even if exclude_low is set.",
+        "description": "Distributions of the RAW hotspots in area and period, split by sensor:\nfrp (MW, bins frp_edges), local_hour (24 bins), conf_class, satellite, daynight.\nLow-confidence detections are included in conf_class even if exclude_low is set.\nPeriods up to 62 days: exact, from the single hotspots. Longer periods: from the histogram cells\n(whole months, area by 1-degree cell centre); basis tells which one was used.",
         "operationId": "distributions_api_distributions_get",
         "parameters": [
           {

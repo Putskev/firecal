@@ -26,6 +26,14 @@ def region_of(lat, lon) -> np.ndarray:
     return out
 
 
+# the same rules as SQL (used by the DuckDB build); keep both in sync with regionOf() in index.html
+REGION_SQL = """CASE WHEN longitude < -30 THEN 'Amerika'
+     WHEN longitude >= 110 AND latitude < -10 THEN 'Ozeanien'
+     WHEN longitude >= 55 THEN 'Asien'
+     WHEN longitude >= -20 AND latitude < 35 THEN 'Afrika'
+     ELSE 'Europa/Westasien' END"""
+
+
 # Satellite timeline (start of operational active fire data; end = still running)
 SATELLITES = [
     {"satellite": "Terra", "sensor": "MODIS", "start": "2000-11-01"},

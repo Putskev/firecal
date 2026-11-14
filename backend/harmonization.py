@@ -19,8 +19,10 @@ The result is written per hotspot (weight = how much the hotspot counts on the h
 VIIRS level), so every view of the app (calendar, anomalies, any drawn area) is a simple SUM.
 Uncertainty: weight_lo / weight_hi use the 25th / 75th percentile of the cell ratios.
 
-To plug in a different method, keep the signature of `harmonize(df) -> (df, info)` and the
-output columns listed in data.py (HARMONIZED_EXTRA).
+Everything runs in SQL inside DuckDB (backend/build.py calls the functions below month by month),
+so the archive can be far larger than the RAM. To plug in a different method, change weights_sql()
+(per-hotspot weights) and/or calibration_table(); the output columns are listed in data.py.
+Full explanation with all formulas: docs/ERKLAERUNG.md
 """
 from __future__ import annotations
 
@@ -31,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 from .paths import DATA
-from .regions import REGIONS, VIIRS_START, region_of
+from .regions import REGION_SQL, REGIONS, VIIRS_START
 
 CALIBRATION_DIR = os.path.join(DATA, "calibration")
 CELL_DEG = 2.0
@@ -48,14 +50,26 @@ INFO = {
 }
 
 
-def _calibrate(d: pd.DataFrame) -> pd.DataFrame:
-    """Compute the calibration table (Tabelle C) from data with both sensors."""
-    g = d[(d["conf_class"] != "low") & (d["acq_date"] >= VIIRS_START)].copy()   # overlap period only
-    g["cell"] = (np.floor(g.latitude / CELL_DEG).astype(int).astype(str) + "_" +
-                 np.floor(g.longitude / CELL_DEG).astype(int).astype(str))
-    day = pd.to_datetime(g["acq_date"])
-    g["win"] = ((day - day.min()).dt.days // WINDOW_DAYS).astype(int)
-    agg = g.groupby(["region", "cell", "win", "sensor"]).agg(n=("frp", "size"), frp=("frp", "sum")).unstack("sensor")
+def calibration_sums_sql(src: str, first_viirs: str) -> str:
+    """Sums per region x 2-degree cell x 7-day window x sensor (low confidence excluded, VIIRS period only).
+    Run per month; the sums of all months are added up in calibration_table()."""
+    return f"""
+      SELECT {REGION_SQL} AS region,
+             CAST(floor(latitude / {CELL_DEG}) AS INTEGER) || '_' || CAST(floor(longitude / {CELL_DEG}) AS INTEGER) AS cell,
+             date_diff('day', DATE '{first_viirs}', CAST(acq_date AS DATE)) // {WINDOW_DAYS} AS win,
+             sensor, count(*) AS n, sum(frp) AS frp
+      FROM {src}
+      WHERE conf_class <> 'low' AND acq_date >= '{VIIRS_START}'
+      GROUP BY ALL"""
+
+
+def _calibrate(parts: list[pd.DataFrame]) -> pd.DataFrame:
+    """Calibration table (Tabelle C) from the collected cell sums: factor = SUM(VIIRS) / SUM(MODIS) over the
+    cells x windows where BOTH sensors detected fire; band = 25th / 75th percentile of the cell ratios."""
+    if not parts:
+        return pd.DataFrame()
+    g = pd.concat(parts, ignore_index=True).groupby(["region", "cell", "win", "sensor"])[["n", "frp"]].sum()
+    agg = g.unstack("sensor")
     if ("n", "MODIS") not in agg.columns or ("n", "VIIRS") not in agg.columns:
         return pd.DataFrame()
     agg = agg.fillna(0)
@@ -70,18 +84,18 @@ def _calibrate(d: pd.DataFrame) -> pd.DataFrame:
         ok = (mf > 0) & (vf > 0)
         r = float(np.corrcoef(np.log(mf[ok]), np.log(vf[ok]))[0, 1]) if ok.sum() > 2 else np.nan
         return {"region": name, "factor_frp": vf.sum() / mf.sum() if mf.sum() > 0 else np.nan,
-                "factor_n": vn.sum() / mn.sum(),
+                "factor_n": vn.sum() / mn.sum() if mn.sum() > 0 else np.nan,
                 "factor_frp_p25": rf.quantile(.25), "factor_frp_p75": rf.quantile(.75),
                 "factor_n_p25": rn.quantile(.25), "factor_n_p75": rn.quantile(.75),
                 "r_log_frp": r, "n_cells": int(len(part)), "used_global_fallback": fallback}
 
+    if both.empty:
+        return pd.DataFrame()
     glob_row = row("global", both, False)
     for reg in REGIONS:
         part = both[both["region"] == reg]
-        if len(part) >= MIN_CELLS:
-            rows.append(row(reg, part, False))
-        else:
-            rows.append({**glob_row, "region": reg, "n_cells": int(len(part)), "used_global_fallback": True})
+        rows.append(row(reg, part, False) if len(part) >= MIN_CELLS else
+                    {**glob_row, "region": reg, "n_cells": int(len(part)), "used_global_fallback": True})
     rows.append(glob_row)
     return pd.DataFrame(rows)
 
@@ -92,7 +106,7 @@ def calibration_files() -> list[str]:
     return sorted(glob.glob(os.path.join(CALIBRATION_DIR, "*.csv")) + glob.glob(os.path.join(CALIBRATION_DIR, "*.parquet"))) + external()
 
 
-def _load_calibration() -> pd.DataFrame | None:
+def load_calibration() -> pd.DataFrame | None:
     files = calibration_files()
     if not files:
         return None
@@ -112,59 +126,47 @@ def _load_calibration() -> pd.DataFrame | None:
     return cal
 
 
-def harmonize(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    d = df.copy()
-    d["region"] = region_of(d["latitude"].to_numpy(), d["longitude"].to_numpy())
-    cal = _load_calibration()
-    source = "team calibration table (" + ", ".join(os.path.basename(f) for f in calibration_files()) + ")"
-    if cal is None:
-        cal = _calibrate(d)
-        source = "computed from the loaded data"
-    if cal.empty:
-        cal = pd.DataFrame([{"region": r, "factor_n": 1.0, "factor_frp": 1.0, "factor_frp_p25": 1.0,
-                             "factor_frp_p75": 1.0, "factor_n_p25": 1.0, "factor_n_p75": 1.0,
-                             "r_log_frp": np.nan, "n_cells": 0, "used_global_fallback": True} for r in REGIONS])
-        source = "no overlap of both sensors: factor 1 (not harmonized)"
+FACTORS = ["factor_n", "factor_frp", "factor_n_p25", "factor_n_p75", "factor_frp_p25", "factor_frp_p75"]
 
-    # factor lookup per hotspot (by region, optionally by month)
-    keys = ["region"] + (["month"] if "month" in cal.columns else [])
-    if "month" in cal.columns:
-        d["month"] = d["acq_date"].str[5:7].astype(int)
-    cols = ["factor_n", "factor_frp", "factor_n_p25", "factor_n_p75", "factor_frp_p25", "factor_frp_p75"]
-    d = d.merge(cal[keys + cols].drop_duplicates(keys), on=keys, how="left")
-    glob_row = cal[cal["region"] == "global"]
-    fallback = glob_row.iloc[0] if len(glob_row) else cal[cols].median()
-    for c in cols:
-        d[c] = d[c].fillna(fallback[c])
 
-    is_v = d["sensor"].eq("VIIRS")
-    viirs_days = set(d.loc[is_v, "acq_date"].unique())
-    use_viirs = (d["acq_date"] >= VIIRS_START) & d["acq_date"].isin(viirs_days)
+def calibration_table(team: pd.DataFrame | None, parts: list[pd.DataFrame]) -> tuple[pd.DataFrame, str]:
+    if team is not None:
+        return team, "team calibration table (" + ", ".join(os.path.basename(f) for f in calibration_files()) + ")"
+    cal = _calibrate(parts)
+    if not cal.empty:
+        return cal, "computed from the loaded data"
+    return (pd.DataFrame([{"region": r, **{c: 1.0 for c in FACTORS}, "r_log_frp": np.nan, "n_cells": 0,
+                           "used_global_fallback": True} for r in REGIONS]),
+            "no overlap of both sensors: factor 1 (not harmonized)")
 
-    z = np.zeros(len(d), dtype="float32")
-    d["weight"], d["weight_lo"], d["weight_hi"] = z.copy(), z.copy(), z.copy()
-    d["frp_h"], d["frp_h_lo"], d["frp_h_hi"] = z.copy(), z.copy(), z.copy()
-    v = is_v & use_viirs
-    d.loc[v, ["weight", "weight_lo", "weight_hi"]] = 1.0
-    for c in ["frp_h", "frp_h_lo", "frp_h_hi"]:
-        d.loc[v, c] = d.loc[v, "frp"]
-    m = ~is_v & ~use_viirs
-    d.loc[m, "weight"] = d.loc[m, "factor_n"]
-    d.loc[m, "weight_lo"] = d.loc[m, "factor_n_p25"]
-    d.loc[m, "weight_hi"] = d.loc[m, "factor_n_p75"]
-    d.loc[m, "frp_h"] = d.loc[m, "frp"] * d.loc[m, "factor_frp"]
-    d.loc[m, "frp_h_lo"] = d.loc[m, "frp"] * d.loc[m, "factor_frp_p25"]
-    d.loc[m, "frp_h_hi"] = d.loc[m, "frp"] * d.loc[m, "factor_frp_p75"]
-    d["weight_cal"] = np.where(~is_v, d["factor_n"], 0.0)
-    d["frp_cal"] = np.where(~is_v, d["frp"] * d["factor_frp"], 0.0)
-    for c in ["weight", "weight_lo", "weight_hi", "frp_h", "frp_h_lo", "frp_h_hi", "weight_cal", "frp_cal"]:
-        d[c] = d[c].astype("float32")
-    d = d.drop(columns=cols + (["month"] if "month" in d.columns and "month" not in df.columns else []))
 
+def info(cal: pd.DataFrame, source: str) -> dict:
     table = cal.replace({np.nan: None}).round(4).to_dict("records")
-    info = dict(INFO, params={
-        "target_level": "VIIRS", "viirs_start": VIIRS_START, "cell_deg": CELL_DEG,
-        "window_days": WINDOW_DAYS, "factor_source": source,
-        "calibrated_share": round(float((d["weight"][~is_v] > 0).mean()) if (~is_v).any() else 0.0, 4),
-    }, calibration=table)
-    return d, info
+    return dict(INFO, params={"target_level": "VIIRS", "viirs_start": VIIRS_START, "cell_deg": CELL_DEG,
+                              "window_days": WINDOW_DAYS, "factor_source": source}, calibration=table)
+
+
+def weights_sql(src: str, cal: str, viirs_days: str, by_month: bool) -> str:
+    """Harmonization per hotspot in SQL (see the module docstring):
+         VIIRS on VIIRS days (from VIIRS_START):    weight = 1,          frp_h = frp
+         MODIS on days without VIIRS:               weight = factor_n,   frp_h = frp * factor_frp
+         everything else:                           weight = 0,          frp_h = 0
+       _lo / _hi use the 25th / 75th percentile factors; weight_cal / frp_cal = MODIS x factor on every day.
+       `cal` is a table with region[, month] + FACTORS; regions without a row use the 'global' row."""
+    key = "c.region = h.region" + (" AND c.month = CAST(substr(h.acq_date, 6, 2) AS INTEGER)" if by_month else "")
+    fb = lambda f: f"coalesce(c.{f}, (SELECT {f} FROM {cal} WHERE region = 'global' LIMIT 1), (SELECT median({f}) FROM {cal}))"
+    return f"""
+      WITH h AS (SELECT *, {REGION_SQL} AS region FROM {src}),
+      j AS (SELECT h.*, {", ".join(f"{fb(f)} AS {f}" for f in FACTORS)},
+                   h.acq_date >= '{VIIRS_START}' AND h.acq_date IN (SELECT acq_date FROM {viirs_days}) AS use_viirs
+            FROM h LEFT JOIN {cal} c ON {key})
+      SELECT * EXCLUDE ({", ".join(FACTORS)}, use_viirs),
+        (CASE WHEN sensor = 'VIIRS' AND use_viirs THEN 1 WHEN sensor <> 'VIIRS' AND NOT use_viirs THEN factor_n ELSE 0 END)::FLOAT AS weight,
+        (CASE WHEN sensor = 'VIIRS' AND use_viirs THEN 1 WHEN sensor <> 'VIIRS' AND NOT use_viirs THEN factor_n_p25 ELSE 0 END)::FLOAT AS weight_lo,
+        (CASE WHEN sensor = 'VIIRS' AND use_viirs THEN 1 WHEN sensor <> 'VIIRS' AND NOT use_viirs THEN factor_n_p75 ELSE 0 END)::FLOAT AS weight_hi,
+        (CASE WHEN sensor = 'VIIRS' AND use_viirs THEN frp WHEN sensor <> 'VIIRS' AND NOT use_viirs THEN frp * factor_frp ELSE 0 END)::FLOAT AS frp_h,
+        (CASE WHEN sensor = 'VIIRS' AND use_viirs THEN frp WHEN sensor <> 'VIIRS' AND NOT use_viirs THEN frp * factor_frp_p25 ELSE 0 END)::FLOAT AS frp_h_lo,
+        (CASE WHEN sensor = 'VIIRS' AND use_viirs THEN frp WHEN sensor <> 'VIIRS' AND NOT use_viirs THEN frp * factor_frp_p75 ELSE 0 END)::FLOAT AS frp_h_hi,
+        (CASE WHEN sensor <> 'VIIRS' THEN factor_n ELSE 0 END)::FLOAT AS weight_cal,
+        (CASE WHEN sensor <> 'VIIRS' THEN frp * factor_frp ELSE 0 END)::FLOAT AS frp_cal
+      FROM j"""
