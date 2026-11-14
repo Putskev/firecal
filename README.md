@@ -123,6 +123,10 @@ Auf dem Server (per SSH, als Benutzer mit sudo) **ein** Befehl, Pfad = Ordner mi
 curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_server.sh | sudo bash -s -- /pfad/zu/parquet --domain reicht.anohji.dev
 ```
 
+`--link-only` verbindet den Ordner nur: Die App zeigt, was drin ist (Dateien, Zeilen, Zeitraum aus den
+Parquet-Metadaten), lädt die Hotspots aber noch nicht. Ohne Angabe wird automatisch nur verbunden, wenn der RAM
+für den Aufbereitungsschritt nicht reicht. Später laden: Skript mit `--load` erneut ausführen.
+
 Ohne Pfad sucht das Skript selbst nach Parquet-Ordnern mit Hotspot-Spalten. Ein schon laufender Webserver bleibt unangetastet
 (Caddy bekommt eine zusätzliche Seite per `import`, bei nginx/apache läuft FireCal auf Port 8080).
 

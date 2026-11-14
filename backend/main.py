@@ -80,6 +80,11 @@ def load() -> None:
             team[grid] = {"view": view, "file": os.path.relpath(f, ROOT) if f.startswith(ROOT) else f,
                           "rows": con.execute(f"SELECT count(*) FROM {view}").fetchone()[0],
                           "periods": [{"start": a, "end": b, "n_days": int(n)} for a, b, n in per]}
+        from .sources import summary
+        try:
+            meta = {**meta, "server_data": summary()}
+        except Exception as ex:          # never let the summary break the app
+            meta = {**meta, "server_data": {"error": str(ex)}}
         old, _db, _meta = _db, con, meta
         _team.clear(); _team.update(team)
         if old is not None:
@@ -502,6 +507,14 @@ def _team_area(c, view: str, bbox, polygon, periods: list[str] | None):
     if poly is not None and len(df):
         df = df[_in_polygon(df["lat"].to_numpy(), df["lon"].to_numpy(), poly)]
     return df
+
+
+@app.get("/api/server-data")
+def server_data():
+    """The linked data folder on the server (FIRECAL_SOURCE): files, rows and date range from the Parquet
+    footers, and whether its hotspots are loaded into the app (loaded = false: link only)."""
+    cur()
+    return _meta.get("server_data") or {"folders": [], "loaded": False, "files": 0}
 
 
 @app.get("/api/team")

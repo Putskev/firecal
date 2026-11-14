@@ -44,7 +44,8 @@ def _inputs() -> tuple[str, list[str]]:
     h = sorted(glob.glob(os.path.join(HARMONIZED_DIR, "*.parquet")) + glob.glob(os.path.join(HARMONIZED_DIR, "*.csv")))
     if h:
         return "harmonized", h
-    return "raw", sorted(glob.glob(os.path.join(RAW, "*.parquet"))) + sources.hotspot_files()
+    linked = sources.hotspot_files() if sources.load_hotspots() else []
+    return "raw", sorted(glob.glob(os.path.join(RAW, "*.parquet"))) + linked
 
 
 def needs_build() -> bool:

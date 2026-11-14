@@ -6,14 +6,19 @@
 #   DATA_FOLDER  folder with your Parquet/CSV files (searched recursively; several: a:b). Without it the script
 #                looks for candidate folders and uses one only if it is unambiguous.
 #   --domain     domain that points to this server (DNS A record), used for HTTPS.
+#   --link-only  connect the data folder (shown in the app: files, rows, dates) but do not load its hotspots yet.
+#   --load       load the hotspots of the data folder into the app (needs enough RAM, see the check).
+#                Default: load if the RAM is enough, otherwise link only.
 #
 # Safe with other websites on the server: an existing Caddy gets an extra site via 'import', an existing
 # nginx/apache is not touched (FireCal then listens on port 8080). Running it again updates everything.
 set -euo pipefail
 
-SRC_ARG=""; DOMAIN=""
+SRC_ARG=""; DOMAIN=""; LOAD=""
 while [ $# -gt 0 ]; do
   case "$1" in
+    --link-only) LOAD=0; shift ;;
+    --load) LOAD=1; shift ;;
     --domain) DOMAIN="${2:-}"; shift 2 ;;
     --domain=*) DOMAIN="${1#*=}"; shift ;;
     *) SRC_ARG="$1"; shift ;;
@@ -31,6 +36,7 @@ prev() { grep -E "^$1=" "$ENVF" 2>/dev/null | cut -d= -f2- || true; }
 . /etc/os-release
 case "${ID:-}" in ubuntu|debian) ;; *) die "tested on Ubuntu/Debian only (found ${ID:-?})" ;; esac
 [ -n "$DOMAIN" ] || DOMAIN="$(prev FIRECAL_DOMAIN)"
+[ -n "$LOAD" ] || LOAD="$(prev FIRECAL_SOURCE_LOAD)"
 
 say "1/7 System packages"
 export DEBIAN_FRONTEND=noninteractive
@@ -107,6 +113,7 @@ fi
 chown -R "$RUN_USER": "$DIR"
 
 if [ -n "$SRC" ]; then
+  set +e
   runuser -u "$RUN_USER" -- env FIRECAL_SOURCE="$SRC" "$DIR/.venv/bin/python" - <<'PY'
 import os, sys
 sys.path.insert(0, "/opt/firecal")
@@ -128,13 +135,25 @@ mem = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 1e9
 need = 0.5 + rows / 1e6 * 0.45
 print(f"RAM: {mem:.1f} GB, estimated for the build step: {need:.1f} GB")
 if need > mem * 0.85:
-    print("WARNING: probably too little RAM for the build step. Add swap, a bigger server, or fewer years.")
+    print("Too little RAM to load all of it at once with the current build step.")
+    sys.exit(3)
 PY
+  RC=$?
+  set -e
+  if [ -z "$LOAD" ]; then
+    if [ "$RC" = 3 ]; then LOAD=0; else LOAD=1; fi
+  fi
+  if [ "$LOAD" = 0 ]; then
+    warn "Data folder is LINKED ONLY: the app shows what is in it, but uses the data in the repo. Load later with --load."
+  else
+    echo "Data folder will be LOADED into the app."
+  fi
 fi
+LOAD="${LOAD:-1}"
 
 say "4/7 Web server"
 IP="$(curl -fsS4 --max-time 5 https://api.ipify.org || hostname -I | awk '{print $1}')"
-holder() { ss -ltnpH "( sport = :$1 )" 2>/dev/null | grep -o 'users:(("[^"]*' | head -1 | cut -d'"' -f2; }
+holder() { ss -ltnpH "( sport = :$1 )" 2>/dev/null | grep -o 'users:(("[^"]*' | head -1 | cut -d'"' -f2 || true; }
 H80="$(holder 80)"; H443="$(holder 443)"
 MODE=caddy; BIND=127.0.0.1; PORT=8000
 for h in "$H80" "$H443"; do
@@ -145,7 +164,7 @@ if [ "$MODE" = direct ]; then
   BIND=0.0.0.0; PORT=8080
 fi
 if [ -n "$DOMAIN" ]; then
-  DIP="$(getent ahostsv4 "$DOMAIN" | awk 'NR==1{print $1}')"
+  DIP="$(getent ahostsv4 "$DOMAIN" | awk 'NR==1{print $1}' || true)"
   if [ "$DIP" != "$IP" ]; then warn "$DOMAIN points to ${DIP:-nothing}, this server is $IP: HTTPS for the domain may fail."; fi
 fi
 
@@ -153,6 +172,7 @@ say "5/7 Service (systemd) + automatic updates"
 TOKEN="$(prev FIRECAL_RELOAD_TOKEN)"; [ -n "$TOKEN" ] || TOKEN="$(openssl rand -hex 16)"
 cat > "$ENVF" <<EOF
 FIRECAL_SOURCE=$SRC
+FIRECAL_SOURCE_LOAD=$LOAD
 FIRECAL_RELOAD_TOKEN=$TOKEN
 FIRECAL_RUN_USER=$RUN_USER
 FIRECAL_DOMAIN=$DOMAIN
@@ -227,6 +247,7 @@ http://$IP {
 	reverse_proxy 127.0.0.1:$PORT
 }
 EOF
+  [ -f /etc/caddy/Caddyfile ] || printf '# Caddy main config\n' > /etc/caddy/Caddyfile
   cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.before-firecal
   grep -qs 'import /etc/caddy/firecal.caddy' /etc/caddy/Caddyfile || printf '\nimport /etc/caddy/firecal.caddy\n' >> /etc/caddy/Caddyfile
   if caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/tmp/caddy-validate.log 2>&1; then
@@ -247,7 +268,7 @@ if command -v ufw >/dev/null && ufw status | grep -q "Status: active"; then
 fi
 
 say "7/7 Start and first data build (a few minutes with large data)"
-for i in $(seq 1 240); do
+for _ in $(seq 1 240); do
   if curl -fsS --max-time 3 "http://127.0.0.1:$PORT/api/health" 2>/dev/null | grep -q '"ok":true'; then break; fi
   if ! systemctl is-active -q firecal; then journalctl -u firecal -n 30 --no-pager; die "service stopped, see log above"; fi
   sleep 5

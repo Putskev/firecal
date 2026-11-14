@@ -1187,6 +1187,23 @@
         }
       }
     },
+    "/api/server-data": {
+      "get": {
+        "summary": "Server Data",
+        "description": "The linked data folder on the server (FIRECAL_SOURCE): files, rows and date range from the Parquet\nfooters, and whether its hotspots are loaded into the app (loaded = false: link only).",
+        "operationId": "server_data_api_server_data_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/team": {
       "get": {
         "summary": "Team Info",

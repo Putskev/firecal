@@ -250,7 +250,9 @@ input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line)
    ===================================================================== */
 window.type = window.type || '';
 const qp = new URLSearchParams(location.search);
-const API = (qp.get('api') ?? window.FIRECAL_API ?? '').replace(/\/$/, '');
+// on GitHub Pages the app talks to the team server; ?api=... overrides, ?api= (empty) forces the demo
+const TEAM_SERVER = 'https://reicht.anohji.dev';
+const API = (qp.get('api') ?? window.FIRECAL_API ?? (location.hostname.endsWith('github.io') ? TEAM_SERVER : '')).replace(/\/$/, '');
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const SATS = ['Terra','Aqua','SNPP','N20','N21'];
@@ -332,7 +334,7 @@ const apiF = f => ({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_lo
 async function getJSON(url) { const r = await fetch(url); if (!r.ok) throw new Error(await r.text()); return r.json(); }
 const ApiProvider = {
   name: 'api', m: null,
-  async init() { const r = await fetch(`${API}/api/meta`, { cache: 'no-store' }); if (!r.ok) throw 0; const m = await r.json();
+  async init() { const r = await fetch(`${API}/api/meta`, { cache: 'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }); if (!r.ok) throw 0; const m = await r.json();
     if (m.api !== 'firecal' || !m.harmonization || !m.harmonization.params || m.harmonization.params.target_level !== 'VIIRS') throw 0; this.m = m; return this; },
   meta() { return this.m; },
   label() { return `API · ${fmt(this.m.rows)} hotspots · ${this.m.first_date} → ${this.m.last_date}`; },
@@ -1059,9 +1061,14 @@ $('dlSummary').addEventListener('click', () => {
 });
 
 /* ---------- footer & methodology ---------- */
+function serverNote(sd) {
+  if (!sd || !sd.files) return '';
+  const span = sd.first_date ? ` (${sd.first_date} → ${sd.last_date})` : '';
+  return ` · server archive: ${fmt(sd.files)} files, ${fmt(sd.rows)} hotspots${span}${sd.loaded ? '' : ', linked, not loaded yet'}`;
+}
 function renderFooter() {
   const m = S.meta, h = m.harmonization || {};
-  $('footer').innerHTML = `Data: NASA LANCE FIRMS (MODIS C6.1 1 km, VIIRS 375 m) · ${m.first_date} → ${m.last_date} · version ${m.data_version || '–'}${h.dropped_partial_day ? ` · incomplete day ${h.dropped_partial_day} removed` : ''} · harmonization: ${h.name || '?'} v${h.version || '?'} (${h.status || '?'}) · map points are raw detections · FireCal team, NASA Space Apps Challenge 2026 · <a href="api-docs.html">API</a> · <a href="https://github.com/Putskev/firecal">GitHub</a>`;
+  $('footer').innerHTML = `Data: NASA LANCE FIRMS (MODIS C6.1 1 km, VIIRS 375 m) · ${m.first_date} → ${m.last_date} · version ${m.data_version || '–'}${h.dropped_partial_day ? ` · incomplete day ${h.dropped_partial_day} removed` : ''} · harmonization: ${h.name || '?'} v${h.version || '?'} (${h.status || '?'}) · map points are raw detections${serverNote(m.server_data)} · FireCal team, NASA Space Apps Challenge 2026 · <a href="api-docs.html">API</a> · <a href="https://github.com/Putskev/firecal">GitHub</a>`;
 }
 (async () => {
   try { const r = await fetch('content/methodology.md', { cache: 'no-store' }); if (!r.ok) throw 0; const md = await r.text();
