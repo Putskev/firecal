@@ -10,7 +10,8 @@ Challenge: **Harmonization of MODIS and VIIRS Hot Spots**
 | Repo (Code, Daten, Doku) | https://github.com/Putskev/firecal |
 | Live-Demo (nur Demodaten) | https://putskev.github.io/firecal/ |
 | Lokale App mit echten Daten | http://localhost:8000 (nach dem Start, siehe unten) |
-| API-Doku (lokal) | http://localhost:8000/docs |
+| API-Doku (online, zum Lesen) | https://putskev.github.io/firecal/api-docs.html |
+| API-Doku (lokal, zum Ausprobieren) | http://localhost:8000/docs |
 | Übergabe für die Harmonisierung | [`docs/AGENT_HANDOFF.md`](AGENT_HANDOFF.md) |
 | Technische Doku | [`README.md`](../README.md) |
 
