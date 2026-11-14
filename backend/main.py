@@ -271,7 +271,18 @@ Q = dict(
     vegetation_only=Query(False, description="keep type = 0 (rows without type are kept)"),
     satellites=Query(None, description="comma list of Terra,Aqua,SNPP,N20,N21 (raw values and map only)"),
     daynight=Query("all", pattern="^(all|D|N)$", description="raw values and map only"),
+    conf=Query(None, description="map only: comma list of low,nominal,high (overrides exclude_low)"),
 )
+
+
+def conf_cond(conf: str | None) -> str | None:
+    if not conf:
+        return None
+    cls = [c.strip().lower() for c in conf.split(",") if c.strip()]
+    bad = set(cls) - {"low", "nominal", "high"}
+    if bad:
+        raise HTTPException(422, f"unknown confidence classes {bad}")
+    return "conf_class IN (" + ",".join(_lit(c) for c in cls) + ")" if cls else "FALSE"
 
 
 def _rows(df) -> list[list]:
@@ -359,9 +370,12 @@ def heatmap(view: Literal["harm", "raw", "modis", "viirs"] = "harm", metric: Lit
             bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
             start: str | None = Q["start"], end: str | None = Q["end"],
             exclude_low: bool = Q["exclude_low"], vegetation_only: bool = Q["vegetation_only"],
-            satellites: str | None = Q["satellites"], daynight: str = Q["daynight"]):
-    """Grid cells [[lat, lon, value], ...] for the map. Pass the visible map area as bbox."""
-    if res >= MONTH_RES - 1e-9 and _whole_months(start, end):
+            satellites: str | None = Q["satellites"], daynight: str = Q["daynight"], conf: str | None = Q["conf"]):
+    """Grid cells [[lat, lon, value], ...] for the map. Pass the visible map area as bbox.
+    conf (confidence classes) switches to the single hotspots, because the cells only know low / not low."""
+    if conf:
+        source = "points"
+    elif res >= MONTH_RES - 1e-9 and _whole_months(start, end):
         source = "cells_month"
     elif res >= DAY_RES - 1e-9:
         source = "cells_day"
@@ -369,7 +383,7 @@ def heatmap(view: Literal["harm", "raw", "modis", "viirs"] = "harm", metric: Lit
         source = "points"
     s = SOURCES[source]
     c = cur()
-    rel = selection(c, source, bbox, polygon, start, end, exclude_low, vegetation_only)
+    rel = selection(c, source, bbox, polygon, start, end, exclude_low and not conf, vegetation_only, extra=conf_cond(conf))
     val = _value(source, view, metric, raw_cond(source, satellites, daynight))
     rows = c.execute(f"""
         SELECT floor({s['lat']} / {res}) * {res} + {res / 2} AS lat,
@@ -382,14 +396,16 @@ def heatmap(view: Literal["harm", "raw", "modis", "viirs"] = "harm", metric: Lit
 def points(bbox: str = Query(..., description="west,south,east,north (visible map area)"),
            polygon: str | None = Q["polygon"], start: str | None = Q["start"], end: str | None = Q["end"],
            exclude_low: bool = Q["exclude_low"], vegetation_only: bool = Q["vegetation_only"],
-           satellites: str | None = Q["satellites"], daynight: str = Q["daynight"],
+           satellites: str | None = Q["satellites"], daynight: str = Q["daynight"], conf: str | None = Q["conf"],
            limit: int = Query(20000, ge=1, le=100000)):
     """Single RAW hotspots for the map (never harmonized). If more than `limit` match, the strongest
     `limit` by FRP are returned and truncated = true.
     columns: lat, lon, sensor, satellite, frp, conf_class, acq_date, acq_time, daynight, pixel_km2, local_hour"""
     c = cur()
-    rel = selection(c, "points", bbox, polygon, start, end, exclude_low, vegetation_only,
-                    extra=raw_cond("points", satellites, daynight))
+    cc = conf_cond(conf)
+    rc = raw_cond("points", satellites, daynight)
+    rel = selection(c, "points", bbox, polygon, start, end, exclude_low and not conf, vegetation_only,
+                    extra=f"{rc} AND {cc}" if cc else rc)
     total = c.execute(f"SELECT count(*) FROM {rel}").fetchone()[0]
     df = c.execute(f"""SELECT latitude, longitude, sensor, satellite, frp, conf_class, acq_date, acq_time,
                               daynight, pixel_km2, local_hour FROM {rel} ORDER BY frp DESC LIMIT {limit}""").df()

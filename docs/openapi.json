@@ -210,7 +210,7 @@
     "/api/heatmap": {
       "get": {
         "summary": "Heatmap",
-        "description": "Grid cells [[lat, lon, value], ...] for the map. Pass the visible map area as bbox.",
+        "description": "Grid cells [[lat, lon, value], ...] for the map. Pass the visible map area as bbox.\nconf (confidence classes) switches to the single hotspots, because the cells only know low / not low.",
         "operationId": "heatmap_api_heatmap_get",
         "parameters": [
           {
@@ -381,6 +381,24 @@
               "title": "Daynight"
             },
             "description": "raw values and map only"
+          },
+          {
+            "name": "conf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "map only: comma list of low,nominal,high (overrides exclude_low)",
+              "title": "Conf"
+            },
+            "description": "map only: comma list of low,nominal,high (overrides exclude_low)"
           }
         ],
         "responses": {
@@ -528,6 +546,24 @@
               "title": "Daynight"
             },
             "description": "raw values and map only"
+          },
+          {
+            "name": "conf",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "map only: comma list of low,nominal,high (overrides exclude_low)",
+              "title": "Conf"
+            },
+            "description": "map only: comma list of low,nominal,high (overrides exclude_low)"
           },
           {
             "name": "limit",

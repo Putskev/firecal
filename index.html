@@ -132,6 +132,19 @@ body.dark .leaflet-control-scale-line{background:rgba(26,29,34,.8);color:#ddd;bo
 body.dark td.ok{color:#5fd38a}body.dark td.off{color:#ff8a7a}
 body.dark .legendrow .sw{filter:brightness(.8)}
 #themeBtn{min-width:34px;justify-content:center}
+.fsbtn{padding:1px 7px!important;font-size:13px!important;line-height:1.3}
+.card:fullscreen{background:var(--panel);padding:16px 20px;overflow:auto;border-radius:0;border:0}
+.card:fullscreen .chart,.card:fullscreen .chart.s{height:calc(100vh - 150px)!important}
+.card:fullscreen #mapwrap{height:calc(100vh - 170px)}
+.card:fullscreen #timeline{height:calc(100vh - 150px)}
+.card:fullscreen .cmpmap{height:calc(50vh - 60px)}
+.mapconf{display:inline-flex;gap:3px;align-items:center}.mapconf .chip{padding:1px 7px;font-size:11px}
+#cmpCard{border:2px solid var(--accent)}
+.cmpctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12.5px;margin-bottom:8px}
+.cmpctl .tag{display:inline-block;width:20px;height:20px;border-radius:5px;color:#fff;font-weight:700;text-align:center;line-height:20px}
+.cmpmap{height:300px;border-radius:8px;border:1px solid var(--line)}
+.cmplbl{font-size:12px;font-weight:600;margin-bottom:3px}
+table.cmp td.up{color:var(--warm)}table.cmp td.down{color:var(--cool)}
 /* side panel mode: statistics in a collapsible, resizable panel on the right */
 #mainCol,#stats{display:flex;flex-direction:column;gap:12px;min-width:0}
 .panehead,#paneTab,#paneResize{display:none}
@@ -167,6 +180,7 @@ body.side.collapsed #paneTab{display:flex}
   <label class="btn small" for="file">Load FIRMS CSV</label>
   <input id="file" type="file" accept=".csv" multiple class="sr">
   <button id="demoBtn" class="btn small">Demo data</button>
+  <button id="cmpBtn" class="btn small" title="Compare two time spans">⇄ Compare</button>
   <button id="themeBtn" class="btn small" title="Dark / light mode">🌙</button>
   <button id="layoutBtn" class="btn small" title="Show the statistics in a panel on the right that you can open and close (shortcut: S)">▥ Side panel</button>
   <a class="btn small" href="api-docs.html">API docs</a>
@@ -211,6 +225,7 @@ body.side.collapsed #paneTab{display:flex}
           <button id="layersBtn" class="btn small" title="Map background and satellite imagery">🗺 Layers</button>
           <div class="seg" id="mapModeSeg"><button data-v="auto" class="on">Auto</button><button data-v="heat">Density</button><button data-v="points">Points</button><button data-v="team" id="teamModeBtn" style="display:none" title="Aggregated cells delivered by the data team (Tabelle B)">Team cells</button></div>
           <span class="teamctl" id="teamCtl"><select id="teamGrid" title="Grid of the team table"></select><select id="teamPeriod" title="Time window"></select></span>
+          <span class="mapconf" id="mapConf" title="Confidence classes shown on the map (map only)"></span>
           <div class="seg" id="colorSeg" title="Colour of single points"><button data-v="sensor" class="on">Sensor</button><button data-v="conf">Confidence</button><button data-v="frp">FRP</button></div>
           <label class="fg" title="Density colour scale">Scale <input id="heatMax" type="range" min="0.1" max="3" step="0.05" value="1" style="width:70px"></label>
         </div>
@@ -245,6 +260,30 @@ body.side.collapsed #paneTab{display:flex}
   <div class="panehead"><h3>Statistics</h3><span class="grow" style="flex:1"></span>
     <select id="paneJump" title="Jump to a statistic"></select>
     <button id="paneClose" class="btn small" title="Close the panel (S)">Close ▸</button></div>
+  <div class="card" id="cmpCard" style="display:none">
+    <div class="head"><h3>Compare two time spans</h3><span class="tbadge" id="tb_cmp"></span><span class="grow"></span>
+      <button id="cmpClose" class="btn small" title="Close compare mode">Close</button></div>
+    <p class="how">Same area and filters, two periods. <b>A</b> is the period you look at, <b>B</b> the reference. Changes are A compared with B. Values follow the switches at the top (Hotspots/FRP, Harmonized/Raw/…).</p>
+    <div class="cmpctl">
+      <span class="tag" style="background:#009e73">A</span><input type="date" id="cmpA1"> – <input type="date" id="cmpA2">
+      <button id="cmpAsel" class="btn small" title="Use the timeline selection as A">= timeline</button>
+      <span style="width:12px"></span>
+      <span class="tag" style="background:#882255">B</span><select id="cmpBmode">
+        <option value="prevyear">same span 1 year earlier</option><option value="prev">the span just before A</option>
+        <option value="prev5">same span 5 years earlier</option><option value="custom">custom</option></select>
+      <input type="date" id="cmpB1"> – <input type="date" id="cmpB2">
+    </div>
+    <div id="cmpKpis"></div>
+    <div class="grid g2" style="margin-top:10px">
+      <div><div class="cmplbl">Over time, aligned at the start of each span</div><div id="cmpLine" class="chart"></div></div>
+      <div><div class="cmplbl">Fire intensity: share per FRP class</div><div id="cmpFrp" class="chart"></div></div>
+    </div>
+    <div class="grid g2" style="margin-top:10px">
+      <div><div class="cmplbl" id="cmpLblA">A</div><div id="cmpMapA" class="cmpmap"></div></div>
+      <div><div class="cmplbl" id="cmpLblB">B</div><div id="cmpMapB" class="cmpmap"></div></div>
+    </div>
+    <p class="note" id="cmpNote" style="margin-top:6px"></p>
+  </div>
   <div class="card">
     <div class="head"><h3>Burning activity calendar</h3><span class="tbadge" id="tb_cal" title="Time span this view uses"></span><span class="grow"></span><span class="note" id="calNote"></span></div>
     <p class="how" id="calHow"></p>
@@ -364,7 +403,7 @@ const S = {
   metric:'count', view:'harm', perDay:false, sats:new Set(SATS), dn:'all', incLow:false, veg:false,
   rows:{}, sat:{}, periods:[], rangeP:[], mapPeriod:null, mapMode:'auto', colorBy:'sensor',
   heatMax:1, heatRef:null, anomMode:'pct', mSort:'total', mNorm:'global', matrix:null, dist:null,
-  req:0, rreq:0, hreq:0, treq:0, freq:0, team:null, distFrp:null, playing:false
+  req:0, rreq:0, hreq:0, treq:0, freq:0, creq:0, team:null, distFrp:null, mapConf:null, cmp:false, playing:false
 };
 
 /* ---------- helpers ---------- */
@@ -424,7 +463,7 @@ function F() {
     satellites: availSats().every(s => S.sats.has(s)) ? null : availSats().filter(s => S.sats.has(s)).join(','), daynight: S.dn, region: R, satSet: S.sats
   };
 }
-const apiF = f => ({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, satellites: f.satellites, daynight: f.daynight });
+const apiF = f => ({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, satellites: f.satellites, daynight: f.daynight, conf: f.conf });
 
 /* ---------- API provider ---------- */
 async function getJSON(url) { const r = await fetch(url); if (!r.ok) throw new Error(await r.text()); return r.json(); }
@@ -434,8 +473,8 @@ const ApiProvider = {
     if (m.api !== 'firecal' || !m.harmonization || !m.harmonization.params || m.harmonization.params.target_level !== 'VIIRS') throw 0; this.m = m; return this; },
   meta() { return this.m; },
   label() { return `API · ${fmt(this.m.rows)} hotspots · ${this.m.first_date} → ${this.m.last_date}`; },
-  async series(f, gran) {   // daily: the last ~13 months only (fast on a long archive)
-    const w = gran === 'day' ? dayWindow() : {};
+  async series(f, gran, win) {   // daily: the last ~13 months only (fast on a long archive), or the window given
+    const w = gran === 'day' ? (win || dayWindow()) : {};
     return (await getJSON(`${API}/api/timeseries?${qs({ ...apiF(f), granularity: gran, ...w })}`)).rows; },
   async satellites(f, gran) { return (await getJSON(`${API}/api/satellites?${qs({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, granularity: gran })}`)).satellites; },
   async heat(f, start, end, view, metric, res) { return (await getJSON(`${API}/api/heatmap?${qs({ ...apiF(f), start, end, view, metric, res })}`)).cells; },
@@ -470,7 +509,8 @@ const LocalProvider = {
   },
   meta() { return this.m; }, label() { return this._label; },
   _sel(f, start, end, rawOnly) {
-    return this.pts.filter(p => inRegion(p, f.region) && (!f.exclude_low || p.cc !== 'low') && (!f.vegetation_only || p.type === null || p.type === 0)
+    const cf = f.conf ? f.conf.split(',') : null;
+    return this.pts.filter(p => inRegion(p, f.region) && (!f.exclude_low || p.cc !== 'low') && (!cf || cf.includes(p.cc)) && (!f.vegetation_only || p.type === null || p.type === 0)
       && (!start || p.date >= start) && (!end || p.date <= end) && (!rawOnly || rawOk(p, f)));
   },
   async series(f, gran) {
@@ -790,7 +830,7 @@ async function refresh() {
   try {
     const f = F(), [rows, sat] = await Promise.all([p.series(f, S.gran), p.satellites(f, S.gran)]);
     if (id !== S.req) return;
-    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange(); renderTeamCheck();
+    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange(); renderTeamCheck(); if (S.cmp) cmpLoad();
   } catch (e) { console.error(e); toast('Could not load data'); }
   finally { if (id === S.req) busy(false); }
 }
@@ -1183,7 +1223,7 @@ async function refreshMap(resetRef) {
   $('mapReset').style.display = S.mapPeriod ? '' : 'none';
   renderMapLegend();
   if (!bbox) { heat.setLatLngs([]); pointLayer.clearLayers(); teamLayer.clearLayers(); return; }
-  const f = { ...F(), bbox };
+  const f = mapF({ ...F(), bbox });
   try {
     if (S.mapMode === 'team') {
       const r = await p.teamCells($('teamGrid').value, $('teamPeriod').value, S.view, S.metric, bbox, F().polygon); if (id !== S.hreq) return;
@@ -1341,7 +1381,7 @@ function setTheme(dark, save = true) {
   document.body.classList.toggle('dark', dark); if (save) store.set('theme', dark ? 'dark' : 'light');
   $('themeBtn').textContent = dark ? '☀️' : '🌙'; $('themeBtn').title = dark ? 'Light mode' : 'Dark mode';
   L0.font.color = dark ? '#cfd2d6' : '#3a3a37'; C.harm = dark ? '#f0f0ee' : '#1f1f1d';
-  if (S.provider && S.rangeStart) { renderTimeline(); renderRange(); renderDist(); drawMatrix(); }
+  if (S.provider && S.rangeStart) { renderTimeline(); renderRange(); renderDist(); drawMatrix(); if (S.cmp) cmpLoad(); }
 }
 $('themeBtn').addEventListener('click', () => setTheme(!DARK()));
 setTheme(DARK(), false);
@@ -1354,6 +1394,160 @@ function capZoom() {
   const max = Math.max(3, Math.min(18, z)); if (map.getMaxZoom() !== max) map.setMaxZoom(max);
 }
 map.on('moveend', capZoom); capZoom();
+
+/* ---------- map: confidence classes (map only) ---------- */
+const CONF = ['low', 'nominal', 'high'];
+const mapConfSet = () => S.mapConf || new Set(S.incLow ? CONF : ['nominal', 'high']);
+function mapF(f) { return S.mapConf ? { ...f, conf: CONF.filter(c => S.mapConf.has(c)).join(','), exclude_low: false } : f; }
+function renderMapConf() {
+  const on = mapConfSet();
+  $('mapConf').innerHTML = '<span class="note">Conf.</span>' + CONF.map(c => `<span class="chip ${on.has(c) ? 'on' : 'off'}" data-c="${c}" title="${c} confidence ${on.has(c) ? 'shown' : 'hidden'} on the map">${c}</span>`).join('');
+}
+$('mapConf').addEventListener('click', e => {
+  const ch = e.target.closest('.chip'); if (!ch) return;
+  const set = new Set(mapConfSet()); if (set.has(ch.dataset.c)) { if (set.size === 1) { toast('Keep at least one class'); return; } set.delete(ch.dataset.c); } else set.add(ch.dataset.c);
+  const def = new Set(S.incLow ? CONF : ['nominal', 'high']);
+  S.mapConf = set.size === def.size && [...set].every(c => def.has(c)) ? null : set;
+  renderMapConf(); refreshMap(true);
+});
+renderMapConf();
+
+/* ---------- full screen for single views ---------- */
+function addFullscreenButtons() {
+  document.querySelectorAll('main .card').forEach(card => {
+    if (card.id === 'methodCard' || card.querySelector(':scope .fsbtn')) return;
+    let head = card.querySelector(':scope > .head');
+    if (!head) return;
+    const b = document.createElement('button'); b.className = 'btn small fsbtn'; b.title = 'Full screen (Esc to leave)'; b.textContent = '⛶';
+    b.addEventListener('click', () => { if (document.fullscreenElement === card) document.exitFullscreen(); else card.requestFullscreen && card.requestFullscreen().catch(() => toast('Full screen not allowed here')); });
+    head.appendChild(b);
+  });
+}
+addFullscreenButtons();
+document.addEventListener('fullscreenchange', () => {
+  const fs = document.fullscreenElement, host = fs || document.body;
+  ['tip', 'helpPop', 'toast'].forEach(id => host.appendChild($(id)));   // tooltips must live inside the full-screen element
+  document.querySelectorAll('.fsbtn').forEach(b => { b.textContent = b.closest('.card') === fs ? '✕' : '⛶'; });
+  setTimeout(() => { relayout(); if (S.cmp) cmpMaps.forEach(m => m && m.invalidateSize()); }, 120);
+});
+
+/* ---------- compare mode: two time spans side by side ---------- */
+const CA = '#009e73', CB = '#882255';
+let cmpMaps = [null, null], cmpHeat = [null, null], cmpSync = false;
+const shiftYears = (d, y) => { const [a, m, dd] = d.split('-').map(Number); const t = new Date(Date.UTC(a - y, m - 1, Math.min(dd, 28 + (m === 2 ? 0 : 3)))); return isoDay(t); };
+function cmpSpans() {
+  const a1 = $('cmpA1').value, a2 = $('cmpA2').value, mode = $('cmpBmode').value, n = dayDiff(a1, a2) + 1;
+  let b1 = $('cmpB1').value, b2 = $('cmpB2').value;
+  if (mode === 'prevyear') { b1 = shiftYears(a1, 1); b2 = shiftYears(a2, 1); }
+  if (mode === 'prev5') { b1 = shiftYears(a1, 5); b2 = shiftYears(a2, 5); }
+  if (mode === 'prev') { b2 = addDays(a1, -1); b1 = addDays(b2, -(n - 1)); }
+  if (mode !== 'custom') { $('cmpB1').value = b1; $('cmpB2').value = b2; }
+  $('cmpB1').disabled = $('cmpB2').disabled = mode !== 'custom';
+  return [[a1, a2], [b1 <= b2 ? b1 : b2, b1 <= b2 ? b2 : b1]];
+}
+function setCompare(on) {
+  S.cmp = on; $('cmpCard').style.display = on ? '' : 'none'; $('cmpBtn').classList.toggle('on', on);
+  if (!on) return;
+  if (!$('cmpA1').value) { $('cmpA1').value = S.rangeStart; $('cmpA2').value = S.rangeEnd; }
+  if (isSide() && isCollapsed()) setLayout(true, false);
+  $('cmpCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  cmpLoad();
+}
+$('cmpBtn').addEventListener('click', () => setCompare(!S.cmp));
+$('cmpClose').addEventListener('click', () => setCompare(false));
+$('cmpAsel').addEventListener('click', () => { $('cmpA1').value = S.rangeStart; $('cmpA2').value = S.rangeEnd; cmpLoad(); });
+['cmpA1', 'cmpA2', 'cmpB1', 'cmpB2', 'cmpBmode'].forEach(id => $(id).addEventListener('change', cmpLoad));
+
+function cmpSum(rows, periods, s, e, gran) {
+  const o = emptyRow(); let days = 0;
+  for (const p of periods) {
+    const r = rows[p]; const [ps, pe] = pRange(p, gran), a = ps < s ? s : ps, b = pe > e ? e : pe; days += Math.max(0, dayDiff(a, b) + 1);
+    if (!r) continue; for (const k in o) o[k] += r[k] || 0;
+  }
+  o.days = Math.max(1, days); return o;
+}
+function initCmpMaps() {
+  if (cmpMaps[0]) return;
+  const b = BASEMAPS.find(x => x.id === M.base) || BASEMAPS[0];
+  cmpMaps = ['cmpMapA', 'cmpMapB'].map(id => {
+    const m = L.map(id, { zoomControl: true, attributionControl: false, worldCopyJump: true, maxZoom: 12 }).setView(map.getCenter(), Math.max(1, map.getZoom() - 1));
+    L.tileLayer(b.url, { maxZoom: 19, maxNativeZoom: b.maxNative || b.max }).addTo(m);
+    return m;
+  });
+  cmpHeat = cmpMaps.map(m => L.heatLayer([], { radius: 12, blur: 14, max: 1, minOpacity: 0.05, gradient: heatGrad() }).addTo(m));
+  cmpMaps.forEach((m, i) => m.on('moveend', () => {   // keep both maps on the same view
+    if (cmpSync) return; cmpSync = true; cmpMaps[1 - i].setView(m.getCenter(), m.getZoom(), { animate: false }); cmpSync = false;
+    clearTimeout(window._cmh); window._cmh = setTimeout(cmpMapData, 250);
+  }));
+}
+async function cmpMapData() {
+  const id = ++S.creq, [[a1, a2], [b1, b2]] = cmpSpans(), m = cmpMaps[0]; if (!m) return;
+  const bb = m.getBounds().pad(.2), bbox = [Math.max(-180, bb.getWest()), Math.max(-90, bb.getSouth()), Math.min(180, bb.getEast()), Math.min(90, bb.getNorth())].map(x => +x.toFixed(3)).join(',');
+  const t = 360 / (256 * 2 ** m.getZoom()) * 8, res = [0.05, 0.1, 0.25, 0.5, 1, 2, 4].find(r => r >= t * .75) || 4;
+  const f = mapF({ ...F(), bbox }), p = S.provider;
+  try {
+    const [ca, cb] = await Promise.all([p.heat(f, a1, a2, S.view, S.metric, res), p.heat(f, b1, b2, S.view, S.metric, res)]);
+    if (id !== S.creq) return;
+    const na = dayDiff(a1, a2) + 1, nb = dayDiff(b1, b2) + 1;   // per day, so spans of different length compare
+    const ref = quantile([...ca.map(c => c[2] / na), ...cb.map(c => c[2] / nb)], .99) || 1;
+    cmpHeat[0].setOptions({ gradient: heatGrad() }); cmpHeat[1].setOptions({ gradient: heatGrad() });
+    cmpHeat[0].setLatLngs(ca.map(([x, y, v]) => [x, y, v / na / ref])); cmpHeat[1].setLatLngs(cb.map(([x, y, v]) => [x, y, v / nb / ref]));
+  } catch (e) { console.error(e); }
+}
+async function cmpLoad() {
+  if (!S.cmp || !S.provider || !$('cmpA1').value) return;
+  const id = ++S.creq, f = F(), p = S.provider, [[a1, a2], [b1, b2]] = cmpSpans();
+  if (a1 > a2) { toast('A: start must be before end'); return; }
+  const span = Math.max(dayDiff(a1, a2), dayDiff(b1, b2)) + 1, gran = span <= 400 ? 'day' : 'month';
+  $('tb_cmp').textContent = `🕒 A: ${span_(a1, a2)} · B: ${span_(b1, b2)}`;
+  $('cmpLblA').innerHTML = `<span style="color:${CA}">A</span> · ${span_(a1, a2)}`; $('cmpLblB').innerHTML = `<span style="color:${CB}">B</span> · ${span_(b1, b2)}`;
+  try {
+    let ra, rb;
+    if (gran === 'day') [ra, rb] = await Promise.all([p.series(f, 'day', { start: a1, end: a2 }), p.series(f, 'day', { start: b1, end: b2 })]);
+    else { ra = rb = S.gran === 'month' ? S.rows : await p.series(f, 'month'); }
+    const [da, db] = await Promise.all([p.distributions(f, a1, a2), p.distributions(f, b1, b2)]);
+    if (id !== S.creq) return;
+    const pa = periodsBetween(a1, a2, gran), pb = periodsBetween(b1, b2, gran), A = cmpSum(ra, pa, a1, a2, gran), B = cmpSum(rb, pb, b1, b2, gran);
+    renderCmpTable(A, B); renderCmpLine(ra, rb, pa, pb, gran); renderCmpFrp(da, db);
+    const outside = [a1, b1].some(d => d < S.meta.first_date) || [a2, b2].some(d => d > S.meta.last_date);
+    $('cmpNote').textContent = (gran === 'month' ? 'Spans longer than 400 days are compared with whole months. ' : '') +
+      (outside ? `Part of a span lies outside the data (${S.meta.first_date} to ${S.meta.last_date}); missing days count as 0.` : '') +
+      ' Maps: density per day, same colour scale for A and B.';
+    initCmpMaps(); cmpMaps.forEach(m => m.invalidateSize()); cmpMapData();
+  } catch (e) { console.error(e); toast('Compare: could not load data'); }
+}
+function span_(a, b) { return span(a, b); }
+function renderCmpTable(A, B) {
+  const c = S.metric === 'count', rows = [
+    ['Harmonized ' + (c ? 'hotspots' : 'FRP (MW)'), A[c ? 'harm_n' : 'harm_frp'], B[c ? 'harm_n' : 'harm_frp']],
+    ['… per day', A[c ? 'harm_n' : 'harm_frp'] / A.days, B[c ? 'harm_n' : 'harm_frp'] / B.days],
+    ['Harmonized ' + (c ? 'FRP (MW)' : 'hotspots'), A[c ? 'harm_frp' : 'harm_n'], B[c ? 'harm_frp' : 'harm_n']],
+    ['Raw MODIS hotspots', A.modis_n, B.modis_n], ['Raw VIIRS hotspots', A.viirs_n, B.viirs_n],
+    ['Raw MODIS FRP (MW)', A.modis_frp, B.modis_frp], ['Raw VIIRS FRP (MW)', A.viirs_frp, B.viirs_frp],
+    ['Night share (%)', A.raw_n ? A.n_night / A.raw_n * 100 : null, B.raw_n ? B.n_night / B.raw_n * 100 : null, true],
+    ['High confidence (%)', A.raw_n ? A.n_high / A.raw_n * 100 : null, B.raw_n ? B.n_high / B.raw_n * 100 : null, true],
+    ['Converted from MODIS (%)', A.harm_n ? A.modis_h_n / A.harm_n * 100 : null, B.harm_n ? B.modis_h_n / B.harm_n * 100 : null, true],
+    ['Days', A.days, B.days, false, true]];
+  const f = (v, pct) => v === null || v === undefined || !isFinite(v) ? '–' : pct ? v.toFixed(1) : fmt(v);
+  $('cmpKpis').innerHTML = `<table class="calib cmp"><tr><th>Quantity</th><th style="color:${CA}">A</th><th style="color:${CB}">B</th><th>A − B</th><th>A vs B</th></tr>` +
+    rows.map(([l, a, b, pct, noRatio]) => { const d = a !== null && b !== null ? a - b : null, r = d !== null && b && !noRatio ? d / b * 100 : null;
+      return `<tr><td>${l}</td><td>${f(a, pct)}</td><td>${f(b, pct)}</td><td>${d === null ? '–' : (d >= 0 ? '+' : '−') + f(Math.abs(d), pct)}${pct && d !== null ? ' pts' : ''}</td><td class="${r === null || pct ? '' : r >= 0 ? 'up' : 'down'}">${r === null || pct ? '' : `${r >= 0 ? '+' : '−'}${Math.abs(r).toFixed(1)} %`}</td></tr>`; }).join('') + '</table>';
+}
+function renderCmpLine(ra, rb, pa, pb, gran) {
+  const k = FIELD[S.view][S.metric === 'count' ? 0 : 1], v = (rows, p) => { const r = rows[p]; const x = r ? r[k] || 0 : 0; return S.perDay && gran === 'month' ? x / (dayDiff(...pRange(p, 'month')) + 1) : x; };
+  const lab = gran === 'day' ? 'day' : 'month';
+  const tr = [[pa, ra, 'A', CA], [pb, rb, 'B', CB]].map(([ps, rows, n, col]) => ({ type: 'scatter', mode: ps.length <= 60 ? 'lines+markers' : 'lines', name: n, x: ps.map((_, i) => i + 1), y: ps.map(p => v(rows, p)),
+    customdata: ps.map(plabel), line: { color: col, width: 2.2 }, marker: { size: 4 }, hovertemplate: `${n} · %{customdata}: %{y:,.0f}<extra></extra>` }));
+  Plotly.react('cmpLine', tr, { ...L0, hovermode: 'x unified', legend: { orientation: 'h', y: 1.12, x: 0 }, margin: { ...L0.margin, t: 20 },
+    xaxis: { title: { text: `${lab} of the span`, font: { size: 10 } }, gridcolor: GRID() }, yaxis: { gridcolor: GRID(), title: { text: unit(), font: { size: 10 } } } }, plotCfg);
+}
+function renderCmpFrp(da, db) {
+  const pick = d => { const m = d.frp.MODIS, v = d.frp.VIIRS; return S.view === 'modis' ? m : S.view === 'viirs' ? v : m.map((x, i) => x + v[i]); };
+  const norm = a => { const t = a.reduce((x, y) => x + y, 0); return a.map(x => t ? x / t * 100 : 0); };
+  const labels = FRP_EDGES.slice(0, -1).map((e, i) => FRP_EDGES[i + 1] === Infinity ? `≥${e}` : `${e}–${FRP_EDGES[i + 1]}`);
+  Plotly.react('cmpFrp', [{ type: 'bar', name: 'A', x: labels, y: norm(pick(da)), marker: { color: CA } }, { type: 'bar', name: 'B', x: labels, y: norm(pick(db)), marker: { color: CB } }],
+    { ...L0, barmode: 'group', bargap: .15, legend: { orientation: 'h', y: 1.12, x: 0 }, margin: { l: 40, r: 6, t: 20, b: 54 }, xaxis: { tickangle: -45, title: { text: 'FRP (MW)', font: { size: 10 } } }, yaxis: { ticksuffix: '%', gridcolor: GRID() } }, plotCfg);
+}
 
 /* ---------- animation ---------- */
 function stopPlay() { S.playing = false; $('playBtn').textContent = '▶ Play'; }
@@ -1370,16 +1564,16 @@ function setSeg(id, v) { $(id).querySelectorAll('button').forEach(x => x.classLi
 function setGran(g, doRefresh = true) { S.gran = g; setSeg('granSeg', g); S.mapPeriod = null; if (doRefresh) refresh(); }
 const rerender = () => { renderTimeline(); renderRange(); };
 seg('granSeg', v => { if (v !== S.gran) setGran(v); });
-seg('metricSeg', v => { S.metric = v; rerender(); });
-seg('viewSeg', v => { S.view = v; rerender(); });
+seg('metricSeg', v => { S.metric = v; rerender(); if (S.cmp) cmpLoad(); });
+seg('viewSeg', v => { S.view = v; rerender(); if (S.cmp) cmpLoad(); });
 seg('dnSeg', v => { S.dn = v; refresh(); });
 seg('mapModeSeg', v => { S.mapMode = v; $('teamCtl').style.display = v === 'team' ? 'inline-flex' : 'none'; refreshMap(true); });
 seg('colorSeg', v => { S.colorBy = v; refreshMap(false); });
 seg('anomSeg', v => { S.anomMode = v; renderAnomaly(); });
 seg('mSortSeg', v => { S.mSort = v; drawMatrix(); });
 seg('mNormSeg', v => { S.mNorm = v; drawMatrix(); });
-$('perDay').addEventListener('change', e => { S.perDay = e.target.checked; rerender(); });
-$('incLow').addEventListener('change', e => { S.incLow = e.target.checked; refresh(); });
+$('perDay').addEventListener('change', e => { S.perDay = e.target.checked; rerender(); if (S.cmp) cmpLoad(); });
+$('incLow').addEventListener('change', e => { S.incLow = e.target.checked; S.mapConf = null; renderMapConf(); refresh(); });
 $('vegOnly').addEventListener('change', e => { S.veg = e.target.checked; refresh(); });
 function renderSatChips() { $('satChips').innerHTML = availSats().map(s => `<span class="chip ${S.sats.has(s) ? 'on' : 'off'}" data-s="${s}" title="${SAT_SENSOR[s]} · since ${SAT_START[s].slice(0, 4)}">${s}</span>`).join(' '); }
 function toggleSat(s) { if (S.sats.has(s)) { if (availSats().filter(x => S.sats.has(x)).length === 1) { toast('Keep at least one satellite'); return; } S.sats.delete(s); } else S.sats.add(s); renderSatChips(); refresh(); }

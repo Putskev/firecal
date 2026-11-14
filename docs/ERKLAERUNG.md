@@ -214,6 +214,23 @@ Jede Karte im Dashboard hat ein Zeit-Abzeichen 🕒 neben dem Titel. Es zeigt ge
 
 ---
 
+### Vergleichsmodus (⇄ Compare)
+Zwei Zeitspannen mit gleichem Gebiet und gleichen Filtern. **A** = betrachteter Zeitraum, **B** = Referenz
+(gleiche Spanne 1 oder 5 Jahre früher, die Spanne direkt davor oder frei gewählt).
+* Tabelle: Summen je Spanne, `A − B` und `A vs B = (A − B) / B × 100`. Anteile (Nacht, High confidence, aus MODIS
+  umgerechnet) als Differenz in Prozentpunkten.
+* Verlauf: beide Reihen ab dem ersten Tag (bzw. Monat) der jeweiligen Spanne übereinandergelegt.
+* FRP-Klassen: Anteil der Hotspots je Klasse für A und B.
+* Karten: Dichte **pro Tag** (Summe ÷ Tage der Spanne) mit derselben Farbskala, beide Karten bewegen sich gemeinsam.
+* Spannen bis 400 Tage werden tageweise verglichen, längere monatsweise (ganze Monate).
+
+### Konfidenz auf der Karte
+Die Chips „low / nominal / high“ in der Kartenleiste gelten **nur für die Karte** (Punkte und Dichte). Weicht die Wahl
+vom Standard ab, rechnet die Dichte aus den Einzelpunkten, weil die Zellsummen nur „low / nicht low“ kennen.
+
+### Vollbild
+Jede Ansicht hat oben rechts ⛶ (Vollbild, Esc zum Verlassen).
+
 ## 8. Karte: Hintergründe und Satellitenbilder
 
 * Hintergründe: Firefly, Satellit (Esri), Blue Marble (NASA GIBS), Straßen, Topographie, Dunkel-/Hellgrau.
