@@ -16,5 +16,5 @@ if [ "$OLD" != "$NEW" ]; then
   echo "code updated $OLD -> $NEW, restarting"
   systemctl restart firecal
 else
-  curl -fsS --max-time 1800 -X POST "http://127.0.0.1:8000/api/reload?token=${FIRECAL_RELOAD_TOKEN}" || true
+  curl -fsS --max-time 1800 -X POST "http://127.0.0.1:${FIRECAL_PORT:-8000}/api/reload?token=${FIRECAL_RELOAD_TOKEN}" || true
 fi

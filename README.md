@@ -120,8 +120,11 @@ Mio. Hotspots. Für die volle Historie also auf einem Rechner mit genug RAM baue
 Auf dem Server (per SSH, als Benutzer mit sudo) **ein** Befehl, Pfad = Ordner mit euren Parquet-Dateien:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_server.sh | sudo bash -s -- /pfad/zu/parquet
+curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_server.sh | sudo bash -s -- /pfad/zu/parquet --domain reicht.anohji.dev
 ```
+
+Ohne Pfad sucht das Skript selbst nach Parquet-Ordnern mit Hotspot-Spalten. Ein schon laufender Webserver bleibt unangetastet
+(Caddy bekommt eine zusätzliche Seite per `import`, bei nginx/apache läuft FireCal auf Port 8080).
 
 Das Skript installiert alles (Python, App, systemd-Dienst, Caddy mit HTTPS), prüft den Datenordner (Dateien,
 Spalten, Zeilen, RAM) und gibt am Ende die Links aus: `http://<IP>` und `https://<IP-mit-Strichen>.sslip.io`.
