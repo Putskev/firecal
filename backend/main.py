@@ -11,7 +11,7 @@ memory up front):
   * heatmap: cells when the grid is coarse enough, single hotspots when zoomed in
   * points, distributions, CSV export: single hotspots (only year/month folders in the date range)
   * team/*: the data team's aggregated table "Tabelle B" (data/team/fire_activity_7d_<grid>.parquet),
-    served as delivered, for the map and for a cross-check against FireCal's own numbers
+    served as delivered, as a map layer
 
 Filters shared by all analysis endpoints
 ----------------------------------------
@@ -566,8 +566,6 @@ TEAM_VALUES = {
     ("raw", "count"): "coalesce(n_modis, 0) + coalesce(n_viirs, 0)",
     ("raw", "frp"): "coalesce(frp_modis, 0) + coalesce(frp_viirs, 0)",
 }
-TEAM_SUMS = ["n_modis", "frp_modis", "n_viirs", "frp_viirs", "n_harmonized", "frp_harmonized",
-             "n_modis_calibrated", "frp_modis_calibrated"]
 
 
 def _grid_cell(grid: str) -> dict:
@@ -651,48 +649,6 @@ def team_cells(grid: str = Query("0.5deg", description="grid label, see /api/tea
             for a, b, v, r, k in agg.itertuples(index=False, name=None)]
     return {"grid": grid, "cell": _grid_cell(grid), "days": days, "count": total, "truncated": total > limit,
             "rows": rows}
-
-
-@app.get("/api/team/check")
-def team_check(grid: str = Query("0.5deg", description="grid label, see /api/team"),
-               bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
-               vegetation_only: bool = Q["vegetation_only"]):
-    """Cross-check: sums of the team's 'Tabelle B' vs FireCal's own numbers for the same time windows and area.
-    Both without low-confidence detections (the team table excludes them). Team cells count if their centre is
-    in the area, FireCal counts the exact hotspots, so small differences at the edge of an area are expected.
-    Per window and in total, also per region (whole windows)."""
-    tv = _team_view(grid)
-    c = cur()
-    out = []
-    tdf = _team_area(c, tv, bbox, polygon, None)
-    tdf = tdf.assign(period_start=tdf["period_start"].astype(str).str[:10]) if len(tdf) else tdf
-    for p in _team[grid]["periods"]:
-        t = tdf[tdf["period_start"] == p["start"]] if len(tdf) else tdf
-        team = {k: round(float(t[k].sum()), 2) if len(t) else 0.0 for k in TEAM_SUMS}
-        rel = selection(c, "points", bbox, polygon, p["start"], p["end"], True, vegetation_only)
-        r = c.execute(f"""SELECT
-              count(*) FILTER (WHERE sensor='MODIS'), coalesce(sum(frp) FILTER (WHERE sensor='MODIS'), 0),
-              count(*) FILTER (WHERE sensor='VIIRS'), coalesce(sum(frp) FILTER (WHERE sensor='VIIRS'), 0),
-              coalesce(sum(weight), 0), coalesce(sum(frp_h), 0), coalesce(sum(weight_cal), 0), coalesce(sum(frp_cal), 0)
-            FROM {rel}""").fetchone()
-        ours = {k: round(float(v), 2) for k, v in zip(TEAM_SUMS, r)}
-        out.append({**p, "team": team, "firecal": ours})
-    regions = []
-    if len(tdf):
-        tr = tdf.groupby("region")[TEAM_SUMS].sum()
-        first, last = _team[grid]["periods"][0]["start"], _team[grid]["periods"][-1]["end"]
-        rel = selection(c, "points", bbox, polygon, first, last, True, vegetation_only)
-        fr = c.execute(f"""SELECT region, count(*) FILTER (WHERE sensor='MODIS') AS n_modis,
-              count(*) FILTER (WHERE sensor='VIIRS') AS n_viirs, coalesce(sum(frp_h), 0) AS frp_harmonized,
-              coalesce(sum(weight_cal), 0) AS n_modis_calibrated FROM {rel} GROUP BY 1""").df().set_index("region")
-        for reg in sorted(set(tr.index) | set(fr.index)):
-            regions.append({"region": reg,
-                            "team": {k: round(float(tr.loc[reg, k]), 2) if reg in tr.index else 0.0
-                                     for k in ["n_modis", "n_viirs", "frp_harmonized", "n_modis_calibrated"]},
-                            "firecal": {k: round(float(fr.loc[reg, k]), 2) if reg in fr.index else 0.0
-                                        for k in ["n_modis", "n_viirs", "frp_harmonized", "n_modis_calibrated"]}})
-    return {"grid": grid, "windows": out, "regions": regions,
-            "note": "low-confidence detections excluded on both sides; team cells by centre, FireCal by exact hotspot"}
 
 
 @app.post("/api/reload")

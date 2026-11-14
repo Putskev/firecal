@@ -307,14 +307,6 @@ body.side.collapsed #paneTab{display:flex}
       <div id="check" class="chart"></div></div>
   </div>
 
-  <div class="card" id="teamCard" style="display:none">
-    <div class="head"><h3>Cross-check with the data team (Tabelle B)</h3><span class="tbadge" id="tb_team" title="Time span this view uses"></span><span class="grow"></span>
-      <span class="note">Grid</span><select id="teamCheckGrid"></select></div>
-    <p class="how"><b>What this is:</b> a control that FireCal and the data team compute the same numbers. The data team delivers sums per grid cell and fixed time window (“Tabelle B”). FireCal recomputes the same sums from the single hotspots, for the area selected on the map, without low confidence (like the team table). Green = equal within 0.5 %.<br>
-      <b>Time span:</b> the windows of the team table (shown in the first column), <i>not</i> the timeline selection. <b>FRP</b> = sum of the fire radiative power of all detections in that window (MW); “per day” divides by the days of the window. Team cells count when their centre is inside the area, so small differences at the edge of a drawn area are expected.</p>
-    <div id="teamCheck"></div>
-  </div>
-
   <div class="grid g4">
     <div class="card"><div class="head"><h3>Fire intensity (FRP)</h3><span class="tbadge" id="tb_frp" title="Time span this view uses"></span></div><p class="how">Share of detections per FRP class (fire radiative power of one detection, MW). VIIRS sees many small fires that MODIS misses.</p>
       <div class="frpctl"><span class="note">Period</span><select id="frpPeriod" title="Time span for this chart">
@@ -483,7 +475,6 @@ const ApiProvider = {
   async matrix(f, gran, view, metric, start, end, top) { return getJSON(`${API}/api/matrix?${qs({ ...apiF(f), granularity: gran, view, metric, start, end, top })}`); },
   async team() { try { return await getJSON(`${API}/api/team`); } catch { return { grids: [] }; } },
   async teamCells(grid, period, view, metric, bbox, polygon) { return getJSON(`${API}/api/team/cells?${qs({ grid, period, view, metric, bbox, polygon, limit: 30000 })}`); },
-  async teamCheck(grid, f) { return getJSON(`${API}/api/team/check?${qs({ grid, bbox: f.bbox, polygon: f.polygon, vegetation_only: f.vegetation_only })}`); },
   downloadPoints(f, start, end, view) { const a = document.createElement('a'); a.href = `${API}/api/hotspots.csv?${qs({ ...apiF(f), start, end, view })}`; document.body.appendChild(a); a.click(); a.remove(); toast('Export started'); }
 };
 
@@ -832,7 +823,7 @@ async function refresh() {
   try {
     const f = F(), [rows, sat] = await Promise.all([p.series(f, S.gran), p.satellites(f, S.gran)]);
     if (id !== S.req) return;
-    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange(); renderTeamCheck(); if (S.cmp) cmpLoad();
+    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange(); if (S.cmp) cmpLoad();
   } catch (e) { console.error(e); toast('Could not load data'); }
   finally { if (id === S.req) busy(false); }
 }
@@ -954,8 +945,6 @@ function renderTimeBadges() {
   set('swim', `🕒 ${loaded}`, 'All loaded periods; the orange frame is the selection');
   const hp = (S.meta.harmonization || {}).params || {};
   set('calib', `🕒 ${hp.window_days || 7}-day windows · VIIRS period from ${DM(hp.viirs_start || '2012-01-20')}`, `Factors: ${hp.factor_source || '?'}`);
-  const g = S.team && S.team.grids && S.team.grids.find(x => x.grid === $('teamCheckGrid').value);
-  if (g) set('team', `🕒 fixed windows: ${g.periods.map(x => `${DM(x.start)} – ${DM(x.end)}`).join(' and ')}`, 'Time windows of the team table, independent of the timeline');
 }
 
 /* ---------- KPIs, warnings, insights ---------- */
@@ -1281,12 +1270,12 @@ function drawTeamCells(r) {
 async function loadTeam() {
   const p = S.provider; S.team = p.team ? await p.team() : { grids: [] };
   const grids = S.team.grids || [], has = grids.length > 0;
-  $('teamModeBtn').style.display = has ? '' : 'none'; $('teamCard').style.display = has ? '' : 'none';
+  $('teamModeBtn').style.display = has ? '' : 'none';
   if (!has) { if (S.mapMode === 'team') { S.mapMode = 'auto'; setSeg('mapModeSeg', 'auto'); } $('teamCtl').style.display = 'none'; return; }
   const opts = grids.map(g => `<option value="${g.grid}">${g.grid}</option>`).join('');
-  $('teamGrid').innerHTML = opts; $('teamCheckGrid').innerHTML = opts;
-  const pref = grids.find(g => g.grid === '0.5deg') || grids[0], exact = grids.find(g => g.grid === '2km') || grids[0];
-  $('teamGrid').value = pref.grid; $('teamCheckGrid').value = exact.grid; fillTeamPeriods();
+  $('teamGrid').innerHTML = opts;
+  const pref = grids.find(g => g.grid === '0.5deg') || grids[0];
+  $('teamGrid').value = pref.grid; fillTeamPeriods();
 }
 function fillTeamPeriods() {
   const g = (S.team.grids || []).find(x => x.grid === $('teamGrid').value); if (!g) return;
@@ -1295,29 +1284,8 @@ function fillTeamPeriods() {
     g.periods.map(p => `<option value="${p.start}">${p.start} → ${p.end} (${p.n_days} d)</option>`).join('');
   if (g.periods.some(p => p.start === cur)) $('teamPeriod').value = cur;
 }
-async function renderTeamCheck() {
-  const p = S.provider; if (!p.teamCheck || !(S.team && S.team.grids && S.team.grids.length)) return;
-  const id = ++S.treq; $('teamCheck').innerHTML = '<p class="note">Comparing…</p>';
-  try {
-    const d = await p.teamCheck($('teamCheckGrid').value, F()); if (id !== S.treq) return;
-    const Q = [['n_modis', 'MODIS hotspots (count)', ''], ['n_viirs', 'VIIRS hotspots (count)', ''], ['frp_modis', 'MODIS FRP (sum)', ' MW'], ['frp_viirs', 'VIIRS FRP (sum)', ' MW'],
-      ['n_harmonized', 'harmonized count', ''], ['frp_harmonized', 'harmonized FRP (sum)', ' MW'], ['n_modis_calibrated', 'MODIS × factor (count)', ''], ['frp_modis_calibrated', 'MODIS × factor (FRP sum)', ' MW']];
-    const diff = (a, b) => { const d = b === 0 ? (a === 0 ? 0 : 100) : (a - b) / b * 100; return `<td class="${Math.abs(d) <= .5 ? 'ok' : 'off'}">${d >= 0 ? '+' : ''}${d.toFixed(2)} %</td>`; };
-    let html = `<table class="calib"><tr><th>Time window</th><th>Quantity</th><th>Data team</th><th>FireCal</th><th>Difference</th><th>FireCal per day</th></tr>`;
-    for (const w of d.windows) Q.forEach(([k, lab, u], i) => { html += `<tr>${i === 0 ? `<td rowspan="${Q.length}"><b>${DM(w.start)} – ${DM(w.end)}</b><br><span class="note">${w.n_days} days (${w.start} to ${w.end}, UTC)</span></td>` : ''}<td style="text-align:left">${lab}${u ? `<br><span class="note">${DM(w.start)} – ${DM(w.end)}</span>` : ''}</td><td>${fmt(w.team[k])}${u}</td><td>${fmt(w.firecal[k])}${u}</td>${diff(w.firecal[k], w.team[k])}<td>${fmt(w.firecal[k] / w.n_days)}${u}</td></tr>`; });
-    html += '</table>';
-    if (d.regions && d.regions.length) {
-      html += `<h3 style="margin-top:12px">Per region · ${DM(d.windows[0].start)} – ${DM(d.windows[d.windows.length - 1].end)} (all windows)</h3><table class="calib"><tr><th>Region</th><th>MODIS team / FireCal</th><th></th><th>VIIRS team / FireCal</th><th></th><th>harmonized FRP team / FireCal</th><th></th><th>MODIS × factor team / FireCal</th><th></th></tr>`;
-      for (const r of d.regions) html += `<tr><td>${r.region}</td>` + ['n_modis', 'n_viirs', 'frp_harmonized', 'n_modis_calibrated'].map(k => `<td>${fmt(r.team[k])} / ${fmt(r.firecal[k])}</td>${diff(r.firecal[k], r.team[k])}`).join('') + '</tr>';
-      html += '</table>';
-    }
-    html += `<p class="note" style="margin-top:6px">${d.note}. Regions and MODIS × factor depend on the calibration table; the delivered table (data/calibration/) belongs to the grid it was computed on.</p>`;
-    $('teamCheck').innerHTML = html;
-  } catch (e) { console.error(e); $('teamCheck').innerHTML = '<p class="note">Cross-check not available.</p>'; }
-}
 $('teamGrid').addEventListener('change', () => { fillTeamPeriods(); refreshMap(true); });
 $('teamPeriod').addEventListener('change', () => refreshMap(true));
-$('teamCheckGrid').addEventListener('change', () => { renderTeamCheck(); renderTimeBadges(); });
 
 /* ---------- layout: page or side panel (statistics on the right, collapsible, resizable) ---------- */
 function relayout() {

@@ -44,7 +44,6 @@ Alle Ansichten hängen an **einer Auswahl** aus Gebiet (Karte), Zeitraum (Zeitle
 | Raum-Zeit-Matrix | aktivste Rasterzellen × Perioden, sortierbar, absolut oder je Zeile | Zeile: Zelle wird Gebiet; Kästchen: Periode auf Karte |
 | Satelliten-Zeitleiste | Rohdetektionen je Satellit und Periode | – |
 | Kalibriertabelle | Faktor je Region mit 25–75 %, r, Zellen; Region des Gebiets hervorgehoben | – |
-| Abgleich mit dem Datenteam | Summen aus Tabelle B gegen FireCals eigene Summen, je Zeitfenster und Region | Raster wählbar, folgt dem Gebiet |
 | Karte „Team cells“ | Zellen aus Tabelle B (5°, 0,5°, 2 km), je Fenster | Raster und Fenster wählbar |
 | Methodik | aus `content/methodology.md` | – |
 
@@ -88,7 +87,7 @@ index.html   (ApiProvider; ohne Backend: LocalProvider mit Demo/CSV, gleiche Rec
 | `data/incoming/` | Rohdateien zum Einlesen | nein |
 | `data/raw/` | kanonisches Parquet | ja |
 | `data/calibration/` | Kalibriertabelle des Teams (Tabelle C), wird für die Faktoren benutzt | ja |
-| `data/team/` | Tabelle B des Teams (`fire_activity_7d_<raster>.parquet`), für Karte und Abgleich | ja |
+| `data/team/` | Tabelle B des Teams (`fire_activity_7d_<raster>.parquet`), als Kartenebene | ja |
 | `data/harmonized/` | fertige harmonisierte Tabelle (optional, ersetzt harmonization.py) | ja |
 | `data/processed/` | gebaut | nein |
 
@@ -111,7 +110,6 @@ Gemeinsame Filter: `bbox`, `polygon`, `start`, `end`, `exclude_low`, `vegetation
 | `GET /api/hotspots.csv` | Download im Format Tabelle A |
 | `GET /api/team` | gelieferte Tabellen B: Raster, Zeitfenster |
 | `GET /api/team/cells` | Zellen einer Tabelle B für die Karte |
-| `GET /api/team/check` | Abgleich Tabelle B gegen FireCal für Gebiet und Fenster |
 
 Online-Doku zum Lesen: https://putskev.github.io/firecal/api-docs.html. Nach Änderungen an Endpunkten:
 `python -m backend.export_openapi`.
@@ -148,7 +146,7 @@ Was im Datenordner (rekursiv, auch `year=/month=`-Ordner) erkannt wird (`backend
 |---|---|---|
 | Tabelle A / FIRMS | Spalten `latitude`, `longitude` + `datetime_utc` oder `acq_date` | Hotspots (zusätzlich zu `data/raw`, Duplikate werden entfernt) |
 | Tabelle C | Dateiname `calibration*` (.csv/.parquet) | Faktoren |
-| Tabelle B | Dateiname `fire_activity_*.parquet` | Karte „Team cells“ und Abgleich |
+| Tabelle B | Dateiname `fire_activity_*.parquet` | Karte „Team cells“ |
 
 Ports 80 und 443 müssen in der Hetzner-Cloud-Firewall offen sein. Log: `journalctl -u firecal -f`.
 

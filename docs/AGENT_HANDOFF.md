@@ -98,8 +98,7 @@ Die Grenzen bei −30/−20/110 liegen in Datenlücken, dort ist der genaue Wert
 
 **Tabelle B** (`fire_activity_*`) braucht die App nicht zum Rechnen (die Aggregate baut `backend/build.py` aus
 Tabelle A), sie wird aber **mitgenutzt**: Dateien als Parquet nach `data/team/fire_activity_7d_<raster>.parquet`.
-Die App zeigt sie als Kartenebene „Team cells“ und vergleicht sie im Panel „Cross-check with the data team“ mit
-den eigenen Summen (`/api/team`, `/api/team/cells`, `/api/team/check`). `monthly_cube` ist nicht nötig.
+Die App zeigt sie als Kartenebene „Team cells“ (`/api/team`, `/api/team/cells`). `monthly_cube` ist nicht nötig.
 
 ---
 
@@ -156,7 +155,7 @@ Eingebaut: Tabelle A (07.–14.11.) + die drei FIRMS-ZIPs (01.–08.11.) → zus
 
 Endpunkte (Doku: `/docs` lokal oder `api-docs.html`): `/api/meta`, `/api/timeseries`, `/api/heatmap`,
 `/api/points`, `/api/distributions`, `/api/matrix`, `/api/satellites`, `/api/hotspots.csv`,
-`/api/team`, `/api/team/cells`, `/api/team/check`.
+`/api/team`, `/api/team/cells`.
 Gemeinsame Filter: `bbox, polygon, start, end, exclude_low, vegetation_only, satellites, daynight`.
 **Satelliten- und Tag/Nacht-Filter wirken nur auf Rohwerte und Karte**; harmonisierte Werte nutzen immer
 alle Satelliten, weil die Faktoren so definiert sind.
