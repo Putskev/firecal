@@ -46,6 +46,11 @@ Alle Ansichten hängen an **einer Auswahl** aus Gebiet (Karte), Zeitraum (Zeitle
 | Karte „Team cells“ | Zellen aus Tabelle B (5°, 0,5°, 2 km), je Fenster | Raster und Fenster wählbar |
 | Methodik | aus `content/methodology.md` | – |
 
+**Layout:** Button „▥ Side panel“ (oder Taste `S`) legt alle Statistiken in ein Panel rechts neben Karte und Zeitleiste.
+Das Panel lässt sich zu- und aufklappen („Close ▸“ / Lasche „◂ Statistics“ am rechten Rand / Taste `S`), am linken
+Rand in der Breite ziehen (Doppelklick = Standard) und hat eine Sprungliste. Die Einstellung bleibt im Browser
+gespeichert; per Link erzwingen mit `?layout=side`.
+
 Downloads: Hotspots im Format „Tabelle A“ (+ Region, weight, frp_h) und eine Statistik-CSV je Periode.
 
 ## Harmonisierung (Stand: Platzhalter nach dem Handoff des Datenteams)

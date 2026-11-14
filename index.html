@@ -87,6 +87,28 @@ footer{max-width:1700px;margin:0 auto;padding:0 16px 18px;font-size:12px;color:v
 .note{font-size:12px;color:var(--muted)}
 input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px}
 @media (max-width:1150px){.g-map,.g2,.g4{grid-template-columns:1fr}.hits{margin-left:0}}
+/* side panel mode: statistics in a collapsible, resizable panel on the right */
+#mainCol,#stats{display:flex;flex-direction:column;gap:12px;min-width:0}
+.panehead,#paneTab,#paneResize{display:none}
+body.side main{max-width:none;display:grid;grid-template-columns:minmax(0,1fr) 12px var(--paneW,560px);align-items:start;gap:0}
+body.side #mainCol{container-type:inline-size}
+body.side #mapwrap{height:calc(100vh - var(--stickyTop,60px) - 260px);min-height:420px}
+@container (max-width:900px){.g-map{grid-template-columns:1fr}}
+body.side #stats{position:sticky;top:calc(var(--stickyTop,60px) + 8px);height:calc(100vh - var(--stickyTop,60px) - 20px);overflow-y:auto;overscroll-behavior:contain;
+  container-type:inline-size;background:#ecebe7;border:1px solid var(--line);border-radius:12px;padding:0 10px 10px;gap:10px}
+body.side #stats .g2,body.side #stats .g4{grid-template-columns:1fr}
+@container (min-width:760px){body.side #stats .g4{grid-template-columns:1fr 1fr}}
+@container (min-width:1100px){body.side #stats .g2{grid-template-columns:1fr 1fr}}
+body.side .panehead{display:flex;position:sticky;top:0;z-index:5;background:#ecebe7;padding:8px 0 6px;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+.panehead h3{margin:0;font-size:14px}.panehead select{font-size:12px;max-width:180px}
+body.side #paneResize{display:block;position:sticky;top:calc(var(--stickyTop,60px) + 8px);height:calc(100vh - var(--stickyTop,60px) - 20px);cursor:col-resize;touch-action:none}
+body.side #paneResize:hover,body.side #paneResize.on{background:linear-gradient(90deg,transparent 5px,var(--accent) 5px 7px,transparent 7px)}
+body.side.collapsed main{grid-template-columns:minmax(0,1fr) 0 0}
+body.side.collapsed #stats,body.side.collapsed #paneResize{display:none}
+body.side.collapsed #paneTab{display:flex}
+#paneTab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:1500;writing-mode:vertical-rl;background:var(--accent);color:#fff;border:0;border-radius:8px 0 0 8px;padding:12px 6px;font:inherit;font-size:13px;cursor:pointer;gap:6px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+#layoutBtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+@media (max-width:900px){body.side main{grid-template-columns:1fr}body.side #stats{position:static;height:auto}body.side #paneResize{display:none}}
 </style>
 </head>
 <body>
@@ -99,6 +121,7 @@ input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line)
   <label class="btn small" for="file">Load FIRMS CSV</label>
   <input id="file" type="file" accept=".csv" multiple class="sr">
   <button id="demoBtn" class="btn small">Demo data</button>
+  <button id="layoutBtn" class="btn small" title="Show the statistics in a panel on the right that you can open and close (shortcut: S)">▥ Side panel</button>
   <a class="btn small" href="api-docs.html">API docs</a>
 </header>
 
@@ -116,6 +139,7 @@ input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line)
 </div>
 
 <main>
+<div id="mainCol">
   <div class="card">
     <div class="head"><h3>Timeline</h3><span class="grow"></span>
       <span class="note" id="rangeLabel"></span>
@@ -165,6 +189,12 @@ input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line)
     </div>
   </div>
 
+</div>
+<div id="paneResize" title="Drag to change the width (double-click: default)"></div>
+<aside id="stats" aria-label="Statistics">
+  <div class="panehead"><h3>Statistics</h3><span class="grow" style="flex:1"></span>
+    <select id="paneJump" title="Jump to a statistic"></select>
+    <button id="paneClose" class="btn small" title="Close the panel (S)">Close ▸</button></div>
   <div class="card">
     <div class="head"><h3>Burning activity calendar</h3><span class="grow"></span><span class="note" id="calNote"></span></div>
     <p class="how" id="calHow"></p>
@@ -218,7 +248,9 @@ input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line)
   </div>
 
   <div class="card" id="methodCard"><div id="method"><p class="note">Loading methodology…</p></div></div>
+</aside>
 </main>
+<button id="paneTab" title="Open the statistics panel (S)">◂ Statistics</button>
 <footer id="footer"></footer>
 <div id="tip"></div>
 <div id="toast" role="status"></div>
@@ -1017,6 +1049,50 @@ async function renderTeamCheck() {
 $('teamGrid').addEventListener('change', () => { fillTeamPeriods(); refreshMap(true); });
 $('teamPeriod').addEventListener('change', () => refreshMap(true));
 $('teamCheckGrid').addEventListener('change', renderTeamCheck);
+
+/* ---------- layout: page or side panel (statistics on the right, collapsible, resizable) ---------- */
+const store = { get(k, d) { try { const v = localStorage.getItem('firecal.' + k); return v === null ? d : v; } catch { return d; } },
+                set(k, v) { try { localStorage.setItem('firecal.' + k, v); } catch {} } };
+function relayout() {
+  clearTimeout(window._rl);
+  window._rl = setTimeout(() => {
+    document.querySelectorAll('.js-plotly-plot').forEach(el => { if (el.offsetParent) Plotly.Plots.resize(el); });
+    map.invalidateSize(); drawMatrix();
+  }, 60);
+}
+function setStickyTop() { document.documentElement.style.setProperty('--stickyTop', $('filters').offsetHeight + 'px'); }
+function setLayout(side, collapsed) {
+  document.body.classList.toggle('side', side); document.body.classList.toggle('collapsed', side && collapsed);
+  $('layoutBtn').classList.toggle('on', side); $('layoutBtn').textContent = side ? '▤ Page layout' : '▥ Side panel';
+  store.set('layout', side ? 'side' : 'page'); store.set('collapsed', collapsed ? '1' : '0');
+  setStickyTop(); relayout();
+}
+const isSide = () => document.body.classList.contains('side'), isCollapsed = () => document.body.classList.contains('collapsed');
+$('layoutBtn').addEventListener('click', () => setLayout(!isSide(), false));
+$('paneClose').addEventListener('click', () => setLayout(true, true));
+$('paneTab').addEventListener('click', () => setLayout(true, false));
+document.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() !== 's' || e.ctrlKey || e.metaKey || e.altKey || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if (!isSide()) setLayout(true, false); else setLayout(true, !isCollapsed());
+});
+// jump list: every card title in the panel
+(function () {
+  const cards = [...$('stats').querySelectorAll(':scope > .card, :scope > .grid > .card')];
+  cards.forEach((c, i) => { c.id = c.id || 'stat' + i; });
+  $('paneJump').innerHTML = '<option value="">Jump to …</option>' + cards.map(c => { const h = c.querySelector('h3,h1'); return h ? `<option value="${c.id}">${h.textContent.replace(/[<>]/g, '')}</option>` : ''; }).join('');
+  $('paneJump').addEventListener('change', e => { const el = document.getElementById(e.target.value); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); e.target.value = ''; });
+})();
+// drag the left edge of the panel to resize it
+(function () {
+  const h = $('paneResize'); let x0 = 0, w0 = 0;
+  const move = e => { const w = Math.max(340, Math.min(window.innerWidth - 420, w0 + (x0 - e.clientX))); document.documentElement.style.setProperty('--paneW', w + 'px'); relayout(); };
+  const up = () => { h.classList.remove('on'); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); store.set('paneW', parseInt(getComputedStyle(document.documentElement).getPropertyValue('--paneW')) || 560); };
+  h.addEventListener('pointerdown', e => { e.preventDefault(); x0 = e.clientX; w0 = $('stats').getBoundingClientRect().width; h.classList.add('on'); window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); });
+  h.addEventListener('dblclick', () => { document.documentElement.style.setProperty('--paneW', '560px'); store.set('paneW', 560); relayout(); });
+})();
+new ResizeObserver(() => { setStickyTop(); }).observe($('filters'));
+document.documentElement.style.setProperty('--paneW', (+store.get('paneW', 560) || 560) + 'px');
+if (store.get('layout', 'page') === 'side' || qp.get('layout') === 'side') setLayout(true, store.get('collapsed', '0') === '1');
 
 /* ---------- animation ---------- */
 function stopPlay() { S.playing = false; $('playBtn').textContent = '▶ Play'; }
