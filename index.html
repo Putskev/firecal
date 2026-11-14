@@ -7,23 +7,23 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
 <style>
-:root{--bg:#f4f4f2;--panel:#fff;--line:#e2e1dc;--text:#1f1f1d;--muted:#6b6a65;--accent:#21708a;--warm:#d95f02;--cool:#1b6fb5;--radius:10px}
+:root{--bg:#f4f4f2;--panel:#fff;--line:#e2e1dc;--text:#1f1f1d;--muted:#6b6a65;--accent:#21708a;--warm:#d95f02;--cool:#1b6fb5}
 *{box-sizing:border-box}
 body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
-header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#1d1f24;color:#fff;flex-wrap:wrap}
+header{display:flex;align-items:center;gap:10px;padding:10px 18px;background:#1d1f24;color:#fff;flex-wrap:wrap}
 header h1{font-size:16px;font-weight:600;margin:0}
 header .sub{color:#b9bac0;font-size:13px}
+header .spacer{flex:1}
 .pill{font-size:12px;padding:3px 10px;border-radius:999px;background:#33363d;color:#e2e2e2}
 .pill.demo{background:#5a3b00;color:#ffd58a}
-header .spacer{flex:1}
-header label.btn{background:#fff;color:#1d1f24;border-color:#fff}
+.pill.api{background:#0f4a3a;color:#aef0d6}
 .layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:14px;padding:14px;max-width:1500px;margin:0 auto}
 aside{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:16px;align-self:start;position:sticky;top:14px}
 aside h2{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 .hint{font-size:12px;color:var(--muted);margin:4px 0 0}
 .row{display:flex;gap:6px;align-items:center}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-input[type=number],input[type=month],select{width:100%;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+input[type=number],input[type=date],select{width:100%;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
 input[type=number]{font-size:12px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;border:1px solid #c9c8c2;border-radius:8px;background:#fff;font:inherit;cursor:pointer;color:var(--text)}
 .btn:hover{background:#f1f0ec}
@@ -35,7 +35,8 @@ input[type=number]{font-size:12px}
 .seg button:last-child{border-right:0}
 .seg button.on{background:var(--accent);color:#fff}
 .harm{background:#f1f6f8;border:1px solid #d3e4ea;border-radius:8px;padding:8px 10px;font-size:12px}
-.harm b{font-weight:600}
+.badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;margin-left:4px}
+.badge.placeholder{background:#fdecc8;color:#7a4b00}.badge.final{background:#d7f2e3;color:#14593a}
 main{display:flex;flex-direction:column;gap:14px;min-width:0}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .card h3{font-size:14px;font-weight:600;margin:0 0 2px}
@@ -45,30 +46,35 @@ main{display:flex;flex-direction:column;gap:14px;min-width:0}
 .mapbar{position:absolute;top:10px;right:10px;z-index:500;display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
 .maplegend{position:absolute;left:10px;bottom:22px;z-index:500;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px;width:190px}
 .maplegend .bar{height:8px;border-radius:4px;margin:4px 0 2px}
+.busy{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:500;background:#1d1f24;color:#fff;font-size:12px;padding:4px 10px;border-radius:999px;display:none}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .kpi .l{font-size:12px;color:var(--muted)}
 .kpi .v{font-size:22px;font-weight:600;margin-top:2px}
 .kpi .s{font-size:12px;color:var(--muted)}
 .up{color:var(--warm)}.down{color:var(--cool)}
-.cal{display:grid;grid-template-columns:44px repeat(12,minmax(0,1fr)) 54px;gap:3px;font-size:11px}
+.cal{display:grid;gap:3px;font-size:11px}
 .cal .h{text-align:center;color:var(--muted);font-size:11px;padding-bottom:2px}
-.cal .y{color:var(--muted);display:flex;align-items:center}
+.cal .y{color:var(--muted);display:flex;align-items:center;white-space:nowrap}
 .cal .t{color:var(--muted);display:flex;align-items:center;justify-content:flex-end;font-variant-numeric:tabular-nums}
 .cell{height:24px;border:0;border-radius:4px;font:inherit;font-size:10.5px;cursor:pointer;font-variant-numeric:tabular-nums;padding:0}
 .cell.off{background:repeating-linear-gradient(45deg,#f3f2ee,#f3f2ee 4px,#ebeae5 4px,#ebeae5 8px);cursor:default}
 .cell.sel{outline:2px solid #111;outline-offset:1px}
 .cell:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.callegend{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-top:10px}
+.callegend{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
 .callegend .bar{height:10px;width:220px;border-radius:5px}
 .charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 .chart{height:280px}
-.empty{padding:40px;text-align:center;color:var(--muted)}
-.gray-tiles{filter:grayscale(1) brightness(1.05) contrast(.9)}
+.note{font-size:12px;color:var(--muted);padding:8px 0}
+#method{font-size:14px;line-height:1.6}
+#method h1{font-size:16px;margin:0 0 6px}#method h2{font-size:14px;margin:14px 0 4px}
+#method .todo{color:var(--muted);font-style:italic}
+#method table{border-collapse:collapse;font-size:13px}#method td,#method th{border:1px solid var(--line);padding:4px 8px}
 footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:var(--muted)}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d1f24;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:2000}
 #toast.show{opacity:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.gray-tiles{filter:grayscale(1) brightness(1.05) contrast(.9)}
 @media (max-width:1000px){.layout{grid-template-columns:1fr}aside{position:static}.charts{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -76,11 +82,11 @@ footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:v
 <header>
   <h1>FireCal</h1>
   <span class="sub">Harmonized MODIS + VIIRS burning activity calendar</span>
-  <span id="source" class="pill demo">Demo data (synthetic)</span>
+  <span id="source" class="pill">Loading…</span>
   <span class="spacer"></span>
+  <button id="apiBtn" class="btn small" style="display:none">API data</button>
   <label class="btn small" for="file">Load FIRMS CSV files</label>
   <input id="file" type="file" accept=".csv" multiple class="sr">
-  <button id="liveBtn" class="btn small">Reload live data</button>
   <button id="demoBtn" class="btn small">Demo data</button>
 </header>
 
@@ -105,9 +111,14 @@ footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:v
   <section>
     <h2>Date range</h2>
     <div style="display:grid;grid-template-columns:40px 1fr;gap:6px;align-items:center;font-size:12px;color:var(--muted)">
-      <label for="from">From</label><input id="from" type="month">
-      <label for="to">To</label><input id="to" type="month">
+      <label for="from">From</label><input id="from" type="date">
+      <label for="to">To</label><input id="to" type="date">
     </div>
+    <div class="seg" id="granSeg" style="margin-top:8px">
+      <button data-v="month">Monthly</button>
+      <button data-v="day">Daily</button>
+    </div>
+    <p class="hint">Daily view is limited to 1 year.</p>
   </section>
 
   <section>
@@ -132,14 +143,14 @@ footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:v
     <h2>Filters</h2>
     <label class="row" style="font-size:13px"><input type="checkbox" id="hideLow" checked> Exclude low-confidence detections</label>
     <label class="row" style="font-size:13px;margin-top:4px"><input type="checkbox" id="vegOnly"> Vegetation fires only (type&nbsp;=&nbsp;0)</label>
-    <p class="hint">Type filter only works on archive files that contain the <code>type</code> column.</p>
+    <p class="hint" id="typeHint">Needs archive data with a <code>type</code> column.</p>
   </section>
 
   <section>
     <h2>Downloads</h2>
     <div style="display:flex;flex-direction:column;gap:6px">
       <button id="dlPoints" class="btn primary">Download hotspots CSV</button>
-      <button id="dlSummary" class="btn">Download monthly summary CSV</button>
+      <button id="dlSummary" class="btn">Download summary CSV</button>
     </div>
     <p class="hint">Charts have a camera icon for PNG export.</p>
   </section>
@@ -148,11 +159,12 @@ footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:v
 <main>
   <div id="mapwrap">
     <div id="map" role="region" aria-label="Map with hotspot density"></div>
+    <div class="busy" id="busy">Loading…</div>
     <div class="mapbar">
-      <span id="mapLabel">Map: full range (monthly average)</span>
+      <span id="mapLabel">Map: full range</span>
       <button id="mapReset" class="btn small" style="display:none" aria-label="Show full range">×</button>
-      <button id="playBtn" class="btn small" aria-label="Animate months">▶ Play</button>
-      <label class="row" title="Heat scale (fixed across months)">Scale <input id="heatMax" type="range" min="0.2" max="10" step="0.1" value="2" style="width:80px"></label>
+      <button id="playBtn" class="btn small" aria-label="Animate periods">▶ Play</button>
+      <label class="row" title="Heat scale (fixed across periods)">Scale <input id="heatMax" type="range" min="0.1" max="3" step="0.05" value="1" style="width:80px"></label>
     </div>
     <div class="maplegend">
       <div>Hotspot density</div>
@@ -165,22 +177,26 @@ footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:v
 
   <div class="card">
     <h3>Burning activity calendar</h3>
-    <p class="desc" id="calDesc">Click a month to show it on the map.</p>
+    <p class="desc" id="calDesc"></p>
     <div class="cal" id="cal"></div>
-    <div class="callegend"><span>0</span><div class="bar" id="calLegendBar"></div><span id="calLegendMax"></span><span>· hatched = no data</span></div>
+    <div class="callegend"><span>0</span><div class="bar" id="calLegendBar"></div><span id="calLegendMax"></span><span>· hatched = outside range / no data</span></div>
   </div>
 
   <div class="charts">
     <div class="card">
-      <h3>Anomaly vs multi-year median</h3>
-      <p class="desc">Monthly value minus the median of the same calendar month across all years. The last month in the range is outlined.</p>
+      <h3>Anomaly vs median</h3>
+      <p class="desc" id="anomDesc"></p>
       <div id="anomaly" class="chart"></div>
     </div>
     <div class="card">
       <h3>Harmonization check</h3>
-      <p class="desc">Raw sensor series and the harmonized series. After harmonization the jump at the start of VIIRS should disappear.</p>
+      <p class="desc">Raw sensor series, the harmonized VIIRS contribution and the harmonized total. After harmonization the jump between sensors should disappear.</p>
       <div id="compare" class="chart"></div>
     </div>
+  </div>
+
+  <div class="card" id="methodCard">
+    <div id="method"><p class="note">Loading methodology…</p></div>
   </div>
 </main>
 </div>
@@ -192,49 +208,61 @@ footer{max-width:1500px;margin:0 auto;padding:0 14px 18px;font-size:12px;color:v
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script>
 /* =====================================================================
    FireCal frontend
-   ---------------------------------------------------------------------
-   DATA CONTRACT (what the backend / loader must provide):
-   one record per hotspot:
-     { lat, lon, date:'YYYY-MM-DD', mk:'YYYY-MM', sensor:'MODIS'|'VIIRS',
-       frp:Number, conf:Number (MODIS 0-100) | 'l'|'n'|'h' (VIIRS),
-       sat:String, type:Number|null }
-   Call loadData(records, label) to replace the dataset.
-
-   HARMONIZATION (placeholder, see harmonizeFactors / monthValue):
-   k = sum(MODIS) / sum(VIIRS) over months where both sensors detected
-   fires in the selected area. From the first VIIRS month on, the
-   harmonized series is VIIRS * k ("MODIS-equivalent"); before that it
-   is MODIS. Replace with the data team's calibration (per cell, per
-   land cover, regression or quantile mapping) once it exists.
+   Data comes from a "provider" with one interface:
+     span() -> [firstDate, lastDate]      bbox() -> [w,s,e,n]
+     info() -> harmonization info         hasType() -> bool
+     series(filters, gran) -> { period: {modis_n, viirs_n, modis_frp, viirs_frp,
+                                         modis_h_n, viirs_h_n, modis_h_frp, viirs_h_frp,
+                                         harm_n, harm_frp} }
+     heat(filters, start, end, view, metric, res) -> [[lat, lon, value], ...]
+     downloadPoints(filters, start, end, view)
+   ApiProvider  : FastAPI backend (same origin, or ?api=https://your-backend)
+   LocalProvider: demo data or uploaded CSVs, harmonized in the browser with the placeholder method
    ===================================================================== */
 window.type = window.type || ''; // workaround for a leaflet-draw 1.0.4 rectangle bug
 
+const qp = new URLSearchParams(location.search);
+const API = (qp.get('api') ?? window.FIRECAL_API ?? '').replace(/\/$/, '');
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const VIRIDIS = ['#440154','#482878','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'];
-const COLORS = { modis:'#e69f00', viirs:'#56b4e9', viirsK:'#0072b2', harm:'#1f1f1d', warm:'#d95f02', cool:'#1b6fb5' };
+const COLORS = { modis:'#e69f00', viirs:'#56b4e9', viirsH:'#0072b2', harm:'#1f1f1d', warm:'#d95f02', cool:'#1b6fb5' };
 
 const state = {
-  points: [], label: '', isDemo: true,
-  spanMonths: [], viirsStart: null,
-  from: null, to: null, rangeMonths: [],
-  region: null, metric: 'count', view: 'harm',
-  hideLow: true, vegOnly: false,
-  mapMonth: null, heatMax: 2, playing: null, C: null,
-  fixedK: null, useFixedK: true
+  provider: null, gran: 'month', from: null, to: null, region: null,
+  metric: 'count', view: 'harm', hideLow: true, vegOnly: false,
+  rows: {}, rangePeriods: [], mapPeriod: null, heatMax: 1, heatRef: null,
+  playing: false, req: 0, heatReq: 0
 };
 
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
-const mkey = (y, m) => `${y}-${String(m).padStart(2, '0')}`;
+const pad = n => String(n).padStart(2, '0');
+const isoDay = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+const toDate = s => new Date(s + 'T00:00:00Z');
+const addDays = (s, n) => { const d = toDate(s); d.setUTCDate(d.getUTCDate() + n); return isoDay(d); };
+const dayDiff = (a, b) => Math.round((toDate(b) - toDate(a)) / 864e5);
 function monthsBetween(a, b) {
   const out = []; let [y, m] = a.split('-').map(Number); const [y2, m2] = b.split('-').map(Number);
-  while (y < y2 || (y === y2 && m <= m2)) { out.push(mkey(y, m)); if (++m > 12) { m = 1; y++; } }
+  while (y < y2 || (y === y2 && m <= m2)) { out.push(`${y}-${pad(m)}`); if (++m > 12) { m = 1; y++; } }
   return out;
 }
-const mlabel = mk => `${MONTHS[+mk.slice(5, 7) - 1]} ${mk.slice(0, 4)}`;
+function daysBetween(a, b) { const out = []; for (let d = a; d <= b; d = addDays(d, 1)) out.push(d); return out; }
+const periodsBetween = (a, b, g) => g === 'month' ? monthsBetween(a.slice(0, 7), b.slice(0, 7)) : daysBetween(a, b);
+const periodOf = (date, g) => g === 'month' ? date.slice(0, 7) : date;
+function periodRange(p, g) {
+  if (g === 'day') return [p, p];
+  const [y, m] = p.split('-').map(Number);
+  return [`${p}-01`, isoDay(new Date(Date.UTC(y, m, 0)))];
+}
+function plabel(p) {
+  const [y, m, d] = p.split('-');
+  return d ? `${MONTHS[+m - 1]} ${+d}, ${y}` : `${MONTHS[+m - 1]} ${y}`;
+}
 const fmt = v => Math.round(v).toLocaleString('en-US');
 function short(v) {
   v = Math.round(v);
@@ -246,15 +274,15 @@ function short(v) {
 function hex(h) { return [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); }
 function viridis(t) {
   t = Math.max(0, Math.min(1, t)); const n = VIRIDIS.length - 1;
-  const i = Math.min(n - 1, Math.floor(t * n)), f = t * n - i;
-  const a = hex(VIRIDIS[i]), b = hex(VIRIDIS[i + 1]);
+  const i = Math.min(n - 1, Math.floor(t * n)), f = t * n - i, a = hex(VIRIDIS[i]), b = hex(VIRIDIS[i + 1]);
   return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * f)).join(',')})`;
 }
 const viridisCss = `linear-gradient(90deg,${VIRIDIS.join(',')})`;
 function median(arr) {
-  if (!arr.length) return 0; const s = [...arr].sort((a, b) => a - b); const h = s.length >> 1;
+  if (!arr.length) return 0; const s = [...arr].sort((a, b) => a - b), h = s.length >> 1;
   return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2;
 }
+function quantile(arr, q) { if (!arr.length) return 1; const s = [...arr].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(q * (s.length - 1)))] || s[s.length - 1] || 1; }
 function pearson(x, y) {
   const n = x.length; if (n < 3) return null;
   const mx = x.reduce((a, b) => a + b) / n, my = y.reduce((a, b) => a + b) / n;
@@ -262,11 +290,139 @@ function pearson(x, y) {
   for (let i = 0; i < n; i++) { const dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
   return sxx && syy ? sxy / Math.sqrt(sxx * syy) : null;
 }
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
-function download(name, text) {
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2800); }
+function busy(on) { $('busy').style.display = on ? 'block' : 'none'; }
+const csvCell = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+function downloadText(name, text) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
+}
+const qs = o => Object.entries(o).filter(([, v]) => v !== null && v !== undefined && v !== '').map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+
+/* ---------- filters ---------- */
+function filters() {
+  const R = state.region;
+  return {
+    bbox: R ? [R.minLon, R.minLat, R.maxLon, R.maxLat].map(v => +v.toFixed(5)).join(',') : null,
+    polygon: R && R.poly ? R.poly.map(([la, lo]) => `${la.toFixed(5)},${lo.toFixed(5)}`).join(';') : null,
+    exclude_low: state.hideLow, vegetation_only: state.vegOnly, region: R
+  };
+}
+const apiFilters = f => ({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only });
+
+/* ---------- API provider ---------- */
+const ApiProvider = {
+  name: 'api', meta: null,
+  async init() {
+    const r = await fetch(`${API}/api/meta`, { cache: 'no-store' });
+    if (!r.ok) throw new Error('no api');
+    const m = await r.json(); if (m.api !== 'firecal') throw new Error('not firecal');
+    this.meta = m; return this;
+  },
+  label() { return `API · ${fmt(this.meta.rows)} hotspots · ${this.meta.first_date} to ${this.meta.last_date}`; },
+  span() { return [this.meta.first_date, this.meta.last_date]; },
+  bbox() { return this.meta.bbox; },
+  info() { return this.meta.harmonization || {}; },
+  hasType() { return !!this.meta.has_type; },
+  async series(f, gran) {
+    const r = await fetch(`${API}/api/timeseries?${qs({ ...apiFilters(f), granularity: gran })}`);
+    if (!r.ok) throw new Error(await r.text());
+    return (await r.json()).rows;
+  },
+  async heat(f, start, end, view, metric, res) {
+    const r = await fetch(`${API}/api/heatmap?${qs({ ...apiFilters(f), start, end, view, metric, res })}`);
+    if (!r.ok) throw new Error(await r.text());
+    return (await r.json()).cells;
+  },
+  downloadPoints(f, start, end, view) {
+    const a = document.createElement('a');
+    a.href = `${API}/api/hotspots.csv?${qs({ ...apiFilters(f), start, end, view })}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('Export started');
+  }
+};
+
+/* ---------- local provider (demo / uploaded CSV, placeholder harmonization in the browser) ---------- */
+const LocalProvider = {
+  name: 'local', points: [], _label: '', _info: {}, _span: null, _bbox: null, isDemo: true,
+  load(points, label, isDemo) {
+    this.points = points; this._label = label; this.isDemo = !!isDemo;
+    let min = '9999', max = '0000', s = 90, n = -90, w = 180, e = -180;
+    for (const p of points) {
+      if (p.date < min) min = p.date; if (p.date > max) max = p.date;
+      if (p.lat < s) s = p.lat; if (p.lat > n) n = p.lat; if (p.lon < w) w = p.lon; if (p.lon > e) e = p.lon;
+    }
+    this._span = [min, max]; this._bbox = [w, s, e, n];
+    this._info = harmonizeLocal(points);
+    return this;
+  },
+  label() { return this._label; },
+  span() { return this._span; }, bbox() { return this._bbox; }, info() { return this._info; },
+  hasType() { return this.points.some(p => p.type !== null); },
+  _sel(f, start, end) {
+    return this.points.filter(p => inRegion(p, f.region) && (!f.exclude_low || p.cc !== 'low') &&
+      (!f.vegetation_only || p.type === null || p.type === 0) && (!start || p.date >= start) && (!end || p.date <= end));
+  },
+  async series(f, gran) {
+    const rows = {};
+    for (const p of this._sel(f)) {
+      const k = periodOf(p.date, gran);
+      const r = rows[k] || (rows[k] = { modis_n: 0, viirs_n: 0, modis_frp: 0, viirs_frp: 0, modis_h_n: 0, viirs_h_n: 0, modis_h_frp: 0, viirs_h_frp: 0, harm_n: 0, harm_frp: 0 });
+      const s = p.sensor === 'MODIS' ? 'modis' : 'viirs';
+      r[s + '_n']++; r[s + '_frp'] += p.frp; r[s + '_h_n'] += p.w; r[s + '_h_frp'] += p.fh; r.harm_n += p.w; r.harm_frp += p.fh;
+    }
+    return rows;
+  },
+  async heat(f, start, end, view, metric, res) {
+    const cells = new Map();
+    for (const p of this._sel(f, start, end)) {
+      let v;
+      if (view === 'harm') v = metric === 'count' ? p.w : p.fh;
+      else if ((view === 'modis') === (p.sensor === 'MODIS')) v = metric === 'count' ? 1 : p.frp;
+      else continue;
+      if (!v) continue;
+      const la = Math.floor(p.lat / res) * res + res / 2, lo = Math.floor(p.lon / res) * res + res / 2, k = la + ',' + lo;
+      const c = cells.get(k); if (c) c[2] += v; else cells.set(k, [la, lo, v]);
+    }
+    return [...cells.values()];
+  },
+  downloadPoints(f, start, end, view) {
+    const rows = [['latitude', 'longitude', 'acq_date', 'satellite', 'sensor', 'confidence', 'conf_class', 'frp', 'type', 'weight', 'frp_h']];
+    for (const p of this._sel(f, start, end)) {
+      if (view === 'modis' && p.sensor !== 'MODIS') continue;
+      if (view === 'viirs' && p.sensor !== 'VIIRS') continue;
+      rows.push([p.lat, p.lon, p.date, p.sat, p.sensor, p.conf, p.cc, p.frp, p.type ?? '', +p.w.toFixed(5), +p.fh.toFixed(3)]);
+    }
+    downloadText(`firecal_hotspots_${start}_${end}.csv`, rows.map(r => r.map(csvCell).join(',')).join('\n'));
+    toast(`${fmt(rows.length - 1)} hotspots exported`);
+  }
+};
+
+/* Same placeholder method as backend/harmonization.py (global ratio over overlap months) */
+function harmonizeLocal(points) {
+  const agg = {};
+  for (const p of points) {
+    const m = p.date.slice(0, 7), a = agg[m] || (agg[m] = { mn: 0, vn: 0, mf: 0, vf: 0, mAll: 0, vAll: 0 });
+    if (p.sensor === 'MODIS') { a.mAll++; if (p.cc !== 'low') { a.mn++; a.mf += p.frp; } }
+    else { a.vAll++; if (p.cc !== 'low') { a.vn++; a.vf += p.frp; } }
+  }
+  let sm = 0, sv = 0, smf = 0, svf = 0, n = 0, vStart = null;
+  for (const m of Object.keys(agg).sort()) {
+    const a = agg[m];
+    if (a.vAll > 0 && !vStart) vStart = m;
+    if (a.mn > 0 && a.vn > 0) { sm += a.mn; sv += a.vn; smf += a.mf; svf += a.vf; n++; }
+  }
+  const kn = sv ? sm / sv : 1, kf = svf ? smf / svf : 1;
+  for (const p of points) {
+    const m = p.date.slice(0, 7), a = agg[m];
+    const useV = vStart && m >= vStart && (a.vAll > 0 || a.mAll === 0);
+    if (p.sensor === 'VIIRS') { p.w = useV ? kn : 0; p.fh = useV ? p.frp * kf : 0; }
+    else { p.w = useV ? 0 : 1; p.fh = useV ? 0 : p.frp; }
+  }
+  return { name: 'placeholder-ratio (browser)', version: '0.1', status: 'placeholder',
+           description: 'Global ratio of monthly MODIS / VIIRS sums over overlap months.',
+           params: { k_count: +kn.toFixed(5), k_frp: +kf.toFixed(5), overlap_months: n, viirs_start: vStart } };
 }
 
 /* ---------- demo data (synthetic, clearly labelled) ---------- */
@@ -274,10 +430,7 @@ function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = 
 function makeDemo() {
   const r = mulberry32(42);
   const gauss = () => { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
-  const clusters = [
-    { lat: -12.5, lon: -55.5, s: 1.1, w: 1 }, { lat: -16.8, lon: -61.0, s: 0.8, w: .8 },
-    { lat: -9.5, lon: -63.0, s: 0.9, w: .7 }, { lat: -19.5, lon: -57.0, s: 0.6, w: .5 }, { lat: -14.0, lon: -48.0, s: 1.2, w: .6 }
-  ];
+  const clusters = [{ lat: -12.5, lon: -55.5, s: 1.1, w: 1 }, { lat: -16.8, lon: -61.0, s: 0.8, w: .8 }, { lat: -9.5, lon: -63.0, s: 0.9, w: .7 }, { lat: -19.5, lon: -57.0, s: 0.6, w: .5 }, { lat: -14.0, lon: -48.0, s: 1.2, w: .6 }];
   const wsum = clusters.reduce((a, c) => a + c.w, 0);
   const pick = () => { let x = r() * wsum; for (const c of clusters) { x -= c.w; if (x <= 0) return c; } return clusters[0]; };
   const yearFactor = { 2004: 1.4, 2005: 1.5, 2007: 1.6, 2010: 1.7, 2019: 1.3, 2020: 1.8, 2024: 1.9 };
@@ -285,15 +438,10 @@ function makeDemo() {
   const pts = [];
   const emit = (sensor, n, mk, y) => {
     for (let i = 0; i < n; i++) {
-      const c = pick(), day = 1 + Math.floor(r() * 28);
-      pts.push({
-        lat: +(c.lat + gauss() * c.s).toFixed(4), lon: +(c.lon + gauss() * c.s).toFixed(4),
-        date: `${mk}-${String(day).padStart(2, '0')}`, mk, sensor,
-        frp: +(sensor === 'MODIS' ? Math.exp(2.6 + gauss() * .9) : Math.exp(1.5 + gauss() * .9)).toFixed(1),
-        conf: sensor === 'MODIS' ? Math.round(15 + r() * 85) : (r() < .12 ? 'l' : r() < .85 ? 'n' : 'h'),
-        sat: sensor === 'MODIS' ? (r() < .5 ? 'Terra' : 'Aqua') : (y < 2018 || r() < .5 ? 'Suomi NPP' : 'NOAA-20'),
-        type: r() < .97 ? 0 : 2
-      });
+      const c = pick(), conf = sensor === 'MODIS' ? Math.round(15 + r() * 85) : (r() < .12 ? 'l' : r() < .85 ? 'n' : 'h');
+      pts.push({ lat: +(c.lat + gauss() * c.s).toFixed(4), lon: +(c.lon + gauss() * c.s).toFixed(4), date: `${mk}-${pad(1 + Math.floor(r() * 28))}`,
+        sensor, frp: +(sensor === 'MODIS' ? Math.exp(2.6 + gauss() * .9) : Math.exp(1.5 + gauss() * .9)).toFixed(1), conf, cc: confClass(sensor, conf),
+        sat: sensor === 'MODIS' ? (r() < .5 ? 'Terra' : 'Aqua') : (y < 2018 || r() < .5 ? 'N' : 'N20'), type: r() < .97 ? 0 : 2 });
     }
   };
   for (const mk of monthsBetween('2003-01', '2026-10')) {
@@ -305,72 +453,41 @@ function makeDemo() {
   return pts;
 }
 
-/* ---------- FIRMS CSV loader ---------- */
+/* ---------- FIRMS CSV loader (local mode) ---------- */
+function confClass(sensor, conf) {
+  if (sensor === 'MODIS') { const n = +conf; return n < 30 ? 'low' : n < 80 ? 'nominal' : 'high'; }
+  return ({ l: 'low', n: 'nominal', h: 'high' })[String(conf).toLowerCase().charAt(0)] || 'nominal';
+}
 function normRow(r) {
   const lat = +r.latitude, lon = +r.longitude;
   if (!isFinite(lat) || !isFinite(lon) || !r.acq_date) return null;
-  const date = String(r.acq_date).slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
-  const inst = String(r.instrument || '').toUpperCase();
-  const sensor = (inst.includes('VIIRS') || 'bright_ti4' in r) ? 'VIIRS' : 'MODIS';
-  let conf = r.confidence;
-  conf = sensor === 'VIIRS' ? String(conf ?? 'n').toLowerCase().charAt(0) : +conf;
-  return { lat, lon, date, mk: date.slice(0, 7), sensor, frp: +r.frp || 0, conf, sat: r.satellite ?? '',
+  const date = String(r.acq_date).slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const sensor = (String(r.instrument || r.sensor || '').toUpperCase().includes('VIIRS') || 'bright_ti4' in r) ? 'VIIRS' : 'MODIS';
+  const conf = r.confidence ?? '';
+  return { lat, lon, date, sensor, frp: +r.frp || 0, conf, cc: confClass(sensor, conf), sat: r.satellite ?? '',
            type: (r.type === undefined || r.type === null || r.type === '') ? null : +r.type };
-}
-function parseFile(file) {
-  return new Promise((resolve, reject) => Papa.parse(file, {
-    header: true, dynamicTyping: true, skipEmptyLines: true, worker: false,
-    complete: res => resolve(res.data.map(normRow).filter(Boolean)), error: reject
-  }));
 }
 $('file').addEventListener('change', async e => {
   const files = [...e.target.files]; if (!files.length) return;
-  toast(`Reading ${files.length} file(s)…`);
+  toast(`Reading ${files.length} file(s)… large files take a while`);
   try {
-    const parts = await Promise.all(files.map(parseFile));
+    const parts = await Promise.all(files.map(file => new Promise((res, rej) => Papa.parse(file, {
+      header: true, dynamicTyping: true, skipEmptyLines: true, complete: x => res(x.data.map(normRow).filter(Boolean)), error: rej }))));
     const all = parts.flat();
     if (!all.length) { toast('No hotspots found. Are these FIRMS CSV files?'); return; }
     const nM = all.filter(p => p.sensor === 'MODIS').length;
-    state.fixedK = null;
-    loadData(all, `${files.length} file(s) · ${fmt(all.length)} hotspots (MODIS ${fmt(nM)}, VIIRS ${fmt(all.length - nM)})`, false);
-    toast('Data loaded');
+    useProvider(LocalProvider.load(all, `${files.length} file(s) · ${fmt(all.length)} hotspots (MODIS ${fmt(nM)}, VIIRS ${fmt(all.length - nM)})`, false));
   } catch (err) { console.error(err); toast('Could not read the file(s)'); }
   e.target.value = '';
 });
-$('demoBtn').addEventListener('click', () => { state.fixedK = null; loadData(makeDemo(), 'Demo data (synthetic)', true); });
-$('liveBtn').addEventListener('click', () => loadLive(true));
-
-/* ---------- live data (data/hotspots.csv, kept current by update.py + GitHub Actions) ---------- */
-async function getJson(url) { try { const r = await fetch(url, { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch { return null; } }
-async function loadLive(manual) {
-  const bust = '?t=' + Date.now();
-  const [meta, harm] = await Promise.all([getJson('data/meta.json' + bust), getJson('data/harmonization.json' + bust)]);
-  Papa.parse('data/hotspots.csv' + bust, {
-    download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
-    complete: res => {
-      const pts = res.data.map(normRow).filter(Boolean);
-      if (!pts.length) return fallback();
-      state.fixedK = harm && isFinite(harm.k_count) ? harm : null;
-      const upd = meta && meta.updated ? ` · updated ${meta.updated.slice(0, 10)}` : '';
-      loadData(pts, `FIRMS · ${fmt(pts.length)} hotspots${upd}`, false);
-      if (manual) toast('Live data loaded');
-    },
-    error: fallback
-  });
-  function fallback() {
-    if (manual) toast(location.protocol === 'file:' ? 'Open the app via a web server to load data/hotspots.csv' : 'No live data found (data/hotspots.csv)');
-    if (!state.points.length) { state.fixedK = null; loadData(makeDemo(), 'Demo data (synthetic)', true); }
-  }
-}
+$('demoBtn').addEventListener('click', () => useProvider(LocalProvider.load(makeDemo(), 'Demo data (synthetic)', true)));
+$('apiBtn').addEventListener('click', () => ApiProvider.meta && useProvider(ApiProvider));
 
 /* ---------- map ---------- */
-const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([-14, -56], 5);
-/* Basemap: Esri World Light Gray (no API key needed). Falls back to grayscale OpenStreetMap if it fails. */
+let zoomTimer = null;
+const map = L.map('map', { zoomControl: true, worldCopyJump: true }).setView([0, 0], 2);
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
-const grayBase = L.tileLayer(ESRI + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Basemap &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16
-}).addTo(map);
+const grayBase = L.tileLayer(ESRI + 'World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { attribution: 'Basemap &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16 }).addTo(map);
 const grayLabels = L.tileLayer(ESRI + 'World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, pane: 'shadowPane' }).addTo(map);
 let tileErrors = 0;
 grayBase.on('tileerror', () => {
@@ -380,33 +497,29 @@ grayBase.on('tileerror', () => {
 });
 map.attributionControl.addAttribution('Fire data: NASA LANCE FIRMS');
 const heatGradient = {}; VIRIDIS.forEach((c, i) => { heatGradient[(0.25 + 0.75 * i / (VIRIDIS.length - 1)).toFixed(3)] = c; });
-const heat = L.heatLayer([], { radius: 18, blur: 20, max: state.heatMax, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGradient }).addTo(map);
-map.on('zoomend', () => { heat.options.maxZoom = map.getZoom(); heat.redraw(); });
+const heat = L.heatLayer([], { radius: 14, blur: 16, max: 1, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGradient }).addTo(map);
+map.on('zoomend', () => { heat.options.maxZoom = map.getZoom(); clearTimeout(zoomTimer); zoomTimer = setTimeout(() => refreshHeat(true), 250); });
 $('mapLegendBar').style.background = viridisCss; $('calLegendBar').style.background = viridisCss;
 
 const drawn = new L.FeatureGroup().addTo(map);
 const shape = { color: '#21708a', weight: 2, fillOpacity: 0.06 };
 map.addControl(new L.Control.Draw({
   position: 'topleft',
-  draw: { polyline: false, circle: false, circlemarker: false, marker: false,
-          polygon: { shapeOptions: shape, allowIntersection: false }, rectangle: { shapeOptions: shape } },
+  draw: { polyline: false, circle: false, circlemarker: false, marker: false, polygon: { shapeOptions: shape, allowIntersection: false }, rectangle: { shapeOptions: shape } },
   edit: { featureGroup: drawn, edit: false, remove: false }
 }));
-map.on(L.Draw.Event.CREATED, e => { drawn.clearLayers(); drawn.addLayer(e.layer); setRegionFromLayer(e.layer, true); });
+map.on(L.Draw.Event.CREATED, e => { drawn.clearLayers(); drawn.addLayer(e.layer); setRegion(e.layer, e.layerType === 'polygon'); });
 
-function setRegionFromLayer(layer, isPoly) {
+function setRegion(layer, isPoly) {
   const b = layer.getBounds();
   let poly = null;
-  if (isPoly) {
-    const ll = layer.getLatLngs(); const ring = Array.isArray(ll[0]) ? ll[0] : ll;
-    poly = ring.map(p => [p.lat, p.lng]);
-  }
-  state.region = { minLat: b.getSouth(), maxLat: b.getNorth(), minLon: b.getWest(), maxLon: b.getEast(), poly };
+  if (isPoly) { const ll = layer.getLatLngs(); poly = (Array.isArray(ll[0]) ? ll[0] : ll).map(p => [p.lat, p.lng]); }
+  state.region = { minLat: b.getSouth(), maxLat: b.getNorth(), minLon: Math.max(-180, b.getWest()), maxLon: Math.min(180, b.getEast()), poly };
   $('minLat').value = b.getSouth().toFixed(2); $('maxLat').value = b.getNorth().toFixed(2);
   $('minLon').value = b.getWest().toFixed(2); $('maxLon').value = b.getEast().toFixed(2);
-  $('regionInfo').textContent = poly && poly.length > 4 ? `Polygon with ${poly.length} vertices` :
-    `Box ${b.getSouth().toFixed(2)}…${b.getNorth().toFixed(2)}°, ${b.getWest().toFixed(2)}…${b.getEast().toFixed(2)}°`;
-  render();
+  $('regionInfo').textContent = poly ? `Polygon with ${poly.length} vertices` :
+    `Box ${b.getSouth().toFixed(2)}…${b.getNorth().toFixed(2)}° lat, ${b.getWest().toFixed(2)}…${b.getEast().toFixed(2)}° lon`;
+  refresh();
 }
 $('applyBox').addEventListener('click', () => {
   const v = ['minLat', 'maxLat', 'minLon', 'maxLon'].map(id => parseFloat($(id).value));
@@ -415,13 +528,14 @@ $('applyBox').addEventListener('click', () => {
   }
   const rect = L.rectangle([[v[0], v[2]], [v[1], v[3]]], shape);
   drawn.clearLayers(); drawn.addLayer(rect); map.fitBounds(rect.getBounds(), { padding: [20, 20] });
-  setRegionFromLayer(rect, false);
+  setRegion(rect, false);
 });
-$('clearRegion').addEventListener('click', () => {
+function clearRegion() {
   drawn.clearLayers(); state.region = null;
   ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(id => $(id).value = '');
-  $('regionInfo').textContent = 'Whole dataset'; render();
-});
+  $('regionInfo').textContent = 'Whole dataset';
+}
+$('clearRegion').addEventListener('click', () => { clearRegion(); refresh(); });
 function pip(lat, lon, poly) {
   let inside = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -430,254 +544,285 @@ function pip(lat, lon, poly) {
   }
   return inside;
 }
-function inRegion(p) {
-  const R = state.region; if (!R) return true;
+function inRegion(p, R) {
+  if (!R) return true;
   if (p.lat < R.minLat || p.lat > R.maxLat || p.lon < R.minLon || p.lon > R.maxLon) return false;
   return R.poly ? pip(p.lat, p.lon, R.poly) : true;
 }
-const isLow = p => p.sensor === 'MODIS' ? p.conf < 30 : p.conf === 'l';
 
-/* ---------- core computation ---------- */
-function compute() {
-  const pts = state.points.filter(p => inRegion(p) && (!state.hideLow || !isLow(p)) && (!state.vegOnly || p.type === null || p.type === 0));
-  const agg = {}; // mk -> [modisCount, viirsCount, modisFrp, viirsFrp]
-  for (const p of pts) {
-    const a = agg[p.mk] || (agg[p.mk] = [0, 0, 0, 0]);
-    if (p.sensor === 'MODIS') { a[0]++; a[2] += p.frp; } else { a[1]++; a[3] += p.frp; }
-  }
-  const f = harmonizeFactors(agg);
-  if (state.useFixedK && state.fixedK) { f.kc = state.fixedK.k_count; f.kf = state.fixedK.k_frp; f.fixed = true; }
-  return { pts, agg, ...f, frpRef: median(pts.filter(p => p.sensor === 'MODIS').map(p => p.frp)) || 10 };
-}
-function harmonizeFactors(agg) {
-  let sm = 0, sv = 0, smf = 0, svf = 0; const xs = [], ys = [], xf = [], yf = [];
-  for (const mk in agg) {
-    const a = agg[mk];
-    if (a[0] > 0 && a[1] > 0) { sm += a[0]; sv += a[1]; smf += a[2]; svf += a[3]; xs.push(a[0]); ys.push(a[1]); xf.push(a[2]); yf.push(a[3]); }
-  }
-  return { kc: sv ? sm / sv : 1, kf: svf ? smf / svf : 1, rc: pearson(xs, ys), rf: pearson(xf, yf), nOverlap: xs.length };
-}
-function useViirs(mk, a) { return state.viirsStart && mk >= state.viirsStart && (a[1] > 0 || a[0] === 0); }
-function monthValue(mk, C, view = state.view) {
-  const a = C.agg[mk]; if (!a) return 0;
-  const cnt = state.metric === 'count';
-  const M = cnt ? a[0] : a[2], V = cnt ? a[1] : a[3], k = cnt ? C.kc : C.kf;
-  if (view === 'modis') return M;
-  if (view === 'viirs') return V;
-  if (view === 'viirsK') return V * k;
-  return useViirs(mk, a) ? V * k : M;
-}
-function pointWeight(p, C) {
-  const cnt = state.metric === 'count', base = cnt ? 1 : p.frp;
-  if (state.view === 'modis') return p.sensor === 'MODIS' ? base : 0;
-  if (state.view === 'viirs') return p.sensor === 'VIIRS' ? base : 0;
-  if (useViirs(p.mk, C.agg[p.mk])) return p.sensor === 'VIIRS' ? base * (cnt ? C.kc : C.kf) : 0;
-  return p.sensor === 'MODIS' ? base : 0;
-}
-
-/* ---------- data loading ---------- */
-function loadData(points, label, isDemo) {
+/* ---------- provider switching ---------- */
+function useProvider(p) {
   stopPlay();
-  state.points = points; state.label = label; state.isDemo = !!isDemo; state.mapMonth = null;
-  drawn.clearLayers(); state.region = null; ['minLat', 'maxLat', 'minLon', 'maxLon'].forEach(id => $(id).value = ''); $('regionInfo').textContent = 'Whole dataset';
-  $('source').textContent = label; $('source').className = 'pill' + (isDemo ? ' demo' : '');
-  let min = '9999-99', max = '0000-00', vs = null;
-  for (const p of points) {
-    if (p.mk < min) min = p.mk; if (p.mk > max) max = p.mk;
-    if (p.sensor === 'VIIRS' && (!vs || p.mk < vs)) vs = p.mk;
-  }
-  state.spanMonths = monthsBetween(min, max); state.viirsStart = vs;
-  state.from = min; state.to = max;
-  $('from').min = $('to').min = min; $('from').max = $('to').max = max;
-  $('from').value = min; $('to').value = max;
-  if (points.length) {
-    let s = 90, n = -90, w = 180, e = -180;
-    for (const p of points) { if (p.lat < s) s = p.lat; if (p.lat > n) n = p.lat; if (p.lon < w) w = p.lon; if (p.lon > e) e = p.lon; }
-    map.fitBounds([[s, w], [n, e]], { padding: [20, 20], maxZoom: 9 });
-  }
-  render();
+  state.provider = p;
+  const [first, last] = p.span();
+  $('source').textContent = p.label();
+  $('source').className = 'pill ' + (p.name === 'api' ? 'api' : (p.isDemo ? 'demo' : ''));
+  $('apiBtn').style.display = ApiProvider.meta && p.name !== 'api' ? '' : 'none';
+  state.from = first; state.to = last; state.mapPeriod = null;
+  ['from', 'to'].forEach(id => { $(id).min = first; $(id).max = last; });
+  $('from').value = first; $('to').value = last;
+  setGran(dayDiff(first, last) <= 92 ? 'day' : 'month', false);
+  $('typeHint').textContent = p.hasType() ? 'Type 0 = presumed vegetation fire.' : 'Current data has no type column (only archive files have it).';
+  clearRegion();
+  const [w, s, e, n] = p.bbox();
+  if (e - w > 200) map.setView([15, 0], 2); else map.fitBounds([[s, w], [n, e]], { padding: [20, 20], maxZoom: 8 });
+  refresh();
 }
 
-/* ---------- rendering ---------- */
-function unit() { return state.metric === 'count' ? 'hotspots' : 'MW FRP'; }
-function render() {
-  if (!state.points.length) return;
-  const C = compute(); state.C = C;
-  const span = state.spanMonths;
-  let from = state.from < span[0] ? span[0] : state.from, to = state.to > span[span.length - 1] ? span[span.length - 1] : state.to;
-  if (from > to) [from, to] = [to, from];
-  state.rangeMonths = monthsBetween(from, to);
-  if (state.mapMonth && !state.rangeMonths.includes(state.mapMonth)) state.mapMonth = null;
-
-  const spanSeries = {}; for (const mk of span) spanSeries[mk] = monthValue(mk, C);
-  const med = {}; for (let m = 1; m <= 12; m++) med[m] = median(span.filter(mk => +mk.slice(5, 7) === m).map(mk => spanSeries[mk]));
-  const series = {}; for (const mk of state.rangeMonths) series[mk] = spanSeries[mk] ?? 0;
-  state.series = series; state.med = med;
-
-  renderHarmInfo(C); renderKPIs(series, med); renderCalendar(series); renderAnomaly(series, med); renderCompare(C); renderHeat();
+/* ---------- data flow ---------- */
+async function refresh() {          // filters / region / granularity changed -> refetch series
+  const p = state.provider; if (!p) return;
+  const id = ++state.req; busy(true);
+  try {
+    const rows = await p.series(filters(), state.gran);
+    if (id !== state.req) return;
+    state.rows = rows;
+    renderAll(); await refreshHeat(true);
+  } catch (err) { console.error(err); toast('Could not load data'); }
+  finally { if (id === state.req) busy(false); }
 }
+function onRangeChange() { state.mapPeriod = null; renderAll(); refreshHeat(true); }
 
-function renderHarmInfo(C) {
-  const cnt = state.metric === 'count', k = cnt ? C.kc : C.kf, r = cnt ? C.rc : C.rf;
-  const toggle = state.fixedK ? `<label class="row" style="margin-top:6px"><input type="checkbox" id="useFixedK" ${state.useFixedK ? 'checked' : ''}> Use fixed calibration (${state.fixedK.period ? state.fixedK.period.join(' to ') : 'file'})</label>` : '';
-  if (C.fixed) {
-    $('harmInfo').innerHTML = `VIIRS → MODIS-equivalent factor <b>k = ${k.toFixed(3)}</b><br>fixed, from ${state.fixedK.overlap_months} overlap months of the whole dataset` +
-      (r !== null ? `<br>monthly correlation in this area <b>r = ${r.toFixed(2)}</b>` : '') + toggle;
-    return;
+function recompute() {
+  let from = state.from, to = state.to; const [first, last] = state.provider.span();
+  if (from < first) from = first; if (to > last) to = last; if (from > to) [from, to] = [to, from];
+  if (state.gran === 'day' && dayDiff(from, to) > 366) { from = addDays(to, -365); state.from = from; $('from').value = from; toast('Daily view limited to 1 year: start moved'); }
+  state.rangePeriods = periodsBetween(from, to, state.gran);
+  state.rangeStart = from; state.rangeEnd = to;
+  if (state.mapPeriod && !state.rangePeriods.includes(state.mapPeriod)) state.mapPeriod = null;
+}
+function value(p, view = state.view) {
+  const r = state.rows[p]; if (!r) return 0;
+  const c = state.metric === 'count';
+  switch (view) {
+    case 'modis': return c ? r.modis_n : r.modis_frp;
+    case 'viirs': return c ? r.viirs_n : r.viirs_frp;
+    case 'viirsH': return c ? r.viirs_h_n : r.viirs_h_frp;
+    default: return c ? r.harm_n : r.harm_frp;
   }
-  $('harmInfo').innerHTML = (C.nOverlap
-    ? `VIIRS → MODIS-equivalent factor <b>k = ${k.toFixed(3)}</b><br>from ${C.nOverlap} overlap month(s)` +
-      (r !== null ? `, monthly correlation <b>r = ${r.toFixed(2)}</b>` : '') +
-      `<br><span style="color:var(--muted)">Placeholder method · replace with the team's calibration</span>`
-    : `No month with both sensors in this area, so no harmonization factor can be estimated (k = 1).`) + toggle;
 }
-$('harmInfo').addEventListener('change', e => { if (e.target.id === 'useFixedK') { state.useFixedK = e.target.checked; render(); } });
+const unit = () => state.metric === 'count' ? 'hotspots' : 'MW FRP';
+const viewName = () => ({ harm: 'Harmonized', modis: 'MODIS raw', viirs: 'VIIRS raw' })[state.view];
 
-function renderKPIs(series, med) {
-  const keys = Object.keys(series), u = unit();
-  const total = keys.reduce((a, k) => a + series[k], 0);
-  const peak = keys.reduce((a, k) => series[k] > series[a] ? k : a, keys[0]);
-  const years = {}; keys.forEach(k => { const y = k.slice(0, 4); years[y] = (years[y] || 0) + series[k]; });
-  const by = Object.keys(years).reduce((a, y) => years[y] > years[a] ? y : a, Object.keys(years)[0]);
-  const last = keys[keys.length - 1], lv = series[last];
-  const others = state.spanMonths.filter(mk => mk.slice(5, 7) === last.slice(5, 7) && mk !== last);
-  const lm = median(others.map(mk => monthValue(mk, state.C))), nYears = others.length + 1;
-  const pct = lm > 0 && nYears >= 3 ? (lv - lm) / lm * 100 : null;
-  const pctTxt = pct === null ? 'n/a' : `${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(0)}%`;
+/* medians: monthly -> same calendar month across all years; daily -> all days in the range */
+function baseline(p, excludeSelf) {
+  if (state.gran === 'month') {
+    const m = p.slice(5, 7);
+    const vals = Object.keys(state.rows).filter(k => k.slice(5, 7) === m && (!excludeSelf || k !== p)).map(k => value(k));
+    const [first, last] = state.provider.span();
+    const years = monthsBetween(first.slice(0, 7), last.slice(0, 7)).filter(k => k.slice(5, 7) === m && (!excludeSelf || k !== p));
+    while (vals.length < years.length) vals.push(0);          // months without detections count as 0
+    return { med: median(vals), n: vals.length };
+  }
+  const vals = state.rangePeriods.filter(k => !excludeSelf || k !== p).map(k => value(k));
+  return { med: median(vals), n: vals.length };
+}
+
+function renderAll() {
+  recompute(); renderHarmInfo(); renderKPIs(); renderCalendar(); renderAnomaly(); renderCompare();
+}
+
+function renderHarmInfo() {
+  const info = state.provider.info() || {}, pr = info.params || {};
+  const st = info.status === 'final' ? 'final' : 'placeholder';
+  const params = Object.entries(pr).filter(([, v]) => v !== null && v !== undefined).map(([k, v]) => `${k} = <b>${typeof v === 'number' ? +v.toFixed(4) : v}</b>`).join('<br>');
+  const xs = [], ys = [], c = state.metric === 'count';
+  for (const p of state.rangePeriods) { const r = state.rows[p]; if (r && r.modis_n > 0 && r.viirs_n > 0) { xs.push(c ? r.modis_n : r.modis_frp); ys.push(c ? r.viirs_n : r.viirs_frp); } }
+  const rr = pearson(xs, ys);
+  $('harmInfo').innerHTML = `<b>${info.name || 'unknown'}</b> v${info.version || '?'}<span class="badge ${st}">${st}</span>` +
+    (info.description ? `<div style="color:var(--muted);margin:4px 0">${info.description}</div>` : '') +
+    (params ? `<div>${params}</div>` : '') +
+    (rr !== null ? `<div style="margin-top:4px">MODIS vs VIIRS in this area: <b>r = ${rr.toFixed(2)}</b> (${xs.length} ${state.gran === 'day' ? 'days' : 'months'})</div>` : '');
+}
+
+function renderKPIs() {
+  const ps = state.rangePeriods, u = unit(), day = state.gran === 'day';
+  const vals = ps.map(p => value(p)), total = vals.reduce((a, b) => a + b, 0);
+  const peak = ps.reduce((a, p) => value(p) > value(a) ? p : a, ps[0]);
+  let third;
+  if (day) third = `<div class="kpi"><div class="l">Daily average</div><div class="v">${fmt(total / ps.length)}</div><div class="s">${u} per day</div></div>`;
+  else {
+    const years = {}; ps.forEach(p => { const y = p.slice(0, 4); years[y] = (years[y] || 0) + value(p); });
+    const by = Object.keys(years).reduce((a, y) => years[y] > years[a] ? y : a, Object.keys(years)[0]);
+    third = `<div class="kpi"><div class="l">Busiest year</div><div class="v">${by}</div><div class="s">${fmt(years[by])} ${u}</div></div>`;
+  }
+  const last = ps[ps.length - 1], lv = value(last), b = baseline(last, true);
+  const ok = b.n >= (day ? 2 : 2) && b.med > 0, pct = ok ? (lv - b.med) / b.med * 100 : null;
   const cls = pct === null ? '' : pct >= 0 ? 'up' : 'down';
+  const label = day ? `${plabel(last)} vs median of the other days` : `${plabel(last)} vs median of other years`;
   $('kpis').innerHTML = `
-    <div class="kpi"><div class="l">Total in range</div><div class="v">${fmt(total)}</div><div class="s">${u}, ${keys.length} months</div></div>
-    <div class="kpi"><div class="l">Peak month</div><div class="v">${mlabel(peak)}</div><div class="s">${fmt(series[peak])} ${u}</div></div>
-    <div class="kpi"><div class="l">Busiest year</div><div class="v">${by}</div><div class="s">${fmt(years[by])} ${u}</div></div>
-    <div class="kpi"><div class="l">${mlabel(last)} vs median of other years</div><div class="v ${cls}">${pctTxt}</div><div class="s">${nYears >= 3 ? `${fmt(lv)} vs median ${fmt(lm)}` : 'needs at least 3 years of data'}</div></div>`;
+    <div class="kpi"><div class="l">Total in range</div><div class="v">${fmt(total)}</div><div class="s">${u}, ${ps.length} ${day ? 'days' : 'months'}</div></div>
+    <div class="kpi"><div class="l">Peak ${day ? 'day' : 'month'}</div><div class="v">${plabel(peak)}</div><div class="s">${fmt(value(peak))} ${u}</div></div>
+    ${third}
+    <div class="kpi"><div class="l">${label}</div><div class="v ${cls}">${pct === null ? 'n/a' : `${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(0)}%`}</div>
+      <div class="s">${ok ? `${fmt(lv)} vs median ${fmt(b.med)}` : 'needs more history'}</div></div>`;
 }
 
-function renderCalendar(series) {
-  const keys = Object.keys(series);
-  const years = [...new Set(keys.map(k => +k.slice(0, 4)))];
-  const vals = keys.map(k => series[k]).filter(v => v > 0).sort((a, b) => a - b);
-  const ref = vals.length ? vals[Math.floor(0.95 * (vals.length - 1))] || vals[vals.length - 1] : 1;
-  let h = '<div></div>' + MONTHS.map(m => `<div class="h">${m}</div>`).join('') + '<div class="h" style="text-align:right">Year</div>';
-  for (const y of years) {
-    let ys = 0; h += `<div class="y">${y}</div>`;
-    for (let m = 1; m <= 12; m++) {
-      const mk = mkey(y, m);
-      if (!(mk in series)) { h += '<div class="cell off" aria-hidden="true"></div>'; continue; }
-      const v = series[mk]; ys += v;
-      const t = v / ref, bg = v > 0 ? viridis(t) : '#efeee9', fg = v > 0 && t < 0.62 ? '#fff' : '#1f1f1d';
-      h += `<button class="cell${state.mapMonth === mk ? ' sel' : ''}" data-mk="${mk}" style="background:${bg};color:${fg}" title="${mlabel(mk)}: ${fmt(v)} ${unit()}" aria-label="${mlabel(mk)}: ${fmt(v)} ${unit()}">${short(v)}</button>`;
+function cellHtml(p, v, ref) {
+  const t = v / ref, bg = v > 0 ? viridis(t) : '#efeee9', fg = v > 0 && t < 0.62 ? '#fff' : '#1f1f1d';
+  return `<button class="cell${state.mapPeriod === p ? ' sel' : ''}" data-p="${p}" style="background:${bg};color:${fg}" title="${plabel(p)}: ${fmt(v)} ${unit()}" aria-label="${plabel(p)}: ${fmt(v)} ${unit()}">${short(v)}</button>`;
+}
+function renderCalendar() {
+  const ps = state.rangePeriods, inR = new Set(ps);
+  const ref = quantile(ps.map(p => value(p)).filter(v => v > 0), 0.95);
+  const cal = $('cal'); let h = '';
+  if (state.gran === 'month') {
+    cal.style.gridTemplateColumns = '44px repeat(12,minmax(0,1fr)) 54px';
+    h = '<div></div>' + MONTHS.map(m => `<div class="h">${m}</div>`).join('') + '<div class="h" style="text-align:right">Year</div>';
+    for (const y of [...new Set(ps.map(p => +p.slice(0, 4)))]) {
+      let ys = 0; h += `<div class="y">${y}</div>`;
+      for (let m = 1; m <= 12; m++) {
+        const p = `${y}-${pad(m)}`;
+        if (!inR.has(p)) { h += '<div class="cell off" aria-hidden="true"></div>'; continue; }
+        const v = value(p); ys += v; h += cellHtml(p, v, ref);
+      }
+      h += `<div class="t">${short(ys)}</div>`;
     }
-    h += `<div class="t">${short(ys)}</div>`;
+  } else {
+    cal.style.gridTemplateColumns = '86px repeat(7,minmax(0,1fr)) 54px';
+    h = '<div></div>' + WD.map(d => `<div class="h">${d}</div>`).join('') + '<div class="h" style="text-align:right">Week</div>';
+    const s0 = toDate(ps[0]), monday = addDays(ps[0], -((s0.getUTCDay() + 6) % 7));
+    for (let w = monday; w <= ps[ps.length - 1]; w = addDays(w, 7)) {
+      let ws = 0; h += `<div class="y">${plabel(w)}</div>`;
+      for (let i = 0; i < 7; i++) {
+        const p = addDays(w, i);
+        if (!inR.has(p)) { h += '<div class="cell off" aria-hidden="true"></div>'; continue; }
+        const v = value(p); ws += v; h += cellHtml(p, v, ref);
+      }
+      h += `<div class="t">${short(ws)}</div>`;
+    }
   }
-  $('cal').innerHTML = h;
+  cal.innerHTML = h;
   $('calLegendMax').textContent = `≥ ${short(ref)} ${unit()} (95th percentile)`;
-  $('calDesc').textContent = `${state.view === 'harm' ? 'Harmonized' : state.view === 'modis' ? 'MODIS raw' : 'VIIRS raw'} ${unit()} per month. Click a month to show it on the map.`;
+  $('calDesc').textContent = `${viewName()} ${unit()} per ${state.gran === 'day' ? 'day' : 'month'}. Click a cell to show it on the map.`;
 }
 $('cal').addEventListener('click', e => {
-  const b = e.target.closest('.cell[data-mk]'); if (!b) return;
-  stopPlay(); selectMapMonth(state.mapMonth === b.dataset.mk ? null : b.dataset.mk);
+  const b = e.target.closest('.cell[data-p]'); if (!b) return;
+  stopPlay(); selectMapPeriod(state.mapPeriod === b.dataset.p ? null : b.dataset.p);
 });
-function selectMapMonth(mk) {
-  state.mapMonth = mk;
+function selectMapPeriod(p) {
+  state.mapPeriod = p;
   document.querySelectorAll('.cell.sel').forEach(c => c.classList.remove('sel'));
-  if (mk) { const c = document.querySelector(`.cell[data-mk="${mk}"]`); if (c) c.classList.add('sel'); }
-  renderHeat();
+  if (p) { const c = document.querySelector(`.cell[data-p="${p}"]`); if (c) c.classList.add('sel'); }
+  return refreshHeat(false);
 }
 
 const plotCfg = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ['lasso2d', 'select2d'], toImageButtonOptions: { format: 'png', scale: 2 } };
-const baseLayout = { margin: { l: 50, r: 10, t: 6, b: 36 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { family: 'system-ui,sans-serif', size: 11, color: '#3a3a37' }, xaxis: { gridcolor: '#eeede8' }, yaxis: { gridcolor: '#eeede8', zerolinecolor: '#9a9993' } };
+const baseLayout = { margin: { l: 56, r: 10, t: 6, b: 36 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { family: 'system-ui,sans-serif', size: 11, color: '#3a3a37' }, xaxis: { gridcolor: '#eeede8' }, yaxis: { gridcolor: '#eeede8', zerolinecolor: '#9a9993' } };
+const xVals = ps => ps.length > 2 ? ps.map(p => p.length === 7 ? p + '-01' : p) : ps.map(plabel);
+const xAxis = ps => ({ ...baseLayout.xaxis, type: ps.length > 2 ? 'date' : 'category' });
 
-const xAxisVals = keys => keys.length > 2 ? keys.map(k => k + '-01') : keys.map(mlabel);
-const xAxis = keys => ({ ...baseLayout.xaxis, type: keys.length > 2 ? 'date' : 'category' });
-function renderAnomaly(series, med) {
-  const keys = Object.keys(series), last = keys.length - 1;
-  const an = keys.map(k => series[k] - med[+k.slice(5, 7)]);
+function renderAnomaly() {
+  const ps = state.rangePeriods, last = ps.length - 1;
+  const meds = ps.map(p => baseline(p, false).med), an = ps.map((p, i) => value(p) - meds[i]);
+  $('anomDesc').textContent = state.gran === 'month'
+    ? 'Monthly value minus the median of the same calendar month across all years. The last month is outlined.'
+    : 'Daily value minus the median of all days in the range. Switch to monthly with several years of data for seasonal anomalies.';
   Plotly.react('anomaly', [{
-    type: 'bar', x: xAxisVals(keys), y: an, customdata: keys.map(k => [mlabel(k), fmt(series[k]), fmt(med[+k.slice(5, 7)])]),
+    type: 'bar', x: xVals(ps), y: an, customdata: ps.map((p, i) => [plabel(p), fmt(value(p)), fmt(meds[i])]),
     marker: { color: an.map(v => v >= 0 ? COLORS.warm : COLORS.cool), line: { color: an.map((v, i) => i === last ? '#000' : 'rgba(0,0,0,0)'), width: 2 } },
     hovertemplate: '%{customdata[0]}<br>value %{customdata[1]} · median %{customdata[2]}<br>anomaly %{y:+,.0f}<extra></extra>'
-  }], { ...baseLayout, bargap: 0.1, yaxis: { ...baseLayout.yaxis, title: { text: `Δ ${unit()}`, font: { size: 11 } } }, xaxis: xAxis(keys) },
+  }], { ...baseLayout, bargap: 0.1, xaxis: xAxis(ps), yaxis: { ...baseLayout.yaxis, title: { text: `Δ ${unit()}`, font: { size: 11 } } } },
   { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_anomaly' } });
 }
 
-function renderCompare(C) {
-  const keys = state.rangeMonths, x = xAxisVals(keys), useDate = keys.length > 2;
-  const tr = (view, name, color, extra = {}) => ({ type: 'scatter', mode: keys.length <= 24 ? 'lines+markers' : 'lines', name, x, y: keys.map(k => monthValue(k, C, view)), line: { color, width: 1.5, ...extra }, hovertemplate: `${name}: %{y:,.0f}<extra></extra>` });
-  const traces = [tr('modis', 'MODIS raw', COLORS.modis), tr('viirs', 'VIIRS raw', COLORS.viirs, { dash: 'dot' }), tr('viirsK', 'VIIRS × k', COLORS.viirsK), tr('harm', 'Harmonized', COLORS.harm, { width: 2.5 })];
-  const shapes = useDate && state.viirsStart && state.viirsStart >= keys[0] && state.viirsStart <= keys[keys.length - 1]
-    ? [{ type: 'line', xref: 'x', yref: 'paper', x0: state.viirsStart + '-01', x1: state.viirsStart + '-01', y0: 0, y1: 1, line: { color: '#9a9993', dash: 'dash', width: 1 } }] : [];
-  Plotly.react('compare', traces, { ...baseLayout, shapes, hovermode: 'x unified', legend: { orientation: 'h', y: 1.12, x: 0, font: { size: 11 } }, margin: { ...baseLayout.margin, t: 26 }, xaxis: xAxis(keys), yaxis: { ...baseLayout.yaxis, title: { text: unit(), font: { size: 11 } } } },
+function renderCompare() {
+  const ps = state.rangePeriods, x = xVals(ps), mode = ps.length <= 40 ? 'lines+markers' : 'lines';
+  const tr = (view, name, color, extra = {}) => ({ type: 'scatter', mode, name, x, y: ps.map(p => value(p, view)), line: { color, width: 1.5, ...extra }, marker: { size: 4 }, hovertemplate: `${name}: %{y:,.0f}<extra></extra>` });
+  const info = state.provider.info() || {}, vs = info.params && info.params.viirs_start;
+  const vx = vs ? (state.gran === 'month' ? vs.slice(0, 7) + '-01' : (vs.length === 7 ? vs + '-01' : vs)) : null;
+  const shapes = ps.length > 2 && vx && vx > x[0] && vx <= x[x.length - 1] ? [{ type: 'line', xref: 'x', yref: 'paper', x0: vx, x1: vx, y0: 0, y1: 1, line: { color: '#9a9993', dash: 'dash', width: 1 } }] : [];
+  Plotly.react('compare', [tr('modis', 'MODIS raw', COLORS.modis), tr('viirs', 'VIIRS raw', COLORS.viirs, { dash: 'dot' }), tr('viirsH', 'VIIRS harmonized', COLORS.viirsH), tr('harm', 'Harmonized total', COLORS.harm, { width: 2.5 })],
+    { ...baseLayout, shapes, hovermode: 'x unified', legend: { orientation: 'h', y: 1.14, x: 0, font: { size: 11 } }, margin: { ...baseLayout.margin, t: 28 }, xaxis: xAxis(ps), yaxis: { ...baseLayout.yaxis, title: { text: unit(), font: { size: 11 } } } },
     { ...plotCfg, toImageButtonOptions: { ...plotCfg.toImageButtonOptions, filename: 'firecal_harmonization' } });
 }
 
-function renderHeat() {
-  const C = state.C; if (!C) return;
-  const months = state.mapMonth ? [state.mapMonth] : state.rangeMonths;
-  const set = new Set(months), ref = state.metric === 'count' ? 1 : C.frpRef, norm = 1 / (months.length * ref);
-  const arr = [];
-  for (const p of C.pts) { if (!set.has(p.mk)) continue; const w = pointWeight(p, C); if (w > 0) arr.push([p.lat, p.lon, w * norm]); }
-  heat.setOptions({ max: state.heatMax, maxZoom: map.getZoom() });
-  heat.setLatLngs(arr);
-  $('mapLabel').textContent = state.mapMonth ? `Map: ${mlabel(state.mapMonth)}` : 'Map: full range (monthly average)';
-  $('mapReset').style.display = state.mapMonth ? '' : 'none';
+/* ---------- heatmap ---------- */
+/* grid cell ~ one heat-layer bin (8 px) at the current zoom, so the colour scale means "per cell" */
+function heatRes() {
+  const target = 360 / (256 * 2 ** map.getZoom()) * 8;
+  return [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 4].find(r => r >= target * 0.75) || 4;
+}
+
+async function refreshHeat(resetRef) {
+  const p = state.provider; if (!p) return;
+  const id = ++state.heatReq, f = filters(), res = heatRes();
+  try {
+    let cells, nPer;
+    if (resetRef || !state.heatRef) {
+      const all = await p.heat(f, state.rangeStart, state.rangeEnd, state.view, state.metric, res);
+      if (id !== state.heatReq) return;
+      const n = state.rangePeriods.length;
+      state.heatRef = quantile(all.map(c => c[2] / n), 0.99) || 1;
+      if (!state.mapPeriod) { cells = all; nPer = n; }
+    }
+    if (!cells) {
+      const [s, e] = state.mapPeriod ? periodRange(state.mapPeriod, state.gran) : [state.rangeStart, state.rangeEnd];
+      cells = await p.heat(f, s, e, state.view, state.metric, res);
+      if (id !== state.heatReq) return;
+      nPer = state.mapPeriod ? 1 : state.rangePeriods.length;
+    }
+    heat.setOptions({ max: state.heatMax, maxZoom: map.getZoom() });
+    heat.setLatLngs(cells.map(([la, lo, v]) => [la, lo, v / nPer / state.heatRef]));
+    $('mapLabel').textContent = state.mapPeriod ? `Map: ${plabel(state.mapPeriod)}` : `Map: full range (${state.gran === 'day' ? 'daily' : 'monthly'} average)`;
+    $('mapReset').style.display = state.mapPeriod ? '' : 'none';
+  } catch (err) { console.error(err); }
 }
 
 /* ---------- animation ---------- */
-function stopPlay() { if (state.playing) { clearInterval(state.playing); state.playing = null; $('playBtn').textContent = '▶ Play'; } }
-$('playBtn').addEventListener('click', () => {
+function stopPlay() { state.playing = false; $('playBtn').textContent = '▶ Play'; }
+$('playBtn').addEventListener('click', async () => {
   if (state.playing) { stopPlay(); return; }
-  const ms = state.rangeMonths; let i = state.mapMonth ? Math.max(0, ms.indexOf(state.mapMonth)) : 0;
-  $('playBtn').textContent = '❚❚ Pause';
-  selectMapMonth(ms[i]);
-  state.playing = setInterval(() => { i++; if (i >= ms.length) { stopPlay(); return; } selectMapMonth(ms[i]); }, 450);
+  state.playing = true; $('playBtn').textContent = '❚❚ Pause';
+  const ps = state.rangePeriods; let i = state.mapPeriod ? Math.max(0, ps.indexOf(state.mapPeriod)) : 0;
+  while (state.playing && i < ps.length) {
+    const t = Date.now(); await selectMapPeriod(ps[i++]);
+    await new Promise(r => setTimeout(r, Math.max(0, 500 - (Date.now() - t))));
+  }
+  stopPlay();
 });
-$('mapReset').addEventListener('click', () => { stopPlay(); selectMapMonth(null); });
+$('mapReset').addEventListener('click', () => { stopPlay(); selectMapPeriod(null); });
 
 /* ---------- controls ---------- */
-function seg(id, key) {
-  $(id).addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-    state[key] = b.dataset.v; render();
-  });
-}
-seg('metricSeg', 'metric'); seg('viewSeg', 'view');
-$('from').addEventListener('change', e => { if (e.target.value) { state.from = e.target.value; render(); } });
-$('to').addEventListener('change', e => { if (e.target.value) { state.to = e.target.value; render(); } });
-$('hideLow').addEventListener('change', e => { state.hideLow = e.target.checked; render(); });
-$('vegOnly').addEventListener('change', e => { state.vegOnly = e.target.checked; render(); });
+function setSeg(id, v) { $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === v)); }
+function setGran(g, doRefresh = true) { state.gran = g; setSeg('granSeg', g); state.mapPeriod = null; if (doRefresh) refresh(); }
+$('granSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b && b.dataset.v !== state.gran) setGran(b.dataset.v); });
+$('metricSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.metric = b.dataset.v; setSeg('metricSeg', state.metric); renderAll(); refreshHeat(true); });
+$('viewSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.view = b.dataset.v; setSeg('viewSeg', state.view); renderAll(); refreshHeat(true); });
+$('from').addEventListener('change', e => { if (e.target.value) { state.from = e.target.value; onRangeChange(); } });
+$('to').addEventListener('change', e => { if (e.target.value) { state.to = e.target.value; onRangeChange(); } });
+$('hideLow').addEventListener('change', e => { state.hideLow = e.target.checked; refresh(); });
+$('vegOnly').addEventListener('change', e => { state.vegOnly = e.target.checked; refresh(); });
 $('heatMax').addEventListener('input', e => { state.heatMax = +e.target.value; heat.setOptions({ max: state.heatMax }); });
 
 /* ---------- downloads ---------- */
-const csvCell = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-$('dlPoints').addEventListener('click', () => {
-  const C = state.C; if (!C) return;
-  const set = new Set(state.rangeMonths);
-  const rows = [['latitude', 'longitude', 'acq_date', 'sensor', 'satellite', 'confidence', 'frp', 'type', 'harmonized_weight']];
-  for (const p of C.pts) {
-    if (!set.has(p.mk)) continue;
-    if (state.view === 'modis' && p.sensor !== 'MODIS') continue;
-    if (state.view === 'viirs' && p.sensor !== 'VIIRS') continue;
-    const w = state.view === 'harm' ? pointWeight(p, C) / (state.metric === 'count' ? 1 : (p.frp || 1)) : 1;
-    rows.push([p.lat, p.lon, p.date, p.sensor, p.sat, p.conf, p.frp, p.type ?? '', +w.toFixed(4)]);
-  }
-  download(`firecal_hotspots_${state.rangeMonths[0]}_${state.rangeMonths[state.rangeMonths.length - 1]}.csv`, rows.map(r => r.map(csvCell).join(',')).join('\n'));
-  toast(`${fmt(rows.length - 1)} hotspots exported`);
-});
+$('dlPoints').addEventListener('click', () => state.provider && state.provider.downloadPoints(filters(), state.rangeStart, state.rangeEnd, state.view));
 $('dlSummary').addEventListener('click', () => {
-  const C = state.C; if (!C) return;
-  const rows = [['month', 'modis', 'viirs', 'viirs_x_k', 'harmonized', 'view', 'view_value', 'median_same_month', 'anomaly', 'metric', 'k']];
-  const k = state.metric === 'count' ? C.kc : C.kf;
-  for (const mk of state.rangeMonths) {
-    const v = state.series[mk], md = state.med[+mk.slice(5, 7)];
-    rows.push([mk, +monthValue(mk, C, 'modis').toFixed(2), +monthValue(mk, C, 'viirs').toFixed(2), +monthValue(mk, C, 'viirsK').toFixed(2), +monthValue(mk, C, 'harm').toFixed(2),
-               state.view, +v.toFixed(2), +md.toFixed(2), +(v - md).toFixed(2), state.metric, +k.toFixed(4)]);
+  if (!state.provider) return;
+  const info = state.provider.info() || {};
+  const rows = [['period', 'modis_n', 'viirs_n', 'modis_h_n', 'viirs_h_n', 'harm_n', 'modis_frp', 'viirs_frp', 'harm_frp', 'view', 'metric', 'view_value', 'median', 'anomaly', 'harmonization']];
+  for (const p of state.rangePeriods) {
+    const r = state.rows[p] || {}, v = value(p), md = baseline(p, false).med, n = x => +(x || 0).toFixed(3);
+    rows.push([p, n(r.modis_n), n(r.viirs_n), n(r.modis_h_n), n(r.viirs_h_n), n(r.harm_n), n(r.modis_frp), n(r.viirs_frp), n(r.harm_frp), state.view, state.metric, n(v), n(md), n(v - md), `${info.name || ''} ${info.version || ''}`.trim()]);
   }
-  download('firecal_monthly_summary.csv', rows.map(r => r.map(csvCell).join(',')).join('\n'));
+  downloadText(`firecal_summary_${state.gran}_${state.rangeStart}_${state.rangeEnd}.csv`, rows.map(r => r.map(csvCell).join(',')).join('\n'));
 });
 
-/* ---------- start ---------- */
-loadLive(false);
+/* ---------- methodology (content/methodology.md, filled in later) ---------- */
+(async () => {
+  try {
+    const r = await fetch('content/methodology.md', { cache: 'no-store' }); if (!r.ok) throw 0;
+    const md = await r.text();
+    $('method').innerHTML = window.marked ? marked.parse(md) : `<pre>${md.replace(/</g, '&lt;')}</pre>`;
+    $('method').querySelectorAll('p').forEach(p => { if (/^\s*(TODO|To be added)/i.test(p.textContent)) p.classList.add('todo'); });
+  } catch { $('method').innerHTML = '<h1>Methodology</h1><p class="todo">To be added.</p>'; }
+})();
+
+/* ---------- start: API if reachable, otherwise demo ---------- */
+(async () => {
+  try { useProvider(await ApiProvider.init()); }
+  catch { useProvider(LocalProvider.load(makeDemo(), 'Demo data (synthetic)', true)); }
+})();
 </script>
 </body>
 </html>
