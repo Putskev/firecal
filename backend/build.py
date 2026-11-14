@@ -51,9 +51,23 @@ def needs_build() -> bool:
     if not (os.path.exists(META) and os.path.exists(CELLS_DAY) and os.path.isdir(HOTSPOTS_DIR)):
         return True
     _, files = _inputs()
-    deps = files + [harmonization.__file__, __file__] + glob.glob(os.path.join(HARMONIZED_DIR, "*.json"))
+    from . import regions
+    deps = (files + [harmonization.__file__, regions.__file__, __file__]
+            + glob.glob(os.path.join(HARMONIZED_DIR, "*.json"))
+            + glob.glob(os.path.join(os.path.dirname(RAW), "calibration", "*.csv")))
     built = os.path.getmtime(META)
-    return any(os.path.getmtime(f) > built for f in deps if os.path.exists(f))
+    if any(os.path.getmtime(f) > built for f in deps if os.path.exists(f)):
+        return True
+    # input files added, removed or still being written (e.g. git pull while the server reloads)
+    try:
+        with open(META) as f:
+            return json.load(f).get("inputs") != _signature(files)
+    except (OSError, ValueError):
+        return True
+
+
+def _signature(files: list[str]) -> list[list]:
+    return [[os.path.basename(f), os.path.getsize(f)] for f in files if os.path.exists(f)]
 
 
 def _read(path: str) -> pd.DataFrame:
@@ -133,6 +147,7 @@ def build(force: bool = False) -> dict:
         json.dump(info, f, indent=2, default=str)
     meta = {
         "data_version": datetime.now(timezone.utc).strftime("%Y%m%d-%H%M"),
+        "inputs": _signature(files),
         "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "rows": int(len(df)),
         "first_date": df["acq_date"].min(), "last_date": df["acq_date"].max(),
