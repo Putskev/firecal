@@ -30,9 +30,12 @@ data/raw/*.parquet  ◄──────────────────┘
         ▼ backend/build.py  ── ruft backend/harmonization.py auf   ◄── HIER kommt die Harmonisierung rein
         │                   ── oder nimmt data/harmonized/* direkt  ◄── ODER fertige Tabelle hier ablegen
         ▼
-data/processed/hotspots.parquet  (+ harmonization.json, meta.json)
+data/processed/
+   hotspots/y=2026/m=11/*.parquet   alle harmonisierten Hotspots, nach Jahr/Monat aufgeteilt
+   cells_month.parquet              vorberechnete Summen: Monat × 0,1°-Zelle
+   cells_day.parquet                vorberechnete Summen: Tag × 0,25°-Zelle
         │
-        ▼ backend/main.py (FastAPI + DuckDB im Speicher)
+        ▼ backend/main.py (FastAPI + DuckDB liest die Parquet-Dateien direkt von der Platte)
 /api/meta · /api/timeseries · /api/heatmap · /api/hotspots.csv
         │
         ▼
@@ -46,6 +49,21 @@ index.html (Karte, Kalender, Anomalien, Harmonisierungs-Check, Methodik)
 | `data/harmonized/` | optional: fertige harmonisierte Tabelle (Drop-in) | ja |
 | `data/processed/` | vom Backend gebaut | nein |
 | `content/methodology.md` | Methodik-Text, wird in der App angezeigt | ja |
+
+## Speicher und Geschwindigkeit
+
+DuckDB liest die Parquet-Dateien direkt von der Platte, es wird nichts komplett in den Arbeitsspeicher geladen.
+
+- **Kalender, Anomalien, Harmonisierungs-Check** lesen nur die vorberechneten Zellen-Summen.
+- **Heatmap** nutzt die Zellen-Summen und lädt nur den sichtbaren Kartenausschnitt. Nur stark
+  hineingezoomt (Raster feiner als 0,25°) werden einzelne Hotspots gelesen.
+- **CSV-Export** liest einzelne Hotspots, aber nur die Jahr/Monat-Ordner im gewählten Zeitraum.
+- Ein Gebiet zählt bei den Zellen-Summen als „drin“, wenn der Zellmittelpunkt drin liegt (0,1° bzw. 0,25°).
+
+Test mit 10,4 Mio. Hotspots (12-fache Woche): API braucht 0,3 GB RAM, Abfragen 50–110 ms,
+CSV-Export einer Woche Australien 0,6 s. **Der Build-Schritt** (Harmonisierung mit pandas) braucht dagegen
+etwa 0,4 GB RAM pro Million Hotspots. Für die volle Archiv-Historie den Build auf einem Rechner mit genug
+RAM laufen lassen oder jahresweise harmonisieren und das Ergebnis nach `data/harmonized/` legen.
 
 ## Neue Daten einlesen
 

@@ -498,7 +498,12 @@ grayBase.on('tileerror', () => {
 map.attributionControl.addAttribution('Fire data: NASA LANCE FIRMS');
 const heatGradient = {}; VIRIDIS.forEach((c, i) => { heatGradient[(0.25 + 0.75 * i / (VIRIDIS.length - 1)).toFixed(3)] = c; });
 const heat = L.heatLayer([], { radius: 14, blur: 16, max: 1, maxZoom: map.getZoom(), minOpacity: 0.05, gradient: heatGradient }).addTo(map);
-map.on('zoomend', () => { heat.options.maxZoom = map.getZoom(); clearTimeout(zoomTimer); zoomTimer = setTimeout(() => refreshHeat(true), 250); });
+let lastZoom = map.getZoom();
+map.on('moveend', () => {               // reload heat for the visible area; new colour scale only when zoom changed
+  heat.options.maxZoom = map.getZoom();
+  const zoomed = map.getZoom() !== lastZoom; lastZoom = map.getZoom();
+  clearTimeout(zoomTimer); zoomTimer = setTimeout(() => refreshHeat(zoomed), 250);
+});
 $('mapLegendBar').style.background = viridisCss; $('calLegendBar').style.background = viridisCss;
 
 const drawn = new L.FeatureGroup().addTo(map);
@@ -744,9 +749,20 @@ function heatRes() {
   return [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 4].find(r => r >= target * 0.75) || 4;
 }
 
+/* visible map area (padded), intersected with the selected region -> only that part is requested */
+function viewFilters() {
+  const f = filters(), b = map.getBounds().pad(0.25);
+  let v = [Math.max(-180, b.getWest()), Math.max(-90, b.getSouth()), Math.min(180, b.getEast()), Math.min(90, b.getNorth())];
+  if (b.getEast() - b.getWest() >= 360) v = [-180, v[1], 180, v[3]];
+  const R = state.region;
+  if (R) v = [Math.max(v[0], R.minLon), Math.max(v[1], R.minLat), Math.min(v[2], R.maxLon), Math.min(v[3], R.maxLat)];
+  if (v[0] >= v[2] || v[1] >= v[3]) return null;
+  return { ...f, bbox: v.map(x => +x.toFixed(4)).join(',') };
+}
 async function refreshHeat(resetRef) {
   const p = state.provider; if (!p) return;
-  const id = ++state.heatReq, f = filters(), res = heatRes();
+  const id = ++state.heatReq, res = heatRes(), f = viewFilters();
+  if (!f) { heat.setLatLngs([]); return; }
   try {
     let cells, nPer;
     if (resetRef || !state.heatRef) {
