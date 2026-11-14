@@ -665,7 +665,7 @@ $('apiBtn').addEventListener('click', () => ApiProvider.m && useProvider(ApiProv
 let zoomTimer = null;
 const map = L.map('map', { zoomControl: true, worldCopyJump: true, preferCanvas: true }).setView([0, 0], 2);
 // leaflet.heat draws with getImageData, which throws while the map has no size (hidden tab, collapsed panel)
-if (L.HeatLayer) { const _rd = L.HeatLayer.prototype._redraw; L.HeatLayer.prototype._redraw = function () { const z = this._map && this._map.getSize(); if (!z || z.x < 1 || z.y < 1) return; return _rd.call(this); }; }
+if (L.HeatLayer) { const _rd = L.HeatLayer.prototype._redraw; L.HeatLayer.prototype._redraw = function () { const z = this._map && this._map.getSize(); if (!z || z.x < 1 || z.y < 1) return; if (this._canvas && (!this._canvas.width || !this._canvas.height)) { this._reset(); if (!this._canvas.width || !this._canvas.height) return; } return _rd.call(this); }; }
 const store = { get(k, d) { try { const v = localStorage.getItem('firecal.' + k); return v === null ? d : v; } catch { return d; } },
                 set(k, v) { try { localStorage.setItem('firecal.' + k, v); } catch {} } };
 
