@@ -40,7 +40,9 @@ main{padding:12px 16px;max-width:1700px;margin:0 auto;display:flex;flex-directio
 .card .how{font-size:12px;color:var(--muted);margin:2px 0 8px}
 .head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.head .grow{flex:1}
 .grid{display:grid;gap:12px}
-.g-map{grid-template-columns:minmax(0,2fr) minmax(320px,1fr)}
+.g-map{grid-template-columns:minmax(0,1fr) 12px minmax(260px,var(--kpiW,33%));column-gap:0}
+.g-map.kfold{grid-template-columns:minmax(0,1fr)}.g-map.kfold>#kpiResize,.g-map.kfold>[data-w="kpis"]{display:none!important}
+#kpiResize{cursor:col-resize;touch-action:none}#kpiResize:hover,#kpiResize.on{background:linear-gradient(90deg,transparent 5px,var(--accent) 5px 7px,transparent 7px)}
 .g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
 #mapwrap{position:relative;height:520px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
@@ -126,7 +128,7 @@ footer{max-width:1700px;margin:0 auto;padding:0 16px 18px;font-size:12px;color:v
 #layersPanel .warnna{background:#c9a227;color:#1d1f24;font-weight:700;font-size:11px;text-align:center;padding:2px 6px}
 .note{font-size:12px;color:var(--muted)}
 input[type=number],input[type=date]{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px}
-@media (max-width:1150px){.g-map,.g2,.g4{grid-template-columns:1fr}.hits{margin-left:0}}
+@media (max-width:1150px){#kpiResize{display:none}.g-map,.g2,.g4{grid-template-columns:1fr}.hits{margin-left:0}}
 /* dark mode */
 body.dark{--bg:#111316;--panel:#1a1d22;--line:#2c3139;--text:#e4e4e1;--muted:#9ea4ab;color-scheme:dark}
 body.dark .btn,body.dark .seg button,body.dark .chip,body.dark input,body.dark select{background:#22262d;color:var(--text);border-color:#3a4049}
@@ -173,7 +175,7 @@ table.cmp td.up{color:var(--warm)}table.cmp td.down{color:var(--cool)}
 body.side main{max-width:none;display:grid;grid-template-columns:minmax(0,1fr) 12px var(--paneW,560px);align-items:start;gap:0}
 body.side #mainCol{container-type:inline-size}
 body.side #mapwrap{height:calc(100vh - var(--stickyTop,60px) - 260px);min-height:420px}
-@container (max-width:900px){.g-map{grid-template-columns:1fr}}
+@container (max-width:900px){.g-map{grid-template-columns:1fr}#kpiResize{display:none}}
 body.side #stats{position:sticky;top:calc(var(--stickyTop,60px) + 8px);height:calc(100vh - var(--stickyTop,60px) - 20px);overflow-y:auto;overscroll-behavior:contain;
   container-type:inline-size;background:#ecebe7;border:1px solid var(--line);border-radius:12px;padding:0 10px 10px;gap:10px}
 body.side #stats .g2,body.side #stats .g4{grid-template-columns:1fr}
@@ -228,7 +230,6 @@ header select.hsel option{color:#111}
 .kpi .l{text-transform:uppercase;font-size:10.5px;letter-spacing:.08em;font-weight:700}
 .kpi .v{font-size:19px;font-weight:900;letter-spacing:-.03em;line-height:1.15}
 .kpis{gap:6px}.kpi{padding:2px 8px}.kpi .s{font-size:10.5px}.kpi .l{font-size:9.5px}
-[data-w="kpis"].folded .kpibody{display:none}
 .stepgrp{display:inline-flex}.stepgrp .btn{margin-left:-1px}
 [data-w="calendar"] #granSeg{margin-left:8px}
 .tbadge{background:transparent;color:var(--muted);border:1px solid var(--line);font-size:10.5px}
@@ -435,7 +436,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
 
   <div class="grid g-map">
     <div data-w="map" class="card">
-      <div class="head"><h3>Map</h3><span class="tbadge" id="tb_map" title="Time span this view uses"></span><span class="grow"></span><span class="note" id="mapNote"></span></div>
+      <div class="head"><h3>Map</h3><span class="tbadge" id="tb_map" title="Time span this view uses"></span><span class="grow"></span><span class="note" id="mapNote"></span><button id="kpiShow" class="btn small" style="display:none" title="Show the key figures again">Key figures ◂</button></div>
       <p class="how">Draw a rectangle or polygon (buttons on the left) or find a place below the map (the area follows its borders) to analyse an area. Three levels, by the number of hotspots in view: up to 1,000 every single detection, up to 1,000,000 Gaussian kernels of the single detections, above that the pre-aggregated density cubes. Single detections are never converted. The bar at the bottom left shows where you are.</p>
       <div id="mapwrap">
         <div id="map" role="region" aria-label="Map"></div>
@@ -473,8 +474,9 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
         <button id="dlSummary" class="btn small">Download statistics CSV</button>
       </div>
     </div>
+    <div id="kpiResize" title="Drag to change the width (double-click: default)"></div>
     <div data-w="kpis" class="card">
-      <div class="head"><button id="kpiFold" class="btn small" title="Collapse or expand" aria-expanded="true">−</button><h3>Key figures for the selection</h3><span class="tbadge" id="tb_kpi" title="Time span this view uses"></span></div>
+      <div class="head"><h3>Key figures for the selection</h3><span class="tbadge" id="tb_kpi" title="Time span this view uses"></span><span class="grow"></span><button id="kpiFold" class="btn small" title="Hide the key figures (the map gets the space)">Hide ▸</button></div>
       <div class="kpibody">
       <p class="how">Area from the map, period from the timeline. Harmonized values are on VIIRS level.</p>
       <div class="kpis" id="kpis"></div>
@@ -526,7 +528,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
     <p class="note" id="cmpNote" style="margin-top:4px"></p>
   </div>
   <div data-w="calendar" class="card">
-    <div class="head"><h3>Burning activity calendar</h3><span class="tbadge" id="tb_cal" title="Time span this view uses"></span><div class="seg" id="granSeg"><button data-v="month">Monthly</button><button data-v="quarter">Quarterly</button><button data-v="week">Weekly</button><button data-v="day">Daily</button></div><span class="grow"></span><span class="note" id="calNote"></span></div>
+    <div class="head"><h3>Burning activity calendar</h3><span class="tbadge" id="tb_cal" title="Time span this view uses"></span><div class="seg" id="granSeg"><button data-v="month">Monthly</button><button data-v="quarter">Quarterly</button><button data-v="week">Weekly</button><button data-v="day">Daily</button></div><button id="calLink" class="btn small" title="Linked to the main period: click to give the calendar its own period">🔗 Linked</button><span id="calOwn" style="display:none;gap:4px;align-items:center"><input type="date" id="calFrom" title="Start of the calendar period"> – <input type="date" id="calTo" title="End of the calendar period"></span><span class="grow"></span><span class="note" id="calNote"></span></div>
     <p class="how" id="calHow"></p>
     <div class="cal" id="cal"></div>
     <div class="legendrow"><span>0</span><div class="bar" id="calLegendBar"></div><span id="calLegendMax"></span>
@@ -1619,7 +1621,7 @@ function renderTimeBadges() {
   set('tl', `🕒 ${loaded}`, 'Time span shown in the timeline; the handles choose the selection for all views');
   set('map', `🕒 ${span(ms, me)}`, S.mapPeriod ? 'Period clicked in the timeline or calendar' : 'Timeline selection');
   set('kpi', `🕒 ${sel}`, 'Timeline selection');
-  set('cal', `🕒 ${sel}`, 'Timeline selection; one cell per ' + (S.gran === 'day' ? 'day' : 'month'));
+  set('cal', `🕒 ${S.calLink === false ? span(...calSpan()) : sel}`, (S.calLink === false ? 'Own period of the calendar (unlinked)' : 'Timeline selection') + '; one cell per ' + (S.gran === 'day' ? 'day' : 'month'));
   set('anom', `🕒 ${sel} · baseline: ${S.gran === 'month' ? 'same month in all other years' : 'other days of the selection'}`,
     S.gran === 'month' ? `Median of the same calendar month in the other years of ${all}` : 'Median of the other days in the selection');
   const ly = latestYear();
@@ -1722,8 +1724,28 @@ function fcMonth(mk) {
 const fcShown = () => !!(S.fc && S.fc.fit_to && S.view === 'harm' && S.rangeEnd && S.rangeEnd.slice(0, 7) >= S.fc.fit_to);
 function isoWeek(d) { const t = toDate(d), day = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - day + 3);
   const y = t.getUTCFullYear(), f = new Date(Date.UTC(y, 0, 4)); return [y, 1 + Math.round(((t - f) / 864e5 - 3 + ((f.getUTCDay() + 6) % 7)) / 7)]; }
+// calendar period: the main selection (linked) or its own (unlinked), inside the loaded data
+function calSpan() {
+  if (S.calLink !== false || !S.calFrom || !S.calTo) return [S.rangeStart, S.rangeEnd];
+  const first = S.gran === 'day' ? dayWindow().start : S.meta.first_date, last = S.meta.last_date;
+  let a = S.calFrom < first ? first : S.calFrom, b = S.calTo > last ? last : S.calTo; if (a > b) [a, b] = [b, a];
+  if (S.gran === 'day' && dayDiff(a, b) > 366) a = addDays(b, -365); return [a, b];
+}
+const calPeriods = () => S.calLink !== false ? S.rangeP : periodsBetween(...calSpan(), S.gran);
+function syncCalLink() {
+  const un = S.calLink === false, b = $('calLink');
+  b.textContent = un ? '✂ Unlinked' : '🔗 Linked'; b.classList.toggle('on', un);
+  b.title = un ? 'Own period: click to follow the main period again' : 'Linked to the main period: click to give the calendar its own period';
+  $('calOwn').style.display = un ? 'inline-flex' : 'none';
+  if (un) { const [a, z] = calSpan(); $('calFrom').value = a; $('calTo').value = z; ['calFrom', 'calTo'].forEach(id => { $(id).min = S.meta.first_date; $(id).max = S.meta.last_date; }); }
+}
+$('calLink').addEventListener('click', () => {
+  S.calLink = S.calLink === false; if (!S.calLink) { S.calFrom = S.rangeStart; S.calTo = S.rangeEnd; }
+  syncCalLink(); renderCalendar(); renderTimeBadges();
+});
+['calFrom', 'calTo'].forEach(id => $(id).addEventListener('change', e => { if (!e.target.value) return; S[id] = e.target.value; syncCalLink(); renderCalendar(); renderTimeBadges(); }));
 function renderCalendar() {
-  const ps = S.rangeP, inR = new Set(ps), cal = $('cal'), mode = S.calMode || S.gran, fcOn = fcShown();
+  const ps = calPeriods(), inR = new Set(ps), cal = $('cal'), mode = S.calMode || S.gran, fcOn = fcShown();
   let h = '', ref = 1;
   const legend = (r, per) => { $('calLegendMax').textContent = `≥ ${short(r)} ${unit()}`; $('calNote').textContent = per; };
   if (mode === 'month') {
@@ -2048,8 +2070,23 @@ function setLayout(side, collapsed) {
   store.set('layout', side ? 'side' : 'page'); store.set('collapsed', collapsed ? '1' : '0');
   setStickyTop(); relayout();
 }
-function setKpiFold(f) { const c = document.querySelector('[data-w="kpis"]'); c.classList.toggle('folded', f); $('kpiFold').textContent = f ? '+' : '−'; $('kpiFold').setAttribute('aria-expanded', String(!f)); store.set('kpiFold', f ? '1' : '0'); }
-$('kpiFold').addEventListener('click', () => setKpiFold(!document.querySelector('[data-w="kpis"]').classList.contains('folded')));
+function syncKpiLayout() {
+  const card = document.querySelector('[data-w="kpis"]'), g = card.parentElement, off = S.kpiHidden || card.style.display === 'none';
+  g.classList.toggle('kfold', off); $('kpiShow').style.display = S.kpiHidden && card.style.display !== 'none' ? '' : 'none'; relayout();
+}
+function setKpiFold(f) { S.kpiHidden = f; store.set('kpiFold', f ? '1' : '0'); syncKpiLayout(); }
+$('kpiFold').addEventListener('click', () => setKpiFold(true));
+$('kpiShow').addEventListener('click', () => setKpiFold(false));
+(function () {   // drag the border between map and key figures
+  const h = $('kpiResize'); let x0 = 0, w0 = 0;
+  const set = w => { document.documentElement.style.setProperty('--kpiW', w + 'px'); relayout(); };
+  const move = e => { const gw = h.parentElement.getBoundingClientRect().width; set(Math.max(260, Math.min(gw - 420, w0 + (x0 - e.clientX)))); };
+  const up = () => { h.classList.remove('on'); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+    store.set('kpiW', Math.round(document.querySelector('[data-w="kpis"]').getBoundingClientRect().width)); };
+  h.addEventListener('pointerdown', e => { e.preventDefault(); x0 = e.clientX; w0 = document.querySelector('[data-w="kpis"]').getBoundingClientRect().width; h.classList.add('on'); window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); });
+  h.addEventListener('dblclick', () => { document.documentElement.style.removeProperty('--kpiW'); store.set('kpiW', ''); relayout(); });
+  const w = +store.get('kpiW', ''); if (w) document.documentElement.style.setProperty('--kpiW', w + 'px');
+})();
 const isSide = () => document.body.classList.contains('side'), isCollapsed = () => document.body.classList.contains('collapsed');
 $('layoutBtn').addEventListener('click', () => setLayout(!isSide(), false));
 $('paneClose').addEventListener('click', () => setLayout(true, true));
@@ -2405,7 +2442,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 function newProject() {
   return { id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: '', desc: '', created: today(), updated: today(), palette: null,
     widgets: [...W_PRESET.essentials], charts: [], map: { base: null, places: true, mode: 'auto', colorBy: 'sensor', timeColor: false },
-    filters: { region: { kind: 'world' }, range: { kind: 'all', days: 365, from: null, to: null }, weekdays: [...ALL_WD], hours: [...ALL_HR],
+    filters: { region: { kind: 'world' }, range: { kind: 'last', days: 7, from: null, to: null }, weekdays: [...ALL_WD], hours: [...ALL_HR],
       sats: null, dn: 'all', conf: ['nominal', 'high'], metric: 'count', view: 'harm', gran: 'auto' } };
 }
 
@@ -2447,7 +2484,7 @@ function regionLabel(rg) { if (!rg || rg.kind === 'world') return 'whole world';
 function confLabel(c) { return !c || c.length === 3 ? 'all confidence' : c.join(' + '); }
 function satLabel(sa) { return !sa ? 'all satellites' : sa.join(', '); }
 function projRange(fl) {
-  const first = S.meta.first_date, last = S.meta.last_date, r = fl ? fl.range : { kind: 'all' }; let a = first, b = last;
+  const first = S.meta.first_date, last = S.meta.last_date, r = fl ? fl.range : { kind: 'last', days: 7 }; let a = first, b = last;
   if (r.kind === 'last') a = addDays(last, -(Math.max(1, +r.days || 365) - 1));
   if (r.kind === 'fixed' && r.from && r.to) { a = r.from <= r.to ? r.from : r.to; b = r.from <= r.to ? r.to : r.from; }
   if (a < first) a = first; if (b > last) b = last; if (a > b) { a = first; b = last; } return [a, b];
@@ -2517,6 +2554,7 @@ function applyWidgets(list) {
   const on = new Set(list);
   document.querySelectorAll('[data-w]').forEach(el => { if (el.dataset.w !== 'compare') el.style.display = on.has(el.dataset.w) ? '' : 'none'; });
   document.querySelectorAll('main .grid').forEach(g => { const k = [...g.children].filter(c => c.classList.contains('card')); g.style.display = k.length && k.every(c => c.style.display === 'none') ? 'none' : ''; });
+  syncKpiLayout();
   $('cmpBtn').style.display = on.has('compare') ? '' : 'none';
   if (!on.has('compare') && S.cmp) setCompare(false);
   buildJump();
