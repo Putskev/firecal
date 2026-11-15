@@ -188,27 +188,47 @@ def _parse_bbox(bbox: str | None) -> list[float] | None:
 
 
 def _parse_polygon(polygon: str | None) -> np.ndarray | None:
+    """lat,lon;lat,lon;... ; several rings (islands, holes) separated by '|'. Returns the vertices of all rings,
+    with a row of NaN between two rings."""
     if not polygon:
         return None
-    try:
-        pts = np.array([[float(v) for v in p.split(",")] for p in polygon.split(";") if p.strip()])
-    except ValueError:
-        raise HTTPException(422, "polygon must be lat,lon;lat,lon;...")
-    if pts.ndim != 2 or pts.shape[1] != 2 or len(pts) < 3:
-        raise HTTPException(422, "polygon needs at least 3 lat,lon vertices")
-    return pts
+    rings = []
+    for part in polygon.split("|"):
+        try:
+            pts = np.array([[float(v) for v in p.split(",")] for p in part.split(";") if p.strip()])
+        except ValueError:
+            raise HTTPException(422, "polygon must be lat,lon;lat,lon;... (rings separated by |)")
+        if pts.ndim != 2 or pts.shape[1] != 2 or len(pts) < 3:
+            raise HTTPException(422, "every polygon ring needs at least 3 lat,lon vertices")
+        rings.append(pts)
+    if not rings:
+        return None
+    out = [rings[0]]
+    for r in rings[1:]:
+        out += [np.full((1, 2), np.nan), r]
+    return np.vstack(out)
+
+
+def _poly_box(poly: np.ndarray) -> list[float]:
+    return [float(np.nanmin(poly[:, 1])), float(np.nanmin(poly[:, 0])), float(np.nanmax(poly[:, 1])), float(np.nanmax(poly[:, 0]))]
 
 
 def _in_polygon(lat: np.ndarray, lon: np.ndarray, poly: np.ndarray) -> np.ndarray:
+    """Even-odd rule over all rings: inside an island counts, inside a hole does not."""
     inside = np.zeros(len(lat), dtype=bool)
-    py, px = poly[:, 0], poly[:, 1]
-    j = len(poly) - 1
-    for i in range(len(poly)):
-        cond = (py[i] > lat) != (py[j] > lat)
-        with np.errstate(divide="ignore", invalid="ignore"):
-            xint = (px[j] - px[i]) * (lat - py[i]) / (py[j] - py[i]) + px[i]
-        inside ^= cond & (lon < xint)
-        j = i
+    breaks = np.where(np.isnan(poly[:, 0]))[0]
+    for ring in np.split(poly, breaks):
+        ring = ring[~np.isnan(ring[:, 0])]
+        if len(ring) < 3:
+            continue
+        py, px = ring[:, 0], ring[:, 1]
+        j = len(ring) - 1
+        for i in range(len(ring)):
+            cond = (py[i] > lat) != (py[j] > lat)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                xint = (px[j] - px[i]) * (lat - py[i]) / (py[j] - py[i]) + px[i]
+            inside ^= cond & (lon < xint)
+            j = i
     return inside
 
 
@@ -326,7 +346,7 @@ def selection(c, source, bbox, polygon, start, end, exclude_low, vegetation_only
     box = _parse_bbox(bbox)
     poly = _parse_polygon(polygon)
     if poly is not None:
-        pb = [poly[:, 1].min(), poly[:, 0].min(), poly[:, 1].max(), poly[:, 0].max()]
+        pb = _poly_box(poly)
         box = pb if box is None else [max(box[0], pb[0]), max(box[1], pb[1]), min(box[2], pb[2]), min(box[3], pb[3])]
     if box:
         where.append(f"{s['lon']} BETWEEN {_lit(box[0])} AND {_lit(box[2])} "
@@ -843,7 +863,7 @@ def _team_area(c, view: str, bbox, polygon, periods: list[str] | None):
     box = _parse_bbox(bbox)
     poly = _parse_polygon(polygon)
     if poly is not None:
-        pb = [poly[:, 1].min(), poly[:, 0].min(), poly[:, 1].max(), poly[:, 0].max()]
+        pb = _poly_box(poly)
         box = pb if box is None else [max(box[0], pb[0]), max(box[1], pb[1]), min(box[2], pb[2]), min(box[3], pb[3])]
     if box:
         where.append(f"lon BETWEEN {_lit(box[0])} AND {_lit(box[2])} AND lat BETWEEN {_lit(box[1])} AND {_lit(box[3])}")

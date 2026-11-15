@@ -253,6 +253,11 @@ Umgesetzt nach `docs/HANDOFF_Frontend_Performance.md`. Die Karte läuft auf **Ma
   * `c > Limit`: die vorberechneten **Dichtewürfel** (Zellen). Aus der Dichte kommend erst ab `c ≤ 0,95 × Limit` wieder
     Kernel (keine Sprünge an der Grenze).
   Die Knöpfe Cubes / Kernels / Points erzwingen eine Stufe (Kernels und Points nur bis zum Limit).
+* **Genaue Zahl bei Einzelpunkten:** Die Zählung aus den Zellen geht nach Zellmittelpunkt und ergibt 0, wenn man in
+  eine Zelle hineinzoomt. Sobald die Einzelpunkte geladen sind, zählt die App die Punkte im Ausschnitt genau.
+* **Details zu einem Punkt** (Sensor, Satellit, Zeit UTC und lokal, FRP, Konfidenz, Tag/Nacht, Koordinaten) beim
+  Darüberfahren, sobald höchstens 200 Punkte im Ausschnitt sind.
+* Die Ebene „Team cells“ (Tabelle B) ist von der Karte entfernt; die Endpunkte `/api/team*` gibt es weiter.
 * **Kein Flackern beim Verschieben:** Einzelpunkte werden für einen größeren Ausschnitt geladen (50 % Rand je Seite,
   wenn `c < 40 %` des Limits; sonst genau der Ausschnitt; geschnitten am gewählten Gebiet). Liegt der neue Ausschnitt
   darin, wird nichts nachgeladen. Sonst bleiben die alten Punkte stehen, oben läuft ein dünner Ladebalken
@@ -328,7 +333,16 @@ curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_s
   Keine Benutzerverwaltung.
 * **Wizard** in vier Schritten: Name → Ansichten → Filter → Prüfung. Die Prüfung zählt die Hotspots mit `/api/count`
   (mit allen Filtern) und sagt, welche Kartenstufe das ergibt (Punkte, Kernel oder Dichtewürfel).
-* **„Save current view“** übernimmt Zeitraum, Gebiet, Satelliten und Schalter des Dashboards als Projektfilter.
+* **Gebiet:** ganze Welt, Kontinent (ungefähre Box der Harmonisierungsregion), **Ort suchen** oder **auf der Karte
+  zeichnen** (Rechteck oder Polygon, im Wizard auf einer kleinen Karte). Die Ortssuche nutzt OpenStreetMap (Nominatim)
+  und übernimmt die echten Grenzen, z. B. von Deutschland, als Polygon mit mehreren Teilflächen (Inseln). Damit die
+  Grenze in jede Anfrage passt, wird sie auf höchstens ~500 Eckpunkte vereinfacht (Douglas-Peucker, sehr kleine Inseln
+  fallen weg). Das API nimmt mehrere Ringe mit `|` getrennt an (`polygon=lat,lon;…|lat,lon;…`) und prüft mit der
+  Gerade-ungerade-Regel (Insel zählt, Loch nicht). Dieselbe Suche gibt es unter der Dashboard-Karte.
+* **Karte im Projekt:** Hintergrund (Satellit, Straßen, Topografie …), Grenzen und Ortsnamen, Kartenstufe
+  (Auto, Cubes, Kernels, Points) und Farbe der Punkte. Änderungen über „Layers“ oder die Knöpfe im Projekt werden
+  im Projekt gespeichert.
+* **„Save current view“** übernimmt Zeitraum, Gebiet, Satelliten, Schalter und Karteneinstellungen als Projektfilter.
 * **Eigene Diagramme:** x-Achse (Periode, Jahr, Kalendermonat, Wochentag, lokale Stunde, FRP-Klasse, Satellit,
   Konfidenz, Tag/Nacht, aktivste Zellen) × Wert × Aggregation (Summe, Mittel je Periode, Anteil in %) × Diagrammtyp.
   Rechnet mit denselben Daten wie die übrigen Ansichten.
