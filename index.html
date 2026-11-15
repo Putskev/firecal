@@ -447,7 +447,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
         <div class="mapbar">
           <span id="mapLabel">full range</span>
           <button id="mapReset" class="btn small" style="display:none" title="Show full range">×</button>
-          <button id="layersBtn" class="btn small" title="Map background and satellite imagery">🗺 Layers</button>
+          <button id="layersBtn" class="btn small" title="Map background and overlays">🗺 Layers</button>
           <div class="seg" id="mapModeSeg" title="Auto: single points below 1,000 hotspots in view, Gaussian kernels up to 1,000,000, density cubes above"><button data-v="auto" class="on">Auto</button><button data-v="heat" title="Pre-aggregated density cubes">Cubes</button><button data-v="kernels" title="Gaussian kernels of the single detections (up to 1,000,000)">Kernels</button><button data-v="points" title="Every single detection (up to 1,000,000)">Points</button></div>
           <span class="mapconf" id="mapConf" title="Confidence classes shown on the map (map only)"></span>
           <label class="fg" title="Colour points and kernels by time within the period"><input type="checkbox" id="timeCk"> time</label>
@@ -1386,12 +1386,6 @@ function renderLayersPanel() {
   const thumb = u => tileUrl(u, 2, 2, 1);
   P.innerHTML = `<div class="lh">Background <button id="layersClose" title="Close">×</button></div>` +
     BASEMAPS.map(b => `<div class="opt ${M.base === b.id ? 'on' : ''}" data-base="${b.id}"><img alt="" loading="lazy" src="${thumb(b.url)}"><div class="t">${b.name}<small>${b.note}</small></div><span class="ck">${M.base === b.id ? '✓' : ''}</span></div>`).join('') +
-    `<div class="lh">Daily satellite imagery</div><div class="sub"><b>${date}</b></div>` +
-    `<div class="opt ${!M.daily ? 'on' : ''}" data-daily=""><img alt="" src="${thumb(baseOf(M.base).url)}"><div class="t">None<small>only the background above</small></div><span class="ck">${!M.daily ? '✓' : ''}</span></div>` +
-    DAILY.map(d => { const na = date < d.from || (d.to && date > d.to);
-      return `<div class="opt ${M.daily === d.id ? 'on' : ''} ${na ? 'na' : ''}" data-daily="${d.id}"><img alt="" loading="lazy" src="${GIBS}${d.id}/default/${date}/GoogleMapsCompatible_Level9/2/1/2.jpg"><div class="t">${d.name}<small>${d.sat}${d.to ? ` · ${d.from} to ${d.to}` : ` · since ${d.from}`}</small></div><span class="ck">${M.daily === d.id ? '✓' : ''}</span></div>` +
-        (na && M.daily === d.id ? `<div class="warnna">NO DATA FOR ${date} · available ${d.from}${d.to ? ' to ' + d.to : ' onward'}</div>` : ''); }).join('') +
-    (M.daily ? `<div class="sub">Opacity <input type="range" id="dailyOp" min="0.2" max="1" step="0.05" value="${M.dailyOpacity}"></div>` : '') +
     `<div class="lh">Overlays</div><label class="opt" style="cursor:pointer"><input type="checkbox" id="placesCk" ${M.places ? 'checked' : ''}><div class="t">Borders and place names</div></label>`;
 }
 $('layersPanel').addEventListener('click', e => {
@@ -1404,7 +1398,7 @@ $('layersPanel').addEventListener('input', e => { if (e.target.id === 'dailyOp')
 $('layersPanel').addEventListener('change', e => { if (e.target.id === 'placesCk') { M.places = e.target.checked;
   if (PROJ.cur) { projMap(PROJ.cur).places = M.places; saveProjects(); } else store.set('places', M.places ? '1' : '0'); updatePlaces(); } });
 $('layersBtn').addEventListener('click', () => { renderLayersPanel(); $('layersPanel').classList.toggle('open'); });
-M.date = M.daily ? dailyDate() : null; applyBases();
+M.daily = ''; M.date = null; applyBases();   // the daily satellite imagery choice was removed from the Layers panel
 $('calLegendBar').style.background = seqCss();
 S.dstyle = store.get('dstyle', 'cells'); setSeg('styleSeg', S.dstyle);
 
