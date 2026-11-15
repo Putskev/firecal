@@ -1,8 +1,8 @@
-# FireCal
+# Phnx (FireCal)
 
 Harmonisierter MODIS- und VIIRS-Brandkalender für die NASA Space Apps Challenge 2026
-(„Harmonization of MODIS and VIIRS Hot Spots“). Interaktives Dashboard mit verknüpften Ansichten,
-Backend mit FastAPI und DuckDB.
+(„Harmonization of MODIS and VIIRS Hot Spots“). Startseite mit Projekten (eigene Ansichten und dauerhafte Filter,
+im Browser gespeichert), interaktives Dashboard mit verknüpften Ansichten, Backend mit FastAPI und DuckDB.
 
 > **Wie funktioniert jede Zahl?** Alle Formeln und Zeiträume: [`docs/ERKLAERUNG.md`](docs/ERKLAERUNG.md).
 >
@@ -31,9 +31,11 @@ Alle Ansichten hängen an **einer Auswahl** aus Gebiet (Karte), Zeitraum (Zeitle
 
 | Ansicht | zeigt | Interaktion |
 |---|---|---|
-| Filterleiste | Kennzahl (Anzahl/FRP, pro Tag), Werte (harmonisiert/roh/MODIS/VIIRS), Satelliten, Tag/Nacht, Konfidenz, Vegetation, Monat/Tag, Trefferzahl | wirkt auf alles |
+| Startseite / Projekte | Projekte anlegen (Wizard: Name, Ansichten, Filter, Prüfung mit Hotspot-Zahl), Vorstellung, Harmonisierung, Funktionen | Projekt öffnen, bearbeiten, kopieren, löschen |
+| Projektleiste | dauerhafte Filter: Gebiet, Zeitraum, Wochentage, lokale Uhrzeit, Satelliten, Tag/Nacht, Konfidenz | „Filters“, „Views“, „Save current view“ |
+| Filterleiste | Kennzahl (Anzahl/FRP, pro Tag), Werte (harmonisiert/roh/MODIS/VIIRS), Satelliten, Tag/Nacht, Monat/Tag, Trefferzahl | wirkt auf alles |
 | Zeitleiste | ganzer Zeitraum, umgerechnete Perioden schraffiert, neue Satelliten gepunktet | Zeitraum mit dem Schieber wählen, Balken anklicken |
-| Karte (WebGL) | Dichte (Zellen oder Glow) oder echte Einzelpunkte, sobald der Ausschnitt unter 1 Mio. Hotspots liegt; Budget-Balken zeigt den Stand | Rechteck/Polygon zeichnen, Box per Lat/Lon, Maßstab in km |
+| Karte (WebGL) | drei Stufen nach Hotspots im Ausschnitt: bis 1.000 Einzelpunkte, bis 1 Mio. Gauß-Kernel, darüber Dichtewürfel; Budget-Balken zeigt den Stand | Rechteck/Polygon zeichnen, Box per Lat/Lon, Maßstab in km |
 | Kennzahlen + Erkenntnisse | harmonisierte Anzahl und FRP mit Unsicherheit, Rohzahlen je Sensor, Nacht- und High-Confidence-Anteil, aktueller Monat gegen Median; automatische Sätze zu Spitzen, Trend, Saison, Sensoren | – |
 | Brandkalender | Jahr × Monat oder Woche × Tag, umgerechnete Monate schraffiert | Klick zeigt Periode auf der Karte |
 | Anomalie | Abweichung vom Median desselben Monats in allen anderen Jahren (% oder absolut) | – |
@@ -103,6 +105,7 @@ Gemeinsame Filter: `bbox`, `polygon`, `start`, `end`, `exclude_low`, `vegetation
 | `GET /api/meta` | Zeitraum, Version, Satelliten-Zeitleiste, Methode, Kalibriertabelle |
 | `GET /api/timeseries` | je Monat/Tag: Rohwerte je Sensor, Nacht, High-Conf, harmonisiert mit Band, MODIS × Faktor |
 | `GET /api/heatmap` | Rasterzellen für die Karte |
+| `weekdays=`, `hours=` | an jedem Analyse-Endpunkt: Wochentage 1–7 (UTC-Datum) und lokale Stunden 0–23; dann aus den Einzelpunkten |
 | `GET /api/count` | Hotspots im Ausschnitt (für Dichte vs. Punkte und den Budget-Balken) |
 | `GET /api/density` | Dichte-Zellen spaltenweise, Zellgröße nach Zoom |
 | `GET /api/points.bin` | Einzelpunkte als Binärblock (max. 1 Mio., sonst 413) |

@@ -171,10 +171,16 @@ Gebieten ist das ungenau; die Karte und der Export nutzen deshalb die einzelnen 
 | per day | Wert ÷ Tage der Periode (Monate mit 28–31 Tagen und angeschnittene Perioden werden vergleichbar) |
 | Values | siehe 4.3 |
 | Satellites, Time of day | **nur Rohwerte und Karte**. Harmonisierte Werte nutzen immer alle Satelliten und Tag+Nacht, weil die Faktoren so definiert sind. Es erscheinen nur Satelliten, die in den Daten vorkommen. |
-| incl. low confidence | ohne Haken: `low` überall weggelassen |
-| vegetation only | nur `type = 0` (Vegetationsfeuer); Zeilen ohne Typ (NRT) bleiben drin |
+| Konfidenz (Projektfilter, Karten-Chips, Klick auf „low“ im Konfidenz-Diagramm) | Statistik: `low` drin oder draußen; die Karte trennt zusätzlich nominal und high |
+| Wochentage (Projektfilter) | alle Ansichten: ISO-Wochentag des Aufnahmedatums (UTC), `isodow(acq_date)` |
+| Lokale Uhrzeit (Projektfilter) | alle Ansichten: volle Stunde der lokalen Sonnenzeit `floor(local_hour)` |
 | Calendar: Monthly / Daily | Auflösung aller Zeitansichten; Daily zeigt höchstens die letzten ~13 Monate |
 | Gebiet (Karte) | alle Ansichten; die Kalibriertabelle gilt global (je Region) |
+
+Die Schalter „incl. low confidence“ und „vegetation only“ gibt es nicht mehr; Konfidenz stellt man im Projekt ein.
+**Wochentag und Uhrzeit** kennen die vorberechneten Summen nicht. Ist einer der beiden Filter gesetzt, liest das API
+statt der Summen die einzelnen Hotspots, in derselben Form (eine Zeile pro Hotspot mit `n = 1`, `w = weight` usw.).
+Jede Summe bleibt dadurch gleich definiert, nur langsamer über viele Jahre.
 
 ---
 
@@ -239,15 +245,25 @@ Umgesetzt nach `docs/HANDOFF_Frontend_Performance.md`. Die Karte läuft auf **Ma
 * **Zählen:** Bei jeder Änderung von Ausschnitt, Zoom, Zeitraum oder Filter (300 ms Pause, alte Anfragen werden
   abgebrochen) fragt die App `/api/count`: Hotspots im sichtbaren Ausschnitt, Zeitraum und mit den Kartenfiltern,
   aus den Zellsummen (Zelle zählt nach Mittelpunkt; über 92 Tage ganze Monate).
-* **Entscheidung:** `POINT_LIMIT = 1.000.000`. Auto-Modus: Einzelpunkte, wenn `count ≤ 0,95 × Limit` (aus der Dichte
-  kommend) bzw. `count ≤ Limit` (schon im Punktmodus) — die Lücke verhindert Flackern. Sonst Dichte.
+* **Entscheidung, drei Stufen** (Auto-Modus), `c` = Hotspots im Ausschnitt:
+  * `c ≤ 1.000` (`KERNEL_MIN`): jeder einzelne Punkt.
+  * `1.000 < c ≤ 1.000.000` (`POINT_LIMIT`): **Gauß-Kernel** der Einzelpunkte. deck.gl `HeatmapLayer` summiert auf der
+    GPU für jedes Pixel `Σ w_i · exp(−d_i² / 2σ²)` (Radius 20 px; `w_i = 1` bzw. FRP bei Kennzahl FRP). Farbe relativ
+    zum Maximum im Bild; „Scale“ ändert die Intensität.
+  * `c > Limit`: die vorberechneten **Dichtewürfel** (Zellen). Aus der Dichte kommend erst ab `c ≤ 0,95 × Limit` wieder
+    Kernel (keine Sprünge an der Grenze).
+  Die Knöpfe Cubes / Kernels / Points erzwingen eine Stufe (Kernels und Points nur bis zum Limit).
+* **Kein Flackern beim Verschieben:** Einzelpunkte werden für einen größeren Ausschnitt geladen (50 % Rand je Seite,
+  wenn `c < 40 %` des Limits; sonst genau der Ausschnitt; geschnitten am gewählten Gebiet). Liegt der neue Ausschnitt
+  darin, wird nichts nachgeladen. Sonst bleiben die alten Punkte stehen, oben läuft ein dünner Ladebalken
+  („Loading points …“), dann werden sie ersetzt.
 * **Dichte** (`/api/density`): Zellgröße nach Zoom: bis Zoom 3 → 2°, bis 5 → 0,5°, bis 7 → 0,1°, darüber 0,05°.
   Zeiträume bis 92 Tage tagesgenau (0,25°-Tageszellen bzw. Einzelpunkte für feinere Zellen), längere aus den
   Monatszellen (ganze Monate, mindestens 0,1°; die Legende sagt das). Farbe: `log(1 + Wert pro Tag) / log(1 + vmax)`,
   `vmax` = 98. Perzentil der Zellen ÷ Schieber „Scale“. Darstellung als scharfe **Zellen** (Standard) oder **Glow**.
 * **Einzelpunkte** (`/api/points.bin`): ein Binärblock mit 22 Byte pro Punkt (Lage, FRP, Datum, Uhrzeit, Sensor,
   Konfidenz, Satellit, Tag/Nacht), im Web Worker entpackt und als Typed Arrays an die GPU gegeben. Über dem Limit
-  antwortet der Server mit HTTP 413. Die Dichte bleibt sichtbar, bis die Punkte da sind. Hover-Infos bis 200.000 Punkte.
+  antwortet der Server mit HTTP 413. Hover-Infos bis 200.000 Punkte.
 * **Budget-Balken** unten links: `Points in view: x / 1,000,000`, Füllung `min(count / Limit, 1)`, Marke bei 100 %.
   Zustände: unter 70 % blau, 70–100 % orange gestreift, darüber rot schraffiert mit ⚠ und Text, ausgegraut wenn nur
   Dichte verfügbar ist. Klick zeigt, welche Filter am meisten bewirken (ohne MODIS, nur high, halber Zeitraum).
@@ -300,3 +316,22 @@ curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_s
 * Faktoren hängen von der Zellgröße ab (2 km: Asien 8,7; 0,5°: 7,0), das gehört in die Unsicherheit.
 * Musterdaten (eine Woche November) sind nicht repräsentativ für andere Monate.
 * Gebiete auf Zellbasis sind am Rand ungenau (Mittelpunkt-Regel).
+
+
+## 11. Projekte, Startseite, Farben (Phnx)
+
+* **Startseite** (`#/`): Projekte, kurze Vorstellung, Harmonisierung, Funktionen und Bedienung.
+* **Projekt** = Name, Beschreibung, gewählte Ansichten (Checkboxen), dauerhafte Filter (Gebiet, Zeitraum „alles“ /
+  „letzte N Tage“ / fest, Wochentage, lokale Uhrzeit, Satelliten, Tag/Nacht, Konfidenz, Start-Kennzahl und -Werte),
+  eigene Diagramme, Farbpalette. Gespeichert nur im Browser: `localStorage` und `sessionStorage` (`phnx.projects`)
+  und als Kopie im Cookie `phnx_projects` (bis ~4 KB; wird es größer, fehlen im Cookie zuerst die eigenen Diagramme).
+  Keine Benutzerverwaltung.
+* **Wizard** in vier Schritten: Name → Ansichten → Filter → Prüfung. Die Prüfung zählt die Hotspots mit `/api/count`
+  (mit allen Filtern) und sagt, welche Kartenstufe das ergibt (Punkte, Kernel oder Dichtewürfel).
+* **„Save current view“** übernimmt Zeitraum, Gebiet, Satelliten und Schalter des Dashboards als Projektfilter.
+* **Eigene Diagramme:** x-Achse (Periode, Jahr, Kalendermonat, Wochentag, lokale Stunde, FRP-Klasse, Satellit,
+  Konfidenz, Tag/Nacht, aktivste Zellen) × Wert × Aggregation (Summe, Mittel je Periode, Anteil in %) × Diagrammtyp.
+  Rechnet mit denselben Daten wie die übrigen Ansichten.
+* **Farbpaletten:** Phnx-Rot (Standard: #400000 #4B0000 #650002 #8D0004 #A80001), Swiss mono, farbenblind-sicher für
+  Rot-Grün (Okabe-Ito + viridis) und für alle Arten (cividis). Eine Palette setzt Oberfläche, Sensorfarben, Konfidenz,
+  Anomalie und die Farbskalen von Kalender, Matrix und Karte.

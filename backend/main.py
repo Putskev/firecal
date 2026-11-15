@@ -20,10 +20,14 @@ Filters shared by all analysis endpoints
     satellites=Terra,Aqua,SNPP,N20,N21  daynight=all|D|N
 satellites and daynight filter the RAW values and the map; the HARMONIZED values always use all
 satellites and day + night, because the calibration factors are defined that way.
+    weekdays=1,...,7 (ISO weekday of the UTC date)   hours=0,...,23 (local solar hour)
+optional, read by a middleware for every endpoint; with them the single hotspots are read instead of the
+aggregates (exact, but slower on a long archive).
 """
 from __future__ import annotations
 
 import calendar
+import contextvars
 import glob
 import json
 import math
@@ -53,6 +57,32 @@ app = FastAPI(title="FireCal API", version=API_VERSION,
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"],
                    expose_headers=["X-Count", "X-Limit", "X-Query-Ms"])
 app.add_middleware(GZipMiddleware, minimum_size=2000, compresslevel=5)   # level 9 is ~10x slower on binary points for the same size
+
+# weekday / hour-of-day filters (persistent project filters in the app). They are read from the query string of
+# every request by this middleware, so all analysis endpoints honour them without extra parameters:
+#   weekdays=1,2,3   ISO weekday of the UTC acquisition date (1 = Monday ... 7 = Sunday)
+#   hours=10,11,12   local solar hour of the detection (0-23, floor of local_hour)
+# The pre-aggregated cells know neither, so with such a filter selection() reads the single hotspots instead.
+_TIME_FILTER: contextvars.ContextVar = contextvars.ContextVar("time_filter", default=(None, None))
+
+
+class TimeFilterMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        from urllib.parse import parse_qs
+        q = parse_qs(scope.get("query_string", b"").decode("latin-1"))
+        token = _TIME_FILTER.set((q.get("weekdays", [None])[0] or None, q.get("hours", [None])[0] or None))
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            _TIME_FILTER.reset(token)
+
+
+app.add_middleware(TimeFilterMiddleware)
 
 _db: duckdb.DuckDBPyConnection | None = None
 _meta: dict = {}
@@ -224,10 +254,75 @@ def raw_cond(source: str, satellites: str | None, daynight: str) -> str:
     return " AND ".join(parts) if parts else "TRUE"
 
 
+def _int_list(v: str | None, lo: int, hi: int, name: str) -> list[int] | None:
+    if not v:
+        return None
+    try:
+        out = sorted({int(x) for x in v.split(",") if x.strip()})
+    except ValueError:
+        raise HTTPException(422, f"{name} must be a comma list of integers")
+    if any(x < lo or x > hi for x in out):
+        raise HTTPException(422, f"{name} must be between {lo} and {hi}")
+    return out
+
+
+def time_filter() -> tuple[list[int] | None, list[int] | None]:
+    """(weekdays, hours) of the current request; None = no filter (a full list counts as no filter)."""
+    wd, hr = _TIME_FILTER.get()
+    wd, hr = _int_list(wd, 1, 7, "weekdays"), _int_list(hr, 0, 23, "hours")
+    return (None if wd is not None and len(wd) == 7 else wd), (None if hr is not None and len(hr) == 24 else hr)
+
+
+def time_cond() -> str | None:
+    """SQL condition on the single hotspots for the weekday / hour filters, or None."""
+    wd, hr = time_filter()
+    parts = []
+    if wd is not None:
+        parts.append(f"isodow(CAST(acq_date AS DATE)) IN ({','.join(map(str, wd))})" if wd else "FALSE")
+    if hr is not None:
+        parts.append(f"(CAST(floor(local_hour) AS INTEGER) % 24) IN ({','.join(map(str, hr))})" if hr else "FALSE")
+    return " AND ".join(parts) if parts else None
+
+
+def _ym_prune(start: str | None, end: str | None) -> list[str]:
+    out = []
+    if start:
+        out.append(f"(y * 100 + m) >= {int(start[:4]) * 100 + int(start[5:7])}")
+    if end:
+        out.append(f"(y * 100 + m) <= {int(end[:4]) * 100 + int(end[5:7])}")
+    return out
+
+
+def _from_points(source: str, tc: str, start: str | None, end: str | None) -> str:
+    """The single hotspots shaped like an aggregate `source` (one row per hotspot, n = 1), restricted by the
+    weekday / hour condition `tc`. Sums over it equal sums over the aggregate, so every endpoint works unchanged."""
+    where = " AND ".join([tc] + _ym_prune(start, end))
+    if source == "dist_month":
+        fbin = "CASE " + " ".join(f"WHEN frp < {FRP_EDGES[i + 1]} THEN {i}" for i in range(len(FRP_EDGES) - 1)) + " END"
+        return f"""(SELECT substr(acq_date, 1, 7) AS period, latitude AS lat, longitude AS lon, sensor, satellite, conf_class,
+                   (type IS NULL OR type = 0) AS veg, daynight, ({fbin})::TINYINT AS fbin,
+                   (CAST(floor(local_hour) AS INTEGER) % 24)::TINYINT AS hour, 1 AS n, frp::DOUBLE AS frp,
+                   frp::FLOAT AS frp_max, pixel_km2::DOUBLE AS px FROM points WHERE {where})"""
+    period = "substr(acq_date, 1, 7)" if source.endswith("_month") else "acq_date"
+    return f"""(SELECT {period} AS period, latitude AS lat, longitude AS lon, sensor, satellite,
+               conf_class = 'low' AS low, (type IS NULL OR type = 0) AS veg, daynight = 'N' AS night,
+               1 AS n, frp::DOUBLE AS frp, (conf_class = 'high')::INTEGER AS n_high,
+               weight::DOUBLE AS w, weight_lo::DOUBLE AS w_lo, weight_hi::DOUBLE AS w_hi,
+               frp_h::DOUBLE AS fh, frp_h_lo::DOUBLE AS fh_lo, frp_h_hi::DOUBLE AS fh_hi,
+               weight_cal::DOUBLE AS wc, frp_cal::DOUBLE AS fc FROM points WHERE {where})"""
+
+
 def selection(c, source, bbox, polygon, start, end, exclude_low, vegetation_only, extra: str | None = None) -> str:
-    """Create a view on cursor `c` with the filtered rows of `source`; returns its name."""
+    """Create a view on cursor `c` with the filtered rows of `source`; returns its name.
+    With a weekday / hour filter the aggregates are replaced by the single hotspots (same columns)."""
     s = SOURCES[source]
     where = []
+    tc = time_cond()
+    table = source
+    if tc and source != "points":
+        table = _from_points(source, tc, start, end)
+    elif tc:
+        where.append(tc)
     box = _parse_bbox(bbox)
     poly = _parse_polygon(polygon)
     if poly is not None:
@@ -252,7 +347,7 @@ def selection(c, source, bbox, polygon, start, end, exclude_low, vegetation_only
         where.append(s["veg"])
     if extra:
         where.append(extra)
-    sql = f"SELECT * FROM {source}" + (" WHERE " + " AND ".join(where) if where else "")
+    sql = f"SELECT * FROM {table}" + (" WHERE " + " AND ".join(where) if where else "")
     name = "sel_" + uuid.uuid4().hex[:8]
     if poly is None:
         c.execute(f"CREATE TEMP VIEW {name} AS {sql}")
@@ -822,4 +917,10 @@ def index():
     return FileResponse(os.path.join(ROOT, "index.html"))
 
 
+@app.get("/api-docs.html", include_in_schema=False)
+def api_docs_page():
+    return FileResponse(os.path.join(ROOT, "api-docs.html"))
+
+
 app.mount("/content", StaticFiles(directory=os.path.join(ROOT, "content")), name="content")
+app.mount("/assets", StaticFiles(directory=os.path.join(ROOT, "assets")), name="assets")
