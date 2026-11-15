@@ -226,7 +226,11 @@ header select.hsel option{color:#111}
 .card .how{font-size:12px}
 .kpi{border:0;border-left:3px solid var(--accent);padding:4px 10px;background:transparent}
 .kpi .l{text-transform:uppercase;font-size:10.5px;letter-spacing:.08em;font-weight:700}
-.kpi .v{font-size:28px;font-weight:900;letter-spacing:-.04em;line-height:1.1}
+.kpi .v{font-size:19px;font-weight:900;letter-spacing:-.03em;line-height:1.15}
+.kpis{gap:6px}.kpi{padding:2px 8px}.kpi .s{font-size:10.5px}.kpi .l{font-size:9.5px}
+[data-w="kpis"].folded .kpibody{display:none}
+.stepgrp{display:inline-flex}.stepgrp .btn{margin-left:-1px}
+[data-w="calendar"] #granSeg{margin-left:8px}
 .tbadge{background:transparent;color:var(--muted);border:1px solid var(--line);font-size:10.5px}
 .info{border-color:var(--ink);color:var(--ink);background:transparent}
 .warn{background:transparent;border:1px solid var(--accent);color:var(--accent)}
@@ -413,7 +417,6 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
     <span class="info" data-help="values">?</span></div>
   <div class="fg"><span class="l">Satellites</span><span id="satChips"></span></div>
   <div class="fg"><span class="l">Time of day</span><div class="seg" id="dnSeg"><button data-v="all" class="on">All</button><button data-v="D">Day</button><button data-v="N">Night</button></div></div>
-  <div class="fg"><span class="l">Calendar</span><div class="seg" id="granSeg"><button data-v="month">Monthly</button><button data-v="quarter">Quarterly</button><button data-v="week">Weekly</button><button data-v="day">Daily</button></div></div>
   <span class="area" id="areaInfo">Area: whole dataset</span>
   <div class="hits" id="hits">–</div>
 </div>
@@ -424,7 +427,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
     <div class="head"><h3>Timeline</h3><span class="tbadge" id="tb_tl" title="Time span this view uses"></span><span class="grow"></span>
       <span class="note" id="rangeLabel"></span>
       <input id="from" type="date" title="Start"><input id="to" type="date" title="End">
-      <button id="playBtn" class="btn small">▶ Play</button>
+      <span class="stepgrp"><button id="stepStart" class="btn small" title="Back to the start">|◀</button><button id="stepPrev" class="btn small" title="Previous step">◀</button><button id="playBtn" class="btn small">▶ Play</button><button id="stepNext" class="btn small" title="Next step">▶</button></span>
       <button id="resetRange" class="btn small">Full range</button></div>
     <p class="how">Drag the handles of the small overview below the chart to choose the period for all views. Click a bar to show that period on the map. Hatched bars are converted from MODIS (before VIIRS); dotted lines mark new satellites.</p>
     <div id="timeline"></div>
@@ -471,12 +474,14 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
       </div>
     </div>
     <div data-w="kpis" class="card">
-      <div class="head"><h3>Key figures for the selection</h3><span class="tbadge" id="tb_kpi" title="Time span this view uses"></span></div>
+      <div class="head"><button id="kpiFold" class="btn small" title="Collapse or expand" aria-expanded="true">−</button><h3>Key figures for the selection</h3><span class="tbadge" id="tb_kpi" title="Time span this view uses"></span></div>
+      <div class="kpibody">
       <p class="how">Area from the map, period from the timeline. Harmonized values are on VIIRS level.</p>
       <div class="kpis" id="kpis"></div>
       <div id="warnBox" style="margin-top:8px"></div>
       <h3 style="margin-top:10px">What the data says</h3>
       <ul class="insights" id="insights"></ul>
+      </div>
     </div>
   </div>
 
@@ -521,7 +526,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
     <p class="note" id="cmpNote" style="margin-top:4px"></p>
   </div>
   <div data-w="calendar" class="card">
-    <div class="head"><h3>Burning activity calendar</h3><span class="tbadge" id="tb_cal" title="Time span this view uses"></span><span class="grow"></span><span class="note" id="calNote"></span></div>
+    <div class="head"><h3>Burning activity calendar</h3><span class="tbadge" id="tb_cal" title="Time span this view uses"></span><div class="seg" id="granSeg"><button data-v="month">Monthly</button><button data-v="quarter">Quarterly</button><button data-v="week">Weekly</button><button data-v="day">Daily</button></div><span class="grow"></span><span class="note" id="calNote"></span></div>
     <p class="how" id="calHow"></p>
     <div class="cal" id="cal"></div>
     <div class="legendrow"><span>0</span><div class="bar" id="calLegendBar"></div><span id="calLegendMax"></span>
@@ -2043,6 +2048,8 @@ function setLayout(side, collapsed) {
   store.set('layout', side ? 'side' : 'page'); store.set('collapsed', collapsed ? '1' : '0');
   setStickyTop(); relayout();
 }
+function setKpiFold(f) { const c = document.querySelector('[data-w="kpis"]'); c.classList.toggle('folded', f); $('kpiFold').textContent = f ? '+' : '−'; $('kpiFold').setAttribute('aria-expanded', String(!f)); store.set('kpiFold', f ? '1' : '0'); }
+$('kpiFold').addEventListener('click', () => setKpiFold(!document.querySelector('[data-w="kpis"]').classList.contains('folded')));
 const isSide = () => document.body.classList.contains('side'), isCollapsed = () => document.body.classList.contains('collapsed');
 $('layoutBtn').addEventListener('click', () => setLayout(!isSide(), false));
 $('paneClose').addEventListener('click', () => setLayout(true, true));
@@ -2064,6 +2071,7 @@ $('paneJump').addEventListener('change', e => { scrollToCard(document.getElement
 new ResizeObserver(() => { setStickyTop(); }).observe($('filters'));
 document.documentElement.style.setProperty('--paneW', (+store.get('paneW', 560) || 560) + 'px');
 if (store.get('layout', 'page') === 'side' || qp.get('layout') === 'side') setLayout(true, store.get('collapsed', '0') === '1');
+if (store.get('kpiFold', '0') === '1') setKpiFold(true);
 
 /* ---------- help popovers ---------- */
 const HELP = {
@@ -2284,10 +2292,19 @@ function renderCmpFrp(da, db) {
 function stopPlay() { S.playing = false; $('playBtn').textContent = '▶ Play'; }
 $('playBtn').addEventListener('click', async () => {
   if (S.playing) { stopPlay(); return; } S.playing = true; $('playBtn').textContent = '❚❚ Pause';
-  const ps = S.rangeP; let i = S.mapPeriod ? Math.max(0, ps.indexOf(S.mapPeriod)) : 0;
+  const ps = S.rangeP; let i = S.mapPeriod ? ps.indexOf(S.mapPeriod) + 1 : 0; if (i <= 0 || i >= ps.length) i = 0;
   while (S.playing && i < ps.length) { const t = Date.now(); S.mapPeriod = null; await selectPeriod(ps[i++]); await new Promise(r => setTimeout(r, Math.max(0, 600 - (Date.now() - t)))); }
   stopPlay();
 });
+
+function stepTo(i) {
+  const ps = S.rangeP; if (!ps.length) return; i = Math.max(0, Math.min(ps.length - 1, i));
+  if (S.mapPeriod === ps[i]) return; S.mapPeriod = null; return selectPeriod(ps[i]);
+}
+const stepIdx = () => S.mapPeriod ? S.rangeP.indexOf(S.mapPeriod) : -1;
+$('stepStart').addEventListener('click', () => { stopPlay(); stepTo(0); });
+$('stepPrev').addEventListener('click', () => { stopPlay(); const i = stepIdx(); stepTo(i < 0 ? S.rangeP.length - 1 : i - 1); });
+$('stepNext').addEventListener('click', () => { stopPlay(); stepTo(stepIdx() + 1); });
 
 /* ---------- controls ---------- */
 function seg(id, fn) { $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(b.dataset.v); }); }
