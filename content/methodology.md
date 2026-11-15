@@ -5,7 +5,7 @@
 Active fire detections from NASA FIRMS (Fire Information for Resource Management System):
 
 * **MODIS** Collection 6.1, Terra (from November 2000) and Aqua (from July 2002), 1 km pixels.
-* **VIIRS** 375 m, NOAA-20 (from April 2018 in our archive) and NOAA-21 (from March 2023). S-NPP (VIIRS since January 2012) is not yet in the archive.
+* **VIIRS** 375 m, NOAA-20 (from April 2018 in our archive) and NOAA-21 (from March 2023).
 * About 363 million detections, 2000-11-01 to today. Standard (science-quality) products up to July 2026, near-real-time data after that.
 
 Preparation: one schema for both sensors, duplicates removed (same satellite, time and position; the standard product wins over near-real-time data), the last, incomplete day of a download dropped. Confidence classes: MODIS 0–29 low, 30–79 nominal, 80–100 high; VIIRS l / n / h.
