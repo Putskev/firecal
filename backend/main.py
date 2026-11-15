@@ -934,7 +934,8 @@ def reload(token: str = ""):
 # ---------------------------------------------------------------- frontend
 @app.get("/", include_in_schema=False)
 def index():
-    return FileResponse(os.path.join(ROOT, "index.html"))
+    # always revalidate: otherwise browsers keep showing an old version of the app after an update
+    return FileResponse(os.path.join(ROOT, "index.html"), headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/api-docs.html", include_in_schema=False)
