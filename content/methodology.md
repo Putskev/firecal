@@ -54,7 +54,6 @@ Before harmonization, raw VIIRS / MODIS was about 4.4 (one VIIRS satellite) and 
 
 ## Limitations
 
-* S-NPP is missing, so VIIRS starts in April 2018 instead of January 2012. With S-NPP the calibration would gain the eras S-NPP and NOAA-20 + S-NPP.
 * MODIS from 2022 drifts; for those years the app uses VIIRS, MODIS × drift factor is only an average over 2023–2026.
 * Regions are coarse boxes (Americas, Africa, Asia, Europe / West Asia, Oceania), used only as a fallback level.
 * Hotspots are detections, not fires: one fire can produce many detections, clouds and overpass times hide others, and static sources (e.g. gas flares) are counted as well.
