@@ -403,7 +403,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
     <button id="pbClose" class="btn small" title="Back to all projects">← Projects</button></div>
   <div class="fg"><span class="l">Metric</span><div class="seg" id="metricSeg"><button data-v="count" class="on">Hotspots</button><button data-v="frp">FRP (MW)</button></div>
     <label class="fg" title="Divide by the days in each period, so months and partial periods are comparable"><input type="checkbox" id="perDay"> per day</label></div>
-  <div class="fg"><span class="l">Values</span><div class="seg" id="viewSeg"><button data-v="harm" class="on" title="One continuous series on VIIRS level: real VIIRS detections from 20 Jan 2012, before that MODIS x calibration factor of the region. Use it to compare years.">Harmonized</button><button data-v="raw" title="MODIS + VIIRS detections simply added up. Not comparable over time: VIIRS sees about 9x more (small) fires.">Raw all</button><button data-v="modis" title="Only MODIS (Terra + Aqua, 1 km pixels), as detected">MODIS</button><button data-v="viirs" title="Only VIIRS (375 m pixels), as detected">VIIRS</button></div>
+  <div class="fg"><span class="l">Values</span><div class="seg" id="viewSeg"><button data-v="harm" class="on" title="One continuous series on the VIIRS level of today's constellation: VIIRS detections (earlier VIIRS eras scaled to it), before VIIRS data MODIS x calibration factor. Use it to compare years.">Harmonized</button><button data-v="raw" title="MODIS + VIIRS detections simply added up. Not comparable over time: VIIRS sees about 9x more (small) fires.">Raw all</button><button data-v="modis" title="Only MODIS (Terra + Aqua, 1 km pixels), as detected">MODIS</button><button data-v="viirs" title="Only VIIRS (375 m pixels), as detected">VIIRS</button></div>
     <span class="info" data-help="values">?</span></div>
   <div class="fg"><span class="l">Satellites</span><span id="satChips"></span></div>
   <div class="fg"><span class="l">Time of day</span><div class="seg" id="dnSeg"><button data-v="all" class="on">All</button><button data-v="D">Day</button><button data-v="N">Night</button></div></div>
@@ -558,7 +558,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
   <div class="grid g2">
     <div data-w="swim" class="card"><div class="head"><h3>Satellite timeline</h3><span class="tbadge" id="tb_swim" title="Time span this view uses"></span></div><p class="how">Raw detections per satellite and period (log colour). New satellites (NOAA-20 2018, NOAA-21 2023; S-NPP 2012 in older data) raise raw counts without more fire, which is why raw counts are not comparable over time. The orange frame is the selected period.</p>
       <div id="swim" class="chart s"></div></div>
-    <div data-w="calib" class="card"><div class="head"><h3>Calibration factors (MODIS → VIIRS)</h3><span class="tbadge" id="tb_calib" title="Time span this view uses"></span></div><p class="how">Factor = VIIRS / MODIS in cells where both detect fire. The band (25–75 %) is the uncertainty used above. The region of the selected area is highlighted.</p>
+    <div data-w="calib" class="card"><div class="head"><h3>Calibration factors (MODIS → VIIRS)</h3><span class="tbadge" id="tb_calib" title="Time span this view uses"></span></div><p class="how" id="calibHow">Factor = VIIRS / MODIS in cells where both detect fire. The band (25–75 %) is the uncertainty used above. The region of the selected area is highlighted.</p>
       <div id="calib"></div></div>
   </div>
 
@@ -720,7 +720,7 @@ async function getJSON(url, signal) { const r = await fetch(url, { signal }); if
 const ApiProvider = {
   name: 'api', m: null,
   async init() { const r = await fetch(`${API}/api/meta`, { cache: 'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }); if (!r.ok) throw 0; const m = await r.json();
-    if (m.api !== 'firecal' || !m.harmonization || !m.harmonization.params || m.harmonization.params.target_level !== 'VIIRS') throw 0; this.m = m; return this; },
+    if (m.api !== 'firecal' || !m.harmonization || !m.harmonization.params || !String(m.harmonization.params.target_level).startsWith('VIIRS')) throw 0; this.m = m; return this; },
   meta() { return this.m; },
   label() { return `API · ${fmt(this.m.rows)} hotspots · ${this.m.first_date} → ${this.m.last_date}`; },
   async series(f, gran, win) {   // daily: the last ~13 months only (fast on a long archive), or the window given
@@ -1593,9 +1593,13 @@ function renderTimeBadges() {
   set('mx', `🕒 ${sel}`, 'Timeline selection');
   set('swim', `🕒 ${loaded}`, 'All loaded periods; the orange frame is the selection');
   const hp = (S.meta.harmonization || {}).params || {};
-  set('calib', `🕒 ${hp.window_days || 7}-day windows · VIIRS period from ${DM(hp.viirs_start || '2012-01-20')}`, `Factors: ${hp.factor_source || '?'}`);
+  set('calib', hp.reference_era ? `🕒 anchor ${hp.anchor_era} 2018–2021 · reference ${hp.reference_era} · VIIRS data from ${DM(hp.viirs_start)}` : `🕒 ${hp.window_days || 7}-day windows · VIIRS period from ${DM(hp.viirs_start || '2012-01-20')}`, `Factors: ${hp.factor_source || '?'}`);
 }
 
+/* ---------- harmonization method: the team's era calibration or the simple region factor (demo, uploads) ---------- */
+const hParams = () => ((S.meta && S.meta.harmonization) || {}).params || {};
+const isEra = () => !!hParams().reference_era;
+const bandLabel = () => isEra() ? '80 %' : '25–75 %';
 /* ---------- KPIs, warnings, insights ---------- */
 const sumRange = field => S.rangeP.reduce((a, p) => a + (S.rows[p] ? S.rows[p][field] : 0), 0);
 function renderKPIs() {
@@ -1603,8 +1607,8 @@ function renderKPIs() {
   const mN = sumRange('modis_n'), vN = sumRange('viirs_n'), raw = sumRange('raw_n'), night = sumRange('n_night'), high = sumRange('n_high'), calHN = sumRange('modis_h_n');
   const days = S.rangeP.reduce((a, p) => a + daysIn(p), 0), calPct = pct(calHN, hN);
   const last = S.rangeP[S.rangeP.length - 1], lv = val(last), b = baseline(last), ok = b.n >= 3 && b.med > 0, d = ok ? (lv - b.med) / b.med * 100 : null;
-  const bandN = calPct > 1 ? `<div class="s">25–75 %: ${fmt(sumRange('harm_n_lo'))}–${fmt(sumRange('harm_n_hi'))}</div>` : '';
-  const bandF = calPct > 1 ? `<div class="s">25–75 %: ${short(sumRange('harm_frp_lo'))}–${short(sumRange('harm_frp_hi'))} MW</div>` : '';
+  const bandN = calPct > 1 ? `<div class="s">${bandLabel()}: ${fmt(sumRange('harm_n_lo'))}–${fmt(sumRange('harm_n_hi'))}</div>` : '';
+  const bandF = calPct > 1 ? `<div class="s">${bandLabel()}: ${short(sumRange('harm_frp_lo'))}–${short(sumRange('harm_frp_hi'))} MW</div>` : '';
   $('kpis').innerHTML = `
     <div class="kpi"><div class="l">Harmonized hotspots</div><div class="v">${fmt(hN)}</div><div class="s">${fmt(hN / days)} per day${calPct > 1 ? ` · ${calPct.toFixed(0)} % from MODIS` : ''}</div>${bandN}</div>
     <div class="kpi"><div class="l">Harmonized FRP</div><div class="v">${short(hF)} MW</div><div class="s">${fmt(hF / days)} MW per day</div>${bandF}</div>
@@ -1641,7 +1645,7 @@ function renderInsights() {
       const i = S.periods.indexOf(d.slice(0, 7)); if (i < 12 || i + 12 > S.periods.length) return null;
       const mean = a => a.reduce((x, k) => x + (S.rows[k] ? S.rows[k].viirs_n : 0), 0) / a.length, before = mean(S.periods.slice(i - 12, i)), after = mean(S.periods.slice(i, i + 12));
       return before > 0 && after / before > 1.25 ? `${s} (${d.slice(0, 4)}): raw VIIRS +${((after / before - 1) * 100).toFixed(0)} %` : null; }).filter(Boolean);
-    if (jumps.length) out.push(`New satellites raise raw counts: ${jumps.join(', ')}. Part of this is more overpasses, not more fire; the correction per satellite combination is planned by the data team.`);
+    if (jumps.length) out.push(`New satellites raise raw counts: ${jumps.join(', ')}. Part of this is more overpasses, not more fire; ${isEra() ? `the harmonized series scales every VIIRS era to today's constellation (${hParams().reference_era}), so it does not jump.` : 'the demo data are not corrected per satellite combination.'}`);
   }
   $('insights').innerHTML = out.map(x => `<li>${x}</li>`).join('');
 }
@@ -1731,7 +1735,7 @@ function renderCheck() {
   const ps = S.rangeP, x = ps.length > 2 ? ps.map(xd) : ps.map(plabel), mode = ps.length <= 40 ? 'lines+markers' : 'lines', g = k => ps.map(p => val(p, k));
   const tr = [
     { x, y: g('hi'), type: 'scatter', mode: 'lines', line: { width: 0 }, hoverinfo: 'skip', showlegend: false },
-    { x, y: g('lo'), type: 'scatter', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: DARK() ? 'rgba(240,240,238,.14)' : 'rgba(31,31,29,.12)', name: 'uncertainty 25–75 %', hoverinfo: 'skip' },
+    { x, y: g('lo'), type: 'scatter', mode: 'lines', line: { width: 0 }, fill: 'tonexty', fillcolor: DARK() ? 'rgba(240,240,238,.14)' : 'rgba(31,31,29,.12)', name: 'uncertainty ' + bandLabel(), hoverinfo: 'skip' },
     { x, y: g('modis'), type: 'scatter', mode, name: 'MODIS raw', line: { color: C.modis, width: 1.5 }, marker: { size: 4 } },
     { x, y: g('viirs'), type: 'scatter', mode, name: 'VIIRS raw', line: { color: C.viirs, width: 1.5 }, marker: { size: 4 } },
     { x, y: g('modisCal'), type: 'scatter', mode, name: 'MODIS × factor', line: { color: C.modisCal, width: 1.5, dash: 'dash' }, marker: { size: 4 } },
@@ -1838,12 +1842,22 @@ function renderSwim() {
 
 /* ---------- calibration table ---------- */
 function renderCalib() {
-  const h = S.meta.harmonization || {}, rows = h.calibration || [], R = S.region, cur = R ? regionOf((R.minLat + R.maxLat) / 2, (R.minLon + R.maxLon) / 2) : null;
+  const h = S.meta.harmonization || {}, rows = h.calibration || [], R = S.region, cur = R ? regionOf((R.minLat + R.maxLat) / 2, (R.minLon + R.maxLon) / 2) : null, hp = h.params || {};
   const f = (v, d = 2) => v === null || v === undefined ? '–' : (+v).toFixed(d);
+  if (hp.reference_era) {
+    $('calibHow').textContent = `Factors that bring every sensor to the level of today's VIIRS constellation (${hp.reference_era}). MODIS → reference: chained over ${hp.anchor_era} in 2018–2021, when the MODIS orbits were still stable. VIIRS ${hp.anchor_era} → reference: measured directly. Medians over the 12 calendar months; the app uses them per 0.5° cell and month.`;
+    const bt = (hp.backtest || []), b = (m, e) => (bt.find(x => x.metric === m && x.era === e) || {});
+    $('calib').innerHTML = `<div class="note" style="margin-bottom:6px"><b>${h.name || '?'}</b> v${h.version || '?'} · status <b>${h.status || '?'}</b></div>
+      <table class="calib"><tr><th>Region</th><th>MODIS → ref count</th><th>80 %</th><th>MODIS → ref FRP</th><th>80 %</th><th>MODIS 2022+ (drift) count / FRP</th><th>VIIRS ${hp.anchor_era} → ref count / FRP</th></tr>
+      ${rows.map(r => `<tr class="${r.region === cur ? 'hl' : ''}"><td>${r.region}</td><td>${f(r.factor_n)}</td><td>${f(r.factor_n_p25, 1)}–${f(r.factor_n_p75, 1)}</td><td>${f(r.factor_frp)}</td><td>${f(r.factor_frp_p25, 1)}–${f(r.factor_frp_p75, 1)}</td><td>${f(r.factor_n_drift)} / ${f(r.factor_frp_drift)}</td><td>${f(r.viirs_n_to_ref)} / ${f(r.viirs_frp_to_ref)}</td></tr>`).join('')}</table>
+      <div class="note" style="margin-top:6px">Leave-one-year-out backtest (5° block × month, log scale): bias ${f(b('n', hp.anchor_era).bias_log, 3)} / ${f(b('frp', hp.anchor_era).bias_log, 3)} (count / FRP), median error ${f(b('n', hp.anchor_era).abs_err_median, 2)} / ${f(b('frp', hp.anchor_era).abs_err_median, 2)}; VIIRS step ${hp.anchor_era} → ${hp.reference_era}: ${f(b('n_direct', hp.reference_era).abs_err_median, 2)} / ${f(b('frp_direct', hp.reference_era).abs_err_median, 2)}. Count factors are much larger than FRP factors: VIIRS finds many small fires. Full report: docs/calibration/calibration_report.md</div>`;
+    return;
+  }
+  $('calibHow').textContent = 'Factor = VIIRS / MODIS in cells where both detect fire. The band (25–75 %) is the uncertainty used above. The region of the selected area is highlighted.';
   $('calib').innerHTML = `<div class="note" style="margin-bottom:6px"><b>${h.name || '?'}</b> v${h.version || '?'} · status <b>${h.status || '?'}</b>${h.params ? ' · ' + h.params.factor_source : ''}</div>
     <table class="calib"><tr><th>Region</th><th>factor count</th><th>25–75 %</th><th>factor FRP</th><th>25–75 %</th><th>r (log FRP)</th><th>cells</th></tr>
     ${rows.map(r => `<tr class="${r.region === cur ? 'hl' : ''}"><td>${r.region}${r.used_global_fallback ? ' *' : ''}</td><td>${f(r.factor_n)}</td><td>${f(r.factor_n_p25, 1)}–${f(r.factor_n_p75, 1)}</td><td>${f(r.factor_frp)}</td><td>${f(r.factor_frp_p25, 1)}–${f(r.factor_frp_p75, 1)}</td><td>${f(r.r_log_frp)}</td><td>${fmt(r.n_cells)}</td></tr>`).join('')}</table>
-    <div class="note" style="margin-top:6px">* too few cells, global factor used. Regions are placeholder boxes until real regions are delivered. The count factor is much larger than the FRP factor: VIIRS finds many small fires, so FRP is the more robust quantity.</div>`;
+    <div class="note" style="margin-top:6px">* too few cells, global factor used. The count factor is much larger than the FRP factor: VIIRS finds many small fires, so FRP is the more robust quantity.</div>`;
 }
 
 /* ---------- map: refresh, legend, performance readout ---------- */
@@ -1928,13 +1942,18 @@ if (store.get('layout', 'page') === 'side' || qp.get('layout') === 'side') setLa
 
 /* ---------- help popovers ---------- */
 const HELP = {
-  values: `<b>Harmonized</b> = one series that can be compared over all years, on <b>VIIRS level</b>.<br>
-    · From 20 Jan 2012 (VIIRS available): the real VIIRS detections are counted.<br>
-    · Before that (MODIS only): every MODIS detection counts as <b>factor</b> detections, factor = VIIRS / MODIS of its region
-    (from cells and weeks where both sensors saw fire, e.g. Africa ≈ 11 for counts, ≈ 3.6 for FRP).<br>
-    · The grey band = 25–75 % range of that factor (uncertainty). Hatched cells/bars = converted from MODIS.<br>
+  get values() { const hp = hParams(); return isEra() ? `<b>Harmonized</b> = one series that can be compared over all years, on the level of <b>today's VIIRS constellation (${hp.reference_era})</b>.<br>
+    · From ${DM(hp.viirs_start)} (VIIRS data): the VIIRS detections are counted; years with fewer VIIRS satellites (era ${hp.anchor_era}) are scaled up (× ≈ 1.96 count, × ≈ 2.13 FRP), because more satellites mean more overpasses.<br>
+    · Before that (MODIS only): every MODIS detection counts as <b>factor</b> detections, per 0.5° cell and calendar month (globally ≈ 8.5 for counts, ≈ 1.9 for FRP), chained over 2018–2021 when both MODIS orbits were stable.<br>
+    · The grey band = 80 % interval of the factor. Hatched cells/bars = converted from MODIS.<br>
     <b>Raw all</b> = MODIS + VIIRS simply added up (jumps whenever a satellite starts). <b>MODIS</b> / <b>VIIRS</b> = one sensor only, as detected.<br>
-    The map always shows the real detections. Details: docs/ERKLAERUNG.md`,
+    The map always shows the real detections. Details: docs/calibration/calibration_report.md` : `<b>Harmonized</b> = one series that can be compared over all years, on <b>VIIRS level</b>.<br>
+    · On days with VIIRS data the real VIIRS detections are counted.<br>
+    · Before that (MODIS only): every MODIS detection counts as <b>factor</b> detections, factor = VIIRS / MODIS of its region.<br>
+    · The grey band = 25–75 % range of that factor (uncertainty). Hatched cells/bars = converted from MODIS.<br>
+    <b>Raw all</b> = MODIS + VIIRS simply added up. <b>MODIS</b> / <b>VIIRS</b> = one sensor only, as detected.<br>
+    The map always shows the real detections. Details: docs/ERKLAERUNG.md`; },
+
 };
 document.addEventListener('click', e => {
   const i = e.target.closest('.info[data-help]'), pop = $('helpPop');
@@ -2407,12 +2426,16 @@ function renderHome() {
       <div><h4>Result</h4><p>One continuous, harmonized record on VIIRS level, with an uncertainty band, a calendar of burning activity, maps from the single detection up to the whole planet, and an open API.</p></div></div>
   </div></div>
   <div class="hsec"><div class="hnum">03</div><div class="hbody"><h2>Harmonization</h2>
-    <p class="hlead">Target level is VIIRS. Where VIIRS exists, its own detections are counted. Before VIIRS, every MODIS detection is converted with a factor of its region. The factor comes from cells and weeks where both sensors saw fire.</p>
+    ${hp.reference_era ? `<p class="hlead">Target level is today's VIIRS constellation (${esc(hp.reference_era)}). Years with fewer VIIRS satellites are scaled up to it; before VIIRS data, every MODIS detection is converted with a factor of its 0.5° cell and calendar month. Because both MODIS orbits drift from 2022, the factor is chained over 2018–2021.</p>
+    <div class="formula">harmonized = Σ VIIRS × f<sub>VIIRS</sub>(era)                 with VIIRS data (from ${esc(hp.viirs_start || '')}); era ${esc(hp.anchor_era)}: f ≈ 1.96, ${esc(hp.reference_era)}: f = 1<br>
+harmonized = Σ MODIS × f<sub>MODIS</sub>(cell, month)          before VIIRS data<br>
+f<sub>MODIS</sub> = (Σ ${esc(hp.anchor_era)} / Σ MODIS)<sub>2018–2021</sub> × (Σ ${esc(hp.reference_era)} / Σ ${esc(hp.anchor_era)})<sub>2023–2026</sub>   chain over stable orbits<br>
+0.5° cell → 5° block → region → global, shrunk towards the parent level · FRP has its own factors · band = 80 % interval</div>
+    <div class="hcols"><div><h4>Example</h4><p>Africa: one MODIS detection ≈ ${af.factor_n ? (+af.factor_n).toFixed(1) : '…'} VIIRS detections, but only ≈ ${af.factor_frp ? (+af.factor_frp).toFixed(1) : '…'}× the fire radiative power: VIIRS finds many small fires. Checked end to end: in 2018–2021 harmonized MODIS meets VIIRS within ±1.6 %.</p></div>` : `<p class="hlead">Target level is VIIRS. Where VIIRS exists, its own detections are counted. Before VIIRS, every MODIS detection is converted with a factor of its region. The factor comes from cells and weeks where both sensors saw fire.</p>
     <div class="formula">harmonized(t) = Σ VIIRS detections                      if t ≥ ${esc(hp.viirs_start || '2012-01-20')} (VIIRS available)<br>
 harmonized(t) = Σ MODIS detections × f<sub>region</sub>             otherwise<br>
-f<sub>region</sub> = Σ VIIRS / Σ MODIS   over ${esc(String(hp.cell_deg || 2))}° cells × ${esc(String(hp.window_days || 7))}-day windows where both detect fire<br>
-uncertainty band = 25–75 % of the per-cell ratios · FRP gets its own factor (Σ VIIRS FRP / Σ MODIS FRP)</div>
-    <div class="hcols"><div><h4>Example</h4><p>Africa: one MODIS detection ≈ ${af.factor_n ? (+af.factor_n).toFixed(1) : '…'} VIIRS detections, but only ≈ ${af.factor_frp ? (+af.factor_frp).toFixed(1) : '…'}× the fire radiative power: VIIRS finds many small fires.</p></div>
+f<sub>region</sub> = Σ VIIRS / Σ MODIS   over ${esc(String(hp.cell_deg || 2))}° cells × ${esc(String(hp.window_days || 7))}-day windows where both detect fire</div>
+    <div class="hcols"><div><h4>Example</h4><p>Africa: one MODIS detection ≈ ${af.factor_n ? (+af.factor_n).toFixed(1) : '…'} VIIRS detections, but only ≈ ${af.factor_frp ? (+af.factor_frp).toFixed(1) : '…'}× the fire radiative power: VIIRS finds many small fires.</p></div>`}
       <div><h4>Regions</h4><p>Americas, Africa, Asia, Europe / West Asia, Oceania. Regions with too few cells fall back to the global factor.</p></div>
       <div><h4>Honest</h4><p>Converted values are hatched. Single detections on the map are never converted. Details and every formula: docs/ERKLAERUNG.md and the methodology in the app.</p></div></div>
   </div></div>

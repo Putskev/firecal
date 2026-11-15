@@ -71,7 +71,7 @@ def needs_build() -> bool:
     _, files = _inputs()
     from . import regions
     deps = (files + [harmonization.__file__, regions.__file__, __file__]
-            + glob.glob(os.path.join(HARMONIZED_DIR, "*.json")) + harmonization.calibration_files())
+            + glob.glob(os.path.join(HARMONIZED_DIR, "*.json")) + harmonization.calibration_files() + harmonization.era_files())
     built = os.path.getmtime(META)
     if any(os.path.getmtime(f) > built for f in deps if os.path.exists(f)):
         return True
@@ -83,7 +83,7 @@ def needs_build() -> bool:
 
 
 def _signature(files: list[str]) -> list[list]:
-    files = files + harmonization.calibration_files()
+    files = files + harmonization.calibration_files() + harmonization.era_files()
     return [[os.path.relpath(f, ROOT) if f.startswith(ROOT) else f, os.path.getsize(f)] for f in files if os.path.exists(f)]
 
 
@@ -291,7 +291,8 @@ def build(force: bool = False, linked: bool = True) -> dict:
     dropped = last if (only_nrt and not extra) else None
 
     # 2) dedupe per month (+ collect calibration sums)
-    cal = None if extra else harmonization.load_calibration()
+    era = bool(not extra and harmonization.era_files())      # the team's era calibration (calibration_out) wins
+    cal = None if extra or era else harmonization.load_calibration()
     calib_parts = []
     first_viirs = con.execute(f"""SELECT min(acq_date) FROM read_parquet({_lit(STAGE + '/*/*/*/*.parquet')}, hive_partitioning = true)
                                   WHERE sensor = 'VIIRS' AND acq_date >= {_lit(VIIRS_START)}""").fetchone()[0]
@@ -310,7 +311,7 @@ def build(force: bool = False, linked: bool = True) -> dict:
                         TO {_lit(out + '/data.parquet')} (FORMAT parquet, COMPRESSION zstd)""")
         for d in glob.glob(os.path.join(STAGE, "f*")):
             shutil.rmtree(_part(d, y, m), ignore_errors=True)
-        if cal is None and first_viirs:
+        if cal is None and first_viirs and not era:
             calib_parts.append(con.execute(harmonization.calibration_sums_sql(
                 f"read_parquet({_lit(out + '/data.parquet')})", first_viirs)).df())
         _log(f"dedupe: {i + 1}/{len(months)} months ({time.time() - t0:.0f} s)")
@@ -321,6 +322,10 @@ def build(force: bool = False, linked: bool = True) -> dict:
         info_path = os.path.join(HARMONIZED_DIR, "harmonization.json")
         info = json.load(open(info_path)) if os.path.exists(info_path) else \
             {"name": "external", "version": "?", "status": "final", "description": "Table from data/harmonized/"}
+        cal_df = None
+    elif era:
+        harmonization.era_setup(con)
+        info = harmonization.era_info(con, str(first_viirs) if first_viirs else None)
         cal_df = None
     else:
         cal_df, source = harmonization.calibration_table(cal, calib_parts)
@@ -339,7 +344,8 @@ def build(force: bool = False, linked: bool = True) -> dict:
     agg = []
     for i, (y, m) in enumerate(months):
         src = f"read_parquet({_lit(_part(DEDUP, y, m) + '/data.parquet')})"
-        sel = src if extra else harmonization.weights_sql(src, "cal", "viirs_days", "month" in cal_df.columns)
+        sel = (src if extra else harmonization.era_weights_sql(src, "viirs_days", y, m) if era
+               else harmonization.weights_sql(src, "cal", "viirs_days", "month" in cal_df.columns))
         out = _part(HD, y, m)
         os.makedirs(out, exist_ok=True)
         path = out + "/data.parquet"

@@ -1,0 +1,5825 @@
+{
+ "reference_era": "N20+N21",
+ "anchor_era": "N20",
+ "apply": {
+  "MODIS month, modis_orbit = nominal": "value * factor_*_modis_to_ref",
+  "MODIS month, modis_orbit = drift": "value * factor_*_modis_drift_to_ref",
+  "VIIRS month in era e": "value * factor_*_viirs_to_ref of era e (1.0 for the reference era)",
+  "fallback": "cell -> block -> region -> global"
+ },
+ "modis_drift_years": [
+  2022,
+  2023,
+  2024,
+  2025,
+  2026
+ ],
+ "modis_overpass_solar_time": [
+  {
+   "satellite": "Aqua",
+   "y": 2002,
+   "solar_h": 13.518,
+   "dev_h": -0.007
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2003,
+   "solar_h": 13.442,
+   "dev_h": -0.084
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2004,
+   "solar_h": 13.494,
+   "dev_h": -0.032
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2005,
+   "solar_h": 13.47,
+   "dev_h": -0.055
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2006,
+   "solar_h": 13.493,
+   "dev_h": -0.032
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2007,
+   "solar_h": 13.534,
+   "dev_h": 0.009
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2008,
+   "solar_h": 13.521,
+   "dev_h": -0.004
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2009,
+   "solar_h": 13.575,
+   "dev_h": 0.05
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2010,
+   "solar_h": 13.553,
+   "dev_h": 0.028
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2011,
+   "solar_h": 13.54,
+   "dev_h": 0.015
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2012,
+   "solar_h": 13.515,
+   "dev_h": -0.011
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2013,
+   "solar_h": 13.534,
+   "dev_h": 0.009
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2014,
+   "solar_h": 13.51,
+   "dev_h": -0.015
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2015,
+   "solar_h": 13.533,
+   "dev_h": 0.007
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2016,
+   "solar_h": 13.529,
+   "dev_h": 0.003
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2017,
+   "solar_h": 13.525,
+   "dev_h": 0.0
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2018,
+   "solar_h": 13.537,
+   "dev_h": 0.012
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2019,
+   "solar_h": 13.519,
+   "dev_h": -0.006
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2020,
+   "solar_h": 13.517,
+   "dev_h": -0.008
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2021,
+   "solar_h": 13.511,
+   "dev_h": -0.014
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2022,
+   "solar_h": 13.613,
+   "dev_h": 0.088
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2023,
+   "solar_h": 13.773,
+   "dev_h": 0.248
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2024,
+   "solar_h": 14.136,
+   "dev_h": 0.611
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2025,
+   "solar_h": 14.67,
+   "dev_h": 1.145
+  },
+  {
+   "satellite": "Aqua",
+   "y": 2026,
+   "solar_h": 15.325,
+   "dev_h": 1.8
+  },
+  {
+   "satellite": "Terra",
+   "y": 2000,
+   "solar_h": 10.806,
+   "dev_h": 0.102
+  },
+  {
+   "satellite": "Terra",
+   "y": 2001,
+   "solar_h": 10.8,
+   "dev_h": 0.097
+  },
+  {
+   "satellite": "Terra",
+   "y": 2002,
+   "solar_h": 10.724,
+   "dev_h": 0.021
+  },
+  {
+   "satellite": "Terra",
+   "y": 2003,
+   "solar_h": 10.754,
+   "dev_h": 0.051
+  },
+  {
+   "satellite": "Terra",
+   "y": 2004,
+   "solar_h": 10.698,
+   "dev_h": -0.005
+  },
+  {
+   "satellite": "Terra",
+   "y": 2005,
+   "solar_h": 10.692,
+   "dev_h": -0.012
+  },
+  {
+   "satellite": "Terra",
+   "y": 2006,
+   "solar_h": 10.696,
+   "dev_h": -0.007
+  },
+  {
+   "satellite": "Terra",
+   "y": 2007,
+   "solar_h": 10.649,
+   "dev_h": -0.054
+  },
+  {
+   "satellite": "Terra",
+   "y": 2008,
+   "solar_h": 10.722,
+   "dev_h": 0.019
+  },
+  {
+   "satellite": "Terra",
+   "y": 2009,
+   "solar_h": 10.716,
+   "dev_h": 0.013
+  },
+  {
+   "satellite": "Terra",
+   "y": 2010,
+   "solar_h": 10.675,
+   "dev_h": -0.028
+  },
+  {
+   "satellite": "Terra",
+   "y": 2011,
+   "solar_h": 10.653,
+   "dev_h": -0.05
+  },
+  {
+   "satellite": "Terra",
+   "y": 2012,
+   "solar_h": 10.705,
+   "dev_h": 0.002
+  },
+  {
+   "satellite": "Terra",
+   "y": 2013,
+   "solar_h": 10.704,
+   "dev_h": 0.001
+  },
+  {
+   "satellite": "Terra",
+   "y": 2014,
+   "solar_h": 10.728,
+   "dev_h": 0.025
+  },
+  {
+   "satellite": "Terra",
+   "y": 2015,
+   "solar_h": 10.699,
+   "dev_h": -0.005
+  },
+  {
+   "satellite": "Terra",
+   "y": 2016,
+   "solar_h": 10.703,
+   "dev_h": 0.0
+  },
+  {
+   "satellite": "Terra",
+   "y": 2017,
+   "solar_h": 10.704,
+   "dev_h": 0.001
+  },
+  {
+   "satellite": "Terra",
+   "y": 2018,
+   "solar_h": 10.702,
+   "dev_h": -0.002
+  },
+  {
+   "satellite": "Terra",
+   "y": 2019,
+   "solar_h": 10.751,
+   "dev_h": 0.048
+  },
+  {
+   "satellite": "Terra",
+   "y": 2020,
+   "solar_h": 10.77,
+   "dev_h": 0.067
+  },
+  {
+   "satellite": "Terra",
+   "y": 2021,
+   "solar_h": 10.748,
+   "dev_h": 0.044
+  },
+  {
+   "satellite": "Terra",
+   "y": 2022,
+   "solar_h": 10.496,
+   "dev_h": -0.207
+  },
+  {
+   "satellite": "Terra",
+   "y": 2023,
+   "solar_h": 10.313,
+   "dev_h": -0.39
+  },
+  {
+   "satellite": "Terra",
+   "y": 2024,
+   "solar_h": 10.063,
+   "dev_h": -0.641
+  },
+  {
+   "satellite": "Terra",
+   "y": 2025,
+   "solar_h": 9.678,
+   "dev_h": -1.026
+  },
+  {
+   "satellite": "Terra",
+   "y": 2026,
+   "solar_h": 9.697,
+   "dev_h": -1.006
+  }
+ ],
+ "eras": [
+  {
+   "era": "N20",
+   "months_clean": 57,
+   "first": 2018,
+   "last": 2023,
+   "months_nominal": 45,
+   "months_used_F": 45,
+   "months_used_D": 0,
+   "role": "anchor"
+  },
+  {
+   "era": "N20+N21",
+   "months_clean": 40,
+   "first": 2023,
+   "last": 2026,
+   "months_nominal": 0,
+   "months_used_F": 40,
+   "months_used_D": 40,
+   "role": "reference"
+  }
+ ],
+ "months": [
+  {
+   "y": 2000,
+   "m": 11,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2000,
+   "m": 12,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 1,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 2,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 3,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 4,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 5,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 6,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": "Terra",
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.5,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 7,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.935,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 8,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 9,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 10,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 11,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2001,
+   "m": 12,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 1,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 2,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 3,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": "Terra",
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.742,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 4,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.967,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 5,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 6,
+   "modis_set": "Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": "Aqua",
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.839,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": "Aqua",
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.774,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.967,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2002,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2003,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": "Terra",
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.774,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2004,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2005,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2006,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2007,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2008,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.935,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2009,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2010,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2011,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2012,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2013,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2014,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2015,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": "Terra",
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 0.69,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2016,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2017,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2018,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2018,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2018,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": NaN,
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03"
+   },
+   "era": NaN,
+   "status": "modis_only",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2018,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2018,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2018,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2018,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2018,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2018,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2018,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2018,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2018,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2019,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2020,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2021,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "nominal",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "calibration",
+   "calibration_pool": "N20"
+  },
+  {
+   "y": 2022,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": "Aqua",
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 0.467,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_partial",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": "Terra",
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 0.613,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_partial",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2022,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.03",
+    "Terra": "6.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2023,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2023,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2"
+   },
+   "era": "N20",
+   "status": "excluded_modis_drift",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2023,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2023,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2023,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2023,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2023,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": "N20",
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 0.871,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "excluded_partial",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2023,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2023,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 0.967,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2023,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2023,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2023,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 0.931,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2024,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2025,
+   "m": 12,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2026,
+   "m": 1,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 0.968,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2026,
+   "m": 2,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2026,
+   "m": 3,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2026,
+   "m": 4,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2026,
+   "m": 5,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2026,
+   "m": 6,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2026,
+   "m": 7,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": false,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2",
+    "N21": "2"
+   },
+   "era": "N20+N21",
+   "status": "calibration",
+   "calibration_pool": "N20+N21"
+  },
+  {
+   "y": 2026,
+   "m": 8,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": true,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "61.03",
+    "Terra": "61.03",
+    "N20": "2.0NRT",
+    "N21": "2.0NRT"
+   },
+   "era": "N20+N21",
+   "status": "excluded_nrt",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2026,
+   "m": 9,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": true,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.1NRT",
+    "Terra": "6.1NRT",
+    "N20": "2.0NRT",
+    "N21": "2.0NRT"
+   },
+   "era": "N20+N21",
+   "status": "excluded_nrt",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2026,
+   "m": 10,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": NaN,
+   "nrt": true,
+   "modis_orbit": "drift",
+   "min_day_coverage": 1.0,
+   "versions": {
+    "Aqua": "6.1NRT",
+    "Terra": "6.1NRT",
+    "N20": "2.0NRT",
+    "N21": "2.0NRT"
+   },
+   "era": "N20+N21",
+   "status": "excluded_nrt",
+   "calibration_pool": NaN
+  },
+  {
+   "y": 2026,
+   "m": 11,
+   "modis_set": "Aqua+Terra",
+   "viirs_set": "N20+N21",
+   "partial": "Aqua+N20+N21+Terra",
+   "nrt": true,
+   "modis_orbit": "drift",
+   "min_day_coverage": 0.467,
+   "versions": {
+    "Aqua": "6.1NRT",
+    "Terra": "6.1NRT",
+    "N20": "2.0NRT",
+    "N21": "2.0NRT"
+   },
+   "era": "N20+N21",
+   "status": "excluded_nrt",
+   "calibration_pool": NaN
+  }
+ ],
+ "config": {
+  "CELL_DEG": 0.5,
+  "BLOCK_DEG": 5.0,
+  "MIN_SUPPORT": 30,
+  "K_SHRINK": 200,
+  "MIN_SAT_MONTH": 1000,
+  "MIN_ERA_MONTHS": 24,
+  "MIN_DAY_COVERAGE": 0.9,
+  "DRIFT_H": 0.15,
+  "DRIFT_BASE": [
+   2003,
+   2019
+  ],
+  "Z": 1.2816,
+  "RAKE": true,
+  "RAKE_CLIP": [
+   0.5,
+   2.0
+  ]
+ }
+}

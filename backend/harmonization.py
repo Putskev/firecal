@@ -170,3 +170,119 @@ def weights_sql(src: str, cal: str, viirs_days: str, by_month: bool) -> str:
         (CASE WHEN sensor <> 'VIIRS' THEN factor_n ELSE 0 END)::FLOAT AS weight_cal,
         (CASE WHEN sensor <> 'VIIRS' THEN frp * factor_frp ELSE 0 END)::FLOAT AS frp_cal
       FROM j"""
+
+
+# =====================================================================================
+#  ERA CALIBRATION (data team, calibration_out of 14.11.2026, docs/calibration/calibration_report.md)
+# =====================================================================================
+# Target level: the reference VIIRS constellation (N20+N21). Factors per 0.5-degree cell x calendar month, with the
+# fallback cell -> 5-degree block -> region -> global. Applied per hotspot (sensor_timeline.json -> apply):
+#   VIIRS hotspot in a month of era e:            weight = factor_n_viirs_to_ref(e)       (1.0 in the reference era)
+#   MODIS hotspot on a day without VIIRS data:    weight = factor_n_modis_to_ref          (orbit nominal, 2000-2021)
+#                                                 weight = factor_n_modis_drift_to_ref    (orbit drift, 2022+)
+#   FRP the same with the factor_frp_* columns. MODIS on days with VIIRS data counts 0 (no double counting).
+ERA_DIR = os.path.join(DATA, "calibration_era")
+ERA_FACTORS = os.path.join(ERA_DIR, "factors.parquet")
+ERA_TIMELINE = os.path.join(ERA_DIR, "sensor_timeline.json")
+_TL: dict = {}
+
+
+def era_files() -> list[str]:
+    return [ERA_FACTORS, ERA_TIMELINE] if os.path.exists(ERA_FACTORS) and os.path.exists(ERA_TIMELINE) else []
+
+
+def era_setup(con) -> dict:
+    """Load the era factors into DuckDB tables efm (MODIS -> reference) and efv (VIIRS era -> reference)."""
+    import json
+    f = ERA_FACTORS.replace("'", "''")
+    con.execute(f"""CREATE OR REPLACE TABLE efm AS SELECT level, cell_id, month, m_n, m_n_lo, m_n_hi, m_frp, m_frp_lo, m_frp_hi, md_n, md_frp
+                    FROM (SELECT *, row_number() OVER (PARTITION BY level, cell_id, month ORDER BY is_reference_era DESC) AS rn
+                          FROM read_parquet('{f}')) WHERE rn = 1""")
+    con.execute(f"CREATE OR REPLACE TABLE efv AS SELECT level, cell_id, month, era, v_n, v_frp FROM read_parquet('{f}')")
+    tl = json.load(open(ERA_TIMELINE))
+    _TL.clear()
+    _TL.update(reference=tl.get("reference_era"), anchor=tl.get("anchor_era"), drift_years=set(tl.get("modis_drift_years") or []),
+               months={(int(r["y"]), int(r["m"])): r for r in tl.get("months", [])}, raw=tl)
+    return _TL
+
+
+def _era_of(y: int, m: int) -> tuple[str, bool]:
+    r = _TL["months"].get((y, m)) or {}
+    era = r.get("era") if isinstance(r.get("era"), str) else _TL["reference"]
+    drift = r.get("modis_orbit") == "drift" if r.get("modis_orbit") else y in _TL["drift_years"] or y >= 2022
+    return era, drift
+
+
+def era_weights_sql(src: str, viirs_days: str, y: int, m: int) -> str:
+    era, drift = _era_of(y, m)
+    lit = lambda s: "'" + str(s).replace("'", "''") + "'"
+    mcols = ["m_n", "m_n_lo", "m_n_hi", "m_frp", "m_frp_lo", "m_frp_hi", "md_n", "md_frp"]
+    co = lambda col, t: f"coalesce({t}c.{col}, {t}b.{col}, {t}r.{col}, {t}g.{col}, 1.0)"
+    if drift:   # MODIS with drifting orbit: drift factor, band scaled like the nominal one
+        mn, mn_lo, mn_hi = "f_md_n", "f_md_n * f_m_n_lo / f_m_n", "f_md_n * f_m_n_hi / f_m_n"
+        mf, mf_lo, mf_hi = "f_md_frp", "f_md_frp * f_m_frp_lo / f_m_frp", "f_md_frp * f_m_frp_hi / f_m_frp"
+    else:
+        mn, mn_lo, mn_hi = "f_m_n", "f_m_n_lo", "f_m_n_hi"
+        mf, mf_lo, mf_hi = "f_m_frp", "f_m_frp_lo", "f_m_frp_hi"
+    return f"""
+      WITH h AS (SELECT *, {REGION_SQL} AS region,
+                 'c' || CAST(floor((latitude + 90) / 0.5) AS INTEGER) || '_' || CAST(floor((longitude + 180) / 0.5) AS INTEGER) AS _cid,
+                 'b' || CAST(floor((latitude + 90) / 5) AS INTEGER) || '_' || CAST(floor((longitude + 180) / 5) AS INTEGER) AS _bid,
+                 acq_date IN (SELECT acq_date FROM {viirs_days}) AS _uv
+                 FROM {src}),
+      mc AS (SELECT * FROM efm WHERE level = 'cell' AND month = {m}), mb AS (SELECT * FROM efm WHERE level = 'block' AND month = {m}),
+      mr AS (SELECT * FROM efm WHERE level = 'region' AND month = {m}), mg AS (SELECT * FROM efm WHERE level = 'global' AND month = {m}),
+      vc AS (SELECT * FROM efv WHERE level = 'cell' AND month = {m} AND era = {lit(era)}), vb AS (SELECT * FROM efv WHERE level = 'block' AND month = {m} AND era = {lit(era)}),
+      vr AS (SELECT * FROM efv WHERE level = 'region' AND month = {m} AND era = {lit(era)}), vg AS (SELECT * FROM efv WHERE level = 'global' AND month = {m} AND era = {lit(era)}),
+      j AS (SELECT h.*, {", ".join(f"{co(c, 'm')} AS f_{c}" for c in mcols)},
+                   {co('v_n', 'v')} AS f_v_n, {co('v_frp', 'v')} AS f_v_frp
+            FROM h LEFT JOIN mc ON mc.cell_id = h._cid LEFT JOIN mb ON mb.cell_id = h._bid LEFT JOIN mr ON mr.cell_id = h.region
+                   LEFT JOIN mg ON TRUE
+                   LEFT JOIN vc ON vc.cell_id = h._cid LEFT JOIN vb ON vb.cell_id = h._bid LEFT JOIN vr ON vr.cell_id = h.region
+                   LEFT JOIN vg ON TRUE)
+      SELECT * EXCLUDE (_cid, _bid, _uv, {", ".join('f_' + c for c in mcols)}, f_v_n, f_v_frp),
+        (CASE WHEN sensor = 'VIIRS' AND _uv THEN f_v_n WHEN sensor <> 'VIIRS' AND NOT _uv THEN {mn} ELSE 0 END)::FLOAT AS weight,
+        (CASE WHEN sensor = 'VIIRS' AND _uv THEN f_v_n WHEN sensor <> 'VIIRS' AND NOT _uv THEN {mn_lo} ELSE 0 END)::FLOAT AS weight_lo,
+        (CASE WHEN sensor = 'VIIRS' AND _uv THEN f_v_n WHEN sensor <> 'VIIRS' AND NOT _uv THEN {mn_hi} ELSE 0 END)::FLOAT AS weight_hi,
+        (CASE WHEN sensor = 'VIIRS' AND _uv THEN frp * f_v_frp WHEN sensor <> 'VIIRS' AND NOT _uv THEN frp * {mf} ELSE 0 END)::FLOAT AS frp_h,
+        (CASE WHEN sensor = 'VIIRS' AND _uv THEN frp * f_v_frp WHEN sensor <> 'VIIRS' AND NOT _uv THEN frp * {mf_lo} ELSE 0 END)::FLOAT AS frp_h_lo,
+        (CASE WHEN sensor = 'VIIRS' AND _uv THEN frp * f_v_frp WHEN sensor <> 'VIIRS' AND NOT _uv THEN frp * {mf_hi} ELSE 0 END)::FLOAT AS frp_h_hi,
+        (CASE WHEN sensor <> 'VIIRS' THEN {mn} ELSE 0 END)::FLOAT AS weight_cal,
+        (CASE WHEN sensor <> 'VIIRS' THEN frp * {mf} ELSE 0 END)::FLOAT AS frp_cal
+      FROM j"""
+
+
+def era_info(con, first_viirs: str | None) -> dict:
+    """Method description and the factor table per region for the app (median over the 12 calendar months)."""
+    reg = con.execute("""SELECT cell_id AS region, median(m_n), median(m_n_lo), median(m_n_hi), median(m_frp), median(m_frp_lo),
+                                median(m_frp_hi), median(md_n), median(md_frp)
+                         FROM efm WHERE level IN ('region', 'global') GROUP BY 1 ORDER BY (cell_id = 'global'), 1""").fetchall()
+    v = {(r, e): (n, f) for r, e, n, f in con.execute("""SELECT cell_id, era, median(v_n), median(v_frp) FROM efv
+                                                          WHERE level IN ('region', 'global') GROUP BY 1, 2""").fetchall()}
+    anchor = _TL.get("anchor") or "N20"
+    table = [{"region": r, "factor_n": round(a, 4), "factor_n_p25": round(b, 4), "factor_n_p75": round(c, 4),
+              "factor_frp": round(d, 4), "factor_frp_p25": round(e, 4), "factor_frp_p75": round(f, 4),
+              "factor_n_drift": round(g, 4), "factor_frp_drift": round(h, 4),
+              "viirs_n_to_ref": round(v.get((r, anchor), (1, 1))[0], 4), "viirs_frp_to_ref": round(v.get((r, anchor), (1, 1))[1], 4),
+              "r_log_frp": None, "n_cells": None, "used_global_fallback": False} for r, a, b, c, d, e, f, g, h in reg]
+    bt = os.path.join(os.path.dirname(DATA), "docs", "calibration", "calibration_backtest.csv")
+    backtest = None
+    if os.path.exists(bt):
+        b = pd.read_csv(bt)
+        if {"metric", "region", "era", "bias_log", "abs_err_median"} <= set(b.columns):
+            backtest = b[b.region.isin(["alle", "global"])][["metric", "era", "bias_log", "abs_err_median"]].round(3).to_dict("records")
+    eras = _TL["raw"].get("eras", [])
+    return {
+        "name": "era calibration (VIIRS N20+N21 level)", "version": "1.0", "status": "final",
+        "description": ("Data team calibration: VIIRS of every era scaled to today's constellation "
+                        f"({_TL['reference']}); MODIS (before VIIRS data) x factor per 0.5-degree cell and calendar month, "
+                        f"chained over the anchor era {anchor} 2018-2021 because the MODIS orbits drift from 2022. "
+                        "Fallback cell -> 5-degree block -> region -> global. Band: 80 % interval."),
+        "params": {"target_level": "VIIRS", "target_constellation": _TL["reference"], "viirs_start": first_viirs or VIIRS_START,
+                   "reference_era": _TL["reference"], "anchor_era": anchor, "cell_deg": 0.5, "block_deg": 5,
+                   "eras": [{k: e.get(k) for k in ("era", "first", "last", "months_clean", "role")} for e in eras],
+                   "modis_drift_years": sorted(_TL["drift_years"]), "band": "80 %",
+                   "factor_source": "team calibration (calibration_out, 14.11.2026, docs/calibration/calibration_report.md)",
+                   "backtest": backtest},
+        "calibration": table,
+    }

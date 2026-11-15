@@ -8,3 +8,4 @@ data/incoming/*.parquet
 data/incoming/*.zip
 data/processed.new/
 data/processed.old/
+data/calibration_out/
