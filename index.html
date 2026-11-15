@@ -45,6 +45,9 @@ main{padding:12px 16px;max-width:1700px;margin:0 auto;display:flex;flex-directio
 #kpiResize{cursor:col-resize;touch-action:none}#kpiResize:hover,#kpiResize.on{background:linear-gradient(90deg,transparent 5px,var(--accent) 5px 7px,transparent 7px)}
 .g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (min-width:1151px){.grid[data-cols]:not(.g-map){grid-template-columns:var(--cols)!important}}
+.grid.colrsz,.grid.colrsz *{cursor:col-resize!important}
+.grid .rszline{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);pointer-events:none;z-index:50}
 #mapwrap{position:relative;height:520px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
 #map{position:absolute;inset:0}
 .mapbar{position:absolute;top:8px;right:8px;z-index:4;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:75%;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12px}
@@ -2077,6 +2080,50 @@ function syncKpiLayout() {
 function setKpiFold(f) { S.kpiHidden = f; store.set('kpiFold', f ? '1' : '0'); syncKpiLayout(); }
 $('kpiFold').addEventListener('click', () => setKpiFold(true));
 $('kpiShow').addEventListener('click', () => setKpiFold(false));
+(function () {   // every row of boxes: drag the border between two boxes to change their widths (double-click: default)
+  const EDGE = 8, MIN = 220, sel = '.grid:not(.g-map)';
+  const cols = g => getComputedStyle(g).gridTemplateColumns.split(' ').map(parseFloat).filter(v => v > 0);
+  const key = g => 'cols.' + [...document.querySelectorAll(sel)].indexOf(g);
+  function hit(g, x, y) {
+    const c = cols(g); if (c.length < 2) return null;
+    const r = g.getBoundingClientRect(), gap = parseFloat(getComputedStyle(g).columnGap) || 0;
+    if (y < r.top || y > r.bottom) return null;
+    let e = r.left;
+    for (let i = 0; i < c.length - 1; i++) { e += c[i]; if (x >= e - EDGE && x <= e + gap + EDGE) return { i, c, gap, x0: e - r.left }; e += gap; }
+    return null;
+  }
+  const apply = (g, fr) => { g.dataset.cols = '1'; g.style.setProperty('--cols', fr.map(f => `minmax(0,${f.toFixed(4)}fr)`).join(' ')); };
+  let drag = null;
+  document.addEventListener('pointermove', e => {
+    if (drag) return;
+    const g = e.target.closest && e.target.closest(sel);
+    document.querySelectorAll('.grid.colrsz').forEach(x => { if (x !== g) x.classList.remove('colrsz'); });
+    if (g) g.classList.toggle('colrsz', !!hit(g, e.clientX, e.clientY));
+  }, true);
+  document.addEventListener('pointerdown', e => {
+    const g = e.target.closest && e.target.closest(sel); if (!g || e.button !== 0) return;
+    const h = hit(g, e.clientX, e.clientY); if (!h) return;
+    e.preventDefault(); e.stopPropagation();
+    const line = document.createElement('div'); line.className = 'rszline'; if (getComputedStyle(g).position === 'static') g.style.position = 'relative';
+    g.appendChild(line); line.style.left = (h.x0 + h.gap / 2 - 1) + 'px';
+    drag = { g, h, x: e.clientX, line, c: h.c.slice() };
+    const move = ev => {
+      const d = drag, dx = ev.clientX - d.x, c = d.h.c.slice(), i = d.h.i, tot = c[i] + c[i + 1];
+      c[i] = Math.max(MIN, Math.min(tot - MIN, c[i] + dx)); c[i + 1] = tot - c[i]; d.c = c;
+      apply(d.g, c); d.line.style.left = (c.slice(0, i + 1).reduce((x, y) => x + y, 0) + i * d.h.gap + d.h.gap / 2 - 1) + 'px'; relayout();
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+      drag.line.remove(); store.set(key(drag.g), JSON.stringify(drag.c)); drag.g.classList.remove('colrsz'); drag = null; relayout();
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  }, true);
+  document.addEventListener('dblclick', e => {
+    const g = e.target.closest && e.target.closest(sel); if (!g || !hit(g, e.clientX, e.clientY)) return;
+    delete g.dataset.cols; g.style.removeProperty('--cols'); store.set(key(g), ''); relayout();
+  }, true);
+  document.querySelectorAll(sel).forEach(g => { try { const c = JSON.parse(store.get(key(g), '') || 'null'); if (Array.isArray(c) && c.length === cols(g).length) apply(g, c); } catch (err) { } });
+})();
 (function () {   // drag the border between map and key figures
   const h = $('kpiResize'); let x0 = 0, w0 = 0;
   const set = w => { document.documentElement.style.setProperty('--kpiW', w + 'px'); relayout(); };
