@@ -349,3 +349,18 @@ curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_s
 * **Farbpaletten:** Phnx-Rot (Standard: #400000 #4B0000 #650002 #8D0004 #A80001), Swiss mono, farbenblind-sicher für
   Rot-Grün (Okabe-Ito + viridis) und für alle Arten (cividis). Eine Palette setzt Oberfläche, Sensorfarben, Konfidenz,
   Anomalie und die Farbskalen von Kalender, Matrix und Karte.
+
+## 12. Prognose, Kalender-Auflösungen, Zeitfarben
+
+* **Prognose** (`/api/forecast`): harmonisierte Monatswerte des Gebiets (mit allen Projektfiltern), Modell
+  **saisonales ARIMA (1,0,1)(0,1,1)₁₂ auf log(1 + Wert)** (statsmodels SARIMAX), angepasst auf alle vollständigen Monate
+  ab 2002-07 (ab da fliegen Terra und Aqua). Vorhersage bis Dezember des aktuellen Jahres, mindestens bis zum Monat nach
+  dem laufenden; 80-%-Intervall, zurücktransformiert. Rückrechnung: dasselbe Modell ohne die letzten 12 Monate, Median der
+  absoluten %-Abweichung (`backtest_mape_pct`, Südafrika: 12,5 %). Weniger als 48 Monate Daten: Mittel desselben Monats der
+  letzten 3 Jahre. Im Kalender gestrichelt umrandet, schraffiert und mit „≈“; die Kennzahlen zeigen den erwarteten Wert des
+  kommenden Monats. Nur für die harmonisierten Werte.
+* **Kalender:** monatlich, quartalsweise (aus den Monatswerten), wöchentlich (ISO-Wochen, aus den Tageswerten), täglich.
+  Klick auf eine Woche oder ein Quartal zeigt diesen Zeitraum auf der Karte.
+* **Zeitfarben** (Kästchen „time“, auch als Projekteinstellung): Farbe eines Punkts = Lage seines Zeitpunkts im gezeigten
+  Zeitraum, `t = (Zeitpunkt − Beginn) / (Ende − Beginn)`, linear von Farbe A (Beginn) nach Farbe B (Ende) der Palette.
+  Kernel: der Zeitraum in 6 Abschnitte geteilt, jeder Abschnitt eine eigene Kernel-Ebene in seiner Farbe.

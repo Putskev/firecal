@@ -371,6 +371,12 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
 .wzdraw .btn{background:var(--paper)}.wzdraw .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .wzsub{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .wzsub input[type=text]{width:280px;padding:6px 8px;font-size:14px}
+.cell.fc{outline:2px dashed var(--ink);outline-offset:-3px;font-style:italic;font-weight:700}
+.cell.fc::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 3px,transparent 3px 7px)}
+.fcsw{outline:2px dashed var(--ink);outline-offset:-2px;background:repeating-linear-gradient(45deg,#ccc 0 3px,#fff 3px 7px)}
+.cal.wk{gap:1px}.cal.wk .cell{height:16px;font-size:0}.cal.wk .h{font-size:9px}
+.kpi.fc{grid-column:1/-1;border-left:3px dashed var(--accent);background:repeating-linear-gradient(45deg,transparent 0 6px,rgba(168,0,1,.04) 6px 12px)}
+.how,#mapNote,.wzrow .hint,#layersPanel .sub.expl{display:none!important}
 .cvform select,.cvform input{font-size:13px;padding:5px 6px;text-transform:none;letter-spacing:0;font-weight:500}
 
 @media (max-width:900px){body.side main{grid-template-columns:1fr}body.side #stats{position:static;height:auto}body.side #paneResize{display:none}}
@@ -380,11 +386,11 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
 <script>try { const t = localStorage.getItem('firecal.theme'); if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark'); } catch (e) {}</script>
 <header>
   <a class="brand" href="#/" title="Phnx · projects"><img src="assets/phnx-white.png" alt="Phnx logo"><span>Phnx</span></a>
-  <nav class="hnav"><a href="#/" data-nav="home">Projects</a><a href="#/explore" data-nav="explore">Explorer</a><a href="api-docs.html">API</a></nav>
+  <nav class="hnav"><a href="#/" data-nav="home">Projects</a><a href="#/explore" data-nav="explore">Explorer</a></nav>
   <span class="hproj" id="hProj"></span>
   <span id="source" class="pill">Loading…</span>
   <span class="spacer"></span>
-  <button id="apiBtn" class="btn small" style="display:none">API data</button>
+  <button id="apiBtn" class="btn small" style="display:none">Server data</button>
   <label class="btn small" for="file" title="Load FIRMS CSV files into the browser">Load CSV</label>
   <input id="file" type="file" accept=".csv" multiple class="sr">
   <button id="demoBtn" class="btn small" title="Synthetic demo data">Demo</button>
@@ -407,7 +413,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
     <span class="info" data-help="values">?</span></div>
   <div class="fg"><span class="l">Satellites</span><span id="satChips"></span></div>
   <div class="fg"><span class="l">Time of day</span><div class="seg" id="dnSeg"><button data-v="all" class="on">All</button><button data-v="D">Day</button><button data-v="N">Night</button></div></div>
-  <div class="fg"><span class="l">Calendar</span><div class="seg" id="granSeg"><button data-v="month">Monthly</button><button data-v="day">Daily</button></div></div>
+  <div class="fg"><span class="l">Calendar</span><div class="seg" id="granSeg"><button data-v="month">Monthly</button><button data-v="quarter">Quarterly</button><button data-v="week">Weekly</button><button data-v="day">Daily</button></div></div>
   <span class="area" id="areaInfo">Area: whole dataset</span>
   <div class="hits" id="hits">–</div>
 </div>
@@ -437,6 +443,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
           <button id="layersBtn" class="btn small" title="Map background and satellite imagery">🗺 Layers</button>
           <div class="seg" id="mapModeSeg" title="Auto: single points below 1,000 hotspots in view, Gaussian kernels up to 1,000,000, density cubes above"><button data-v="auto" class="on">Auto</button><button data-v="heat" title="Pre-aggregated density cubes">Cubes</button><button data-v="kernels" title="Gaussian kernels of the single detections (up to 1,000,000)">Kernels</button><button data-v="points" title="Every single detection (up to 1,000,000)">Points</button></div>
           <span class="mapconf" id="mapConf" title="Confidence classes shown on the map (map only)"></span>
+          <label class="fg" title="Colour points and kernels by time within the period"><input type="checkbox" id="timeCk"> time</label>
           <div class="seg" id="colorSeg" title="Colour of single points"><button data-v="sensor" class="on">Sensor</button><button data-v="conf">Confidence</button><button data-v="frp">FRP</button></div>
           <div class="seg" id="styleSeg" title="How the density is drawn: sharp grid cells or a soft glow"><button data-v="cells" class="on">Cells</button><button data-v="glow">Glow</button></div>
           <label class="fg" title="Density colour scale">Scale <input id="heatMax" type="range" min="0.2" max="3" step="0.05" value="1" style="width:70px"></label>
@@ -519,6 +526,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
     <div class="cal" id="cal"></div>
     <div class="legendrow"><span>0</span><div class="bar" id="calLegendBar"></div><span id="calLegendMax"></span>
       <span><span class="sw" style="background:repeating-linear-gradient(135deg,#9ad 0 2px,#fff 2px 6px)"></span>converted from MODIS</span>
+      <span id="calFcLegend" style="display:none"><span class="sw fcsw"></span>≈ forecast (seasonal ARIMA)</span>
       <span><span class="sw" style="background:repeating-linear-gradient(45deg,#f3f2ee,#f3f2ee 4px,#ebeae5 4px,#ebeae5 8px)"></span>outside range / no data</span></div>
   </div>
 
@@ -621,22 +629,22 @@ function availSats() {
 const VIIRS_START = '2012-01-20';
 const VIRIDIS = ['#440154','#482878','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'];
 const DARK = () => document.body.classList.contains('dark');
-const C = { modis:'#e69f00', viirs:'#0072b2', modisCal:'#cc79a7', harm: DARK() ? '#f0f0ee' : '#1f1f1d', warm:'#d55e00', cool:'#1b6fb5', low:'#b9b9b9', nominal:'#56b4e9', high:'#d55e00', bar:'#8D0004', barLight:'#d9a8a0' };
+const C = { modis:'#e69f00', viirs:'#0072b2', modisCal:'#cc79a7', harm: DARK() ? '#f0f0ee' : '#1f1f1d', warm:'#d55e00', cool:'#1b6fb5', low:'#b9b9b9', nominal:'#56b4e9', high:'#d55e00', bar:'#8D0004', barLight:'#d9a8a0', timeA:'#F2C14E', timeB:'#E01E2B' };
 const FRP_EDGES = [0, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 1000, Infinity];
 /* ---------- colour palettes: one small framework, a few presets (incl. colour-blind safe ones) ----------
    ui: five interface tones (dark -> bright), seq: sequential scale on light ground (calendar, matrix, light maps),
    map: scale on dark maps (dark -> bright), plus the categorical colours (sensors, confidence, anomaly). */
 const PALETTES = {
-  phnx: { name: 'Phnx red (default)', ui: ['#400000', '#4B0000', '#650002', '#8D0004', '#A80001'], hdr: '#400000', accent: '#A80001',
+  phnx: { timeA: '#F2C14E', timeB: '#E01E2B', name: 'Phnx red (default)', ui: ['#400000', '#4B0000', '#650002', '#8D0004', '#A80001'], hdr: '#400000', accent: '#A80001',
     modis: '#E39A2D', viirs: '#A80001', warm: '#A80001', cool: '#5C7A99', low: '#b9b2ab', nominal: '#E39A2D', high: '#650002', bar: '#8D0004', barLight: '#d9a8a0',
     seq: ['#f7ebe6', '#efcfc3', '#e2a593', '#cf7462', '#b8423a', '#8D0004', '#650002', '#400000'], map: ['#2a0000', '#650002', '#A80001', '#e0451f', '#ff8f3a', '#ffd88a'] },
-  swiss: { name: 'Swiss mono', ui: ['#111111', '#1c1c1c', '#333333', '#E30613', '#E30613'], hdr: '#111111', accent: '#E30613',
+  swiss: { timeA: '#2F5DA8', timeB: '#E30613', name: 'Swiss mono', ui: ['#111111', '#1c1c1c', '#333333', '#E30613', '#E30613'], hdr: '#111111', accent: '#E30613',
     modis: '#E30613', viirs: '#2F5DA8', warm: '#E30613', cool: '#2F5DA8', low: '#bdbdbd', nominal: '#7a7a7a', high: '#111111', bar: '#111111', barLight: '#a3a39e',
     seq: ['#f2f2f0', '#d9d9d6', '#b3b3ae', '#8a8a84', '#5f5f5a', '#38382f', '#1a1a17', '#000000'], map: ['#1a0000', '#7a0008', '#E30613', '#ff6a3d', '#ffc2a6', '#ffffff'] },
-  okabe: { name: 'Colour-blind safe: red-green (Okabe-Ito)', ui: ['#1d1f24', '#2a2d33', '#3b3f46', '#0072B2', '#D55E00'], hdr: '#1d1f24', accent: '#D55E00',
+  okabe: { timeA: '#56B4E9', timeB: '#D55E00', name: 'Colour-blind safe: red-green (Okabe-Ito)', ui: ['#1d1f24', '#2a2d33', '#3b3f46', '#0072B2', '#D55E00'], hdr: '#1d1f24', accent: '#D55E00',
     modis: '#E69F00', viirs: '#0072B2', warm: '#D55E00', cool: '#0072B2', low: '#b9b9b9', nominal: '#56B4E9', high: '#D55E00', bar: '#0072B2', barLight: '#9cc3dd',
     seq: ['#fde725', '#b5de2b', '#6ece58', '#35b779', '#1f9e89', '#26828e', '#31688e', '#3e4989', '#482878', '#440154'], map: ['#000004', '#3b0f70', '#8c2981', '#de4968', '#fe9f6d', '#fcfdbf'] },
-  cividis: { name: 'Colour-blind safe: all types (cividis)', ui: ['#00224E', '#123570', '#3b496c', '#00336F', '#7c6f3a'], hdr: '#00224E', accent: '#00336F',
+  cividis: { timeA: '#4A6FA5', timeB: '#FEE838', name: 'Colour-blind safe: all types (cividis)', ui: ['#00224E', '#123570', '#3b496c', '#00336F', '#7c6f3a'], hdr: '#00224E', accent: '#00336F',
     modis: '#D9BE3B', viirs: '#00336F', warm: '#C9A227', cool: '#00336F', low: '#c4c4c4', nominal: '#8a8678', high: '#00224E', bar: '#00336F', barLight: '#a3adc2',
     seq: ['#fee838', '#e1cc55', '#c3b369', '#a59c74', '#8a8678', '#707173', '#575d6d', '#3b496c', '#123570', '#00224e'], map: ['#00224e', '#123570', '#575d6d', '#8a8678', '#c3b369', '#fee838'] },
 };
@@ -652,6 +660,7 @@ const S = {
   rows:{}, sat:{}, periods:[], rangeP:[], mapPeriod:null, mapMode:'auto', colorBy:'sensor',
   heatMax:1, heatRef:null, anomMode:'pct', mSort:'total', mNorm:'global', matrix:null, dist:null,
   req:0, rreq:0, hreq:0, treq:0, freq:0, creq:0, team:null, distFrp:null, mapConf:null, cmp:false, dstyle:'cells', playing:false,
+  calMode:'month', fc:null, fcReq:0, mapRange:null, mapRangeLabel:'', timeColor:false,
   wd:null, hrs:null, pal:'phnx'   // wd / hrs: persistent weekday and local-hour filters of a project (null = all)
 };
 
@@ -722,7 +731,7 @@ const ApiProvider = {
   async init() { const r = await fetch(`${API}/api/meta`, { cache: 'no-store', signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }); if (!r.ok) throw 0; const m = await r.json();
     if (m.api !== 'firecal' || !m.harmonization || !m.harmonization.params || !String(m.harmonization.params.target_level).startsWith('VIIRS')) throw 0; this.m = m; return this; },
   meta() { return this.m; },
-  label() { return `API · ${fmt(this.m.rows)} hotspots · ${this.m.first_date} → ${this.m.last_date}`; },
+  label() { return `${fmt(this.m.rows)} hotspots · ${this.m.first_date} → ${this.m.last_date}`; },
   async series(f, gran, win) {   // daily: the last ~13 months only (fast on a long archive), or the window given
     const w = gran === 'day' ? (win || dayWindow()) : {};
     return (await getJSON(`${API}/api/timeseries?${qs({ ...apiF(f), granularity: gran, ...w })}`)).rows; },
@@ -732,6 +741,7 @@ const ApiProvider = {
   async distributions(f, start, end) { return getJSON(`${API}/api/distributions?${qs({ ...apiF(f), start, end })}`); },
   async matrix(f, gran, view, metric, start, end, top) { return getJSON(`${API}/api/matrix?${qs({ ...apiF(f), granularity: gran, view, metric, start, end, top })}`); },
   async team() { try { return await getJSON(`${API}/api/team`); } catch { return { grids: [] }; } },
+  async forecast(f, metric) { return getJSON(`${API}/api/forecast?${qs({ bbox: f.bbox, polygon: f.polygon, exclude_low: f.exclude_low, vegetation_only: f.vegetation_only, weekdays: f.weekdays, hours: f.hours, metric })}`); },
   async count(f, start, end, signal) { return getJSON(`${API}/api/count?${qs({ ...apiF(f), sensor: f.sensor, start, end })}`, signal); },
   async density(f, start, end, zoom, view, metric, signal) { return getJSON(`${API}/api/density?${qs({ ...apiF(f), sensor: f.sensor, start, end, zoom, view, metric })}`, signal); },
   async pointsGL(f, bbox, start, end, signal) { return pointLoader.load(`${API}/api/points.bin?${qs({ ...apiF(f), sensor: f.sensor, bbox, start, end })}`, signal); },
@@ -775,6 +785,15 @@ const LocalProvider = {
       if (M) r.modis_h_n += p.w; else r.viirs_h_n += p.w; r.modis_cal_n += p.wc; r.modis_cal_frp += p.fc;
     }
     return rows;
+  },
+  async forecast(f, metric) {   // demo / uploads: seasonal mean of the last 3 years (no model fitted in the browser)
+    const rows = await this.series(f, 'month'), fld = metric === 'count' ? 'harm_n' : 'harm_frp', last = this.m.last_date;
+    const lm = last.slice(0, 7), complete = last === lastDay(lm) ? lm : monthsBetween(addDays(lm + '-01', -1).slice(0, 7), lm)[0];
+    const end = lm.slice(0, 4) + '-12' > lm ? lm.slice(0, 4) + '-12' : monthsBetween(lm, addDays(lastDay(lm), 1).slice(0, 7))[1];
+    const fut = monthsBetween(complete, end).slice(1), out = { model: 'Seasonal mean of the last 3 years', band: 'range of the last 3 years', fit_to: complete, months: {} };
+    for (const k of fut) { const v = [1, 2, 3].map(d => (rows[`${+k.slice(0, 4) - d}-${k.slice(5)}`] || {})[fld] || 0), m = v.reduce((a, b) => a + b, 0) / 3;
+      out.months[k] = { mean: m, lo: Math.min(...v), hi: Math.max(...v) }; }
+    return out;
   },
   async satellites(f, gran) { const out = {}; for (const p of this._sel(f)) { const k = pOf(p.date, gran), o = out[p.sat] || (out[p.sat] = {}); o[k] = (o[k] || 0) + 1; } return out; },
   async heat(f, start, end, view, metric, res) {
@@ -996,6 +1015,11 @@ const rgb = c => { const h = hex(c); return [h[0], h[1], h[2]]; };
 const boxIn = (a, b) => { const x = a.split(',').map(Number), y = b.split(',').map(Number); return x[0] >= y[0] - 1e-9 && x[1] >= y[1] - 1e-9 && x[2] <= y[2] + 1e-9 && x[3] <= y[3] + 1e-9; };
 function padBox(b, k) { const [w, s, e, n] = b.split(',').map(Number), dx = (e - w) * k, dy = (n - s) * k;
   return [Math.max(-180, w - dx), Math.max(-85, s - dy), Math.min(180, e + dx), Math.min(85, n + dy)].map(v => +v.toFixed(3)).join(','); }
+// time colouring: position of a detection within the shown period, 0 = first moment, 1 = last moment
+const lerpRgb = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+function timeT(P, i, span) { const d0 = Date.parse(span[0]) / 864e5, d1 = Date.parse(span[1]) / 864e5 + 1, tt = P.t[i];
+  return Math.max(0, Math.min(1, (P.day[i] + (Math.floor(tt / 100) * 60 + tt % 100) / 1440 - d0) / Math.max(1e-9, d1 - d0))); }
+const TIME_BINS = 6;
 function clipToRegion(b, R) { if (!R) return b; const [w, s, e, n] = b.split(',').map(Number);
   return [Math.max(w, R.minLon), Math.max(s, R.minLat), Math.min(e, R.maxLon), Math.min(n, R.maxLat)].map(v => +v.toFixed(3)).join(','); }
 // kernels: the darkest tone would vanish on a dark map, so the scale starts one step brighter
@@ -1188,11 +1212,11 @@ class FireMap {
       getFillColor: col, updateTriggers: { getFillColor: [vmax, dark, days] } })];
   }
   pointLayer(st, dark) {
-    const P = this.st.pts, n = P.n, ck = st.colorBy + dark;
+    const P = this.st.pts, n = P.n, span = this.o.span() || [S.rangeStart, S.rangeEnd], ck = st.colorBy + dark + (st.timeColor ? 't' + span.join() + C.timeA + C.timeB : '') + palId();
     if (P._ck !== ck) {
-      const colr = new Uint8Array(4 * n), rad = new Float32Array(n), cm = rgb(C.modis), cv = rgb(C.viirs), cc = [rgb(C.low), rgb(C.nominal), rgb(C.high)];
+      const colr = new Uint8Array(4 * n), rad = new Float32Array(n), cm = rgb(C.modis), cv = rgb(C.viirs), cc = [rgb(C.low), rgb(C.nominal), rgb(C.high)], ta = rgb(C.timeA), tb = rgb(C.timeB);
       for (let i = 0; i < n; i++) {
-        const c = st.colorBy === 'sensor' ? (P.s[i] ? cv : cm) : st.colorBy === 'conf' ? cc[P.cf[i]] : palColor(Math.log10(P.frp[i] + 1) / 3, dark);
+        const c = st.timeColor ? lerpRgb(ta, tb, timeT(P, i, span)) : st.colorBy === 'sensor' ? (P.s[i] ? cv : cm) : st.colorBy === 'conf' ? cc[P.cf[i]] : palColor(Math.log10(P.frp[i] + 1) / 3, dark);
         colr[4 * i] = c[0]; colr[4 * i + 1] = c[1]; colr[4 * i + 2] = c[2]; colr[4 * i + 3] = 235;
         rad[i] = Math.min(7, 1.6 + Math.log10(P.frp[i] + 1) * 1.6);
       }
@@ -1205,10 +1229,22 @@ class FireMap {
   }
   kernelLayer(st, dark) {   // Gaussian kernels of the single detections, summed on the GPU
     const P = this.st.pts, frp = st.metric === 'frp';
+    if (st.timeColor) return this.timeKernels(st, P, frp);
     if (!P._kd) P._kd = { length: P.n };
     return new deck.HeatmapLayer({ id: 'kern', data: P._kd, radiusPixels: 20, intensity: 3 * (st.scale || 1), threshold: .02, aggregation: 'SUM',
       getPosition: (_, { index, target }) => { target[0] = P.pos[2 * index]; target[1] = P.pos[2 * index + 1]; return target; },
       getWeight: frp ? (_, { index }) => P.frp[index] : 1, colorRange: kernelColors(dark), updateTriggers: { getWeight: frp } });
+  }
+  timeKernels(st, P, frp) {   // time colouring for kernels: the period cut into slices, every slice its own colour
+    const span = this.o.span() || [S.rangeStart, S.rangeEnd], key = span.join() + P.n;
+    if (P._tk !== key) { const bins = Array.from({ length: TIME_BINS }, () => []);
+      for (let i = 0; i < P.n; i++) bins[Math.min(TIME_BINS - 1, Math.floor(timeT(P, i, span) * TIME_BINS))].push(i);
+      P._tb = bins.map(b => Uint32Array.from(b)); P._tk = key; }
+    const ta = rgb(C.timeA), tb = rgb(C.timeB);
+    return P._tb.map((idx, k) => { const c = lerpRgb(ta, tb, (k + .5) / TIME_BINS);
+      return new deck.HeatmapLayer({ id: 'kt' + k, data: { length: idx.length }, radiusPixels: 20, intensity: 3 * (st.scale || 1), threshold: .03, aggregation: 'SUM',
+        getPosition: (_, { index, target }) => { const i = idx[index]; target[0] = P.pos[2 * i]; target[1] = P.pos[2 * i + 1]; return target; },
+        getWeight: frp ? (_, { index }) => P.frp[idx[index]] : 1, colorRange: [40, 90, 140, 185, 225, 255].map(a => [...c, a]), updateTriggers: { getWeight: frp, getPosition: P._tk } }); });
   }
   render() {
     const st = this.o.settings(), dark = this.o.dark(), layers = [];
@@ -1241,20 +1277,20 @@ class FireMap {
     const fill = el.querySelector('.bfill'), txt = el.querySelector('.btext'), sub = el.querySelector('.bsub');
     el.classList.remove('ok', 'near', 'over', 'na', 'loading', 'err');
     if (x.team) { el.style.display = 'none'; return; } el.style.display = '';
-    if (x.loading) { el.classList.add('loading'); sub.textContent = 'Counting the hotspots in view …'; return; }
-    if (x.error) { el.classList.add('err'); sub.textContent = 'Could not count the hotspots in view.'; return; }
+    if (x.loading) { el.classList.add('loading'); sub.textContent = 'Counting …'; return; }
+    if (x.error) { el.classList.add('err'); sub.textContent = 'Count failed'; return; }
     const c = x.cnt.count, r = Math.min(c / POINT_LIMIT, 1), avail = x.cnt.points_available !== false;
     fill.style.width = (r * 100).toFixed(1) + '%';
     el.setAttribute('aria-valuenow', Math.min(c, POINT_LIMIT)); el.setAttribute('aria-valuemax', POINT_LIMIT);
     txt.textContent = `Points in view: ${fmt(c)} / ${fmt(POINT_LIMIT)}`;
     let state, msg;
-    if (!avail) { state = 'na'; msg = 'Only density is available for this period.'; }
-    else if (c > POINT_LIMIT) { state = 'over'; msg = `Too many points (${fmt(c)}). Showing density. Zoom in or shorten the period to see single points.`; }
-    else if (x.want === 'density') { state = r >= .7 ? 'near' : 'ok'; msg = this.o.settings().mode === 'density' ? 'Density cubes chosen (switch to Auto, Kernels or Points for the single detections).' : 'Showing density cubes (just below the limit: zoom in a little).'; }
-    else if (x.want === 'kernels') { state = r >= .7 ? 'near' : 'ok'; msg = (r >= .7 ? 'Close to the limit. ' : '') + `Gaussian kernels of the single detections (${fmt(KERNEL_MIN)} to ${fmt(POINT_LIMIT)}). Switch to Points to see each one.`; }
-    else if (r >= .7) { state = 'near'; msg = 'Close to the limit. With a smaller area or period the single points stay visible.'; }
-    else { state = 'ok'; msg = (c <= KERNEL_MIN ? `Every single detection (up to ${fmt(KERNEL_MIN)}).` : 'Single points are shown.') + (c <= TIP_MAX ? ' Hover a point for its details.' : ` Details on hover from ${fmt(TIP_MAX)} points in view.`); }
-    el.classList.add(state); sub.textContent = msg + (x.cnt.whole_months ? ' Count from whole months.' : '');
+    if (!avail) { state = 'na'; msg = 'Density cubes only'; }
+    else if (c > POINT_LIMIT) { state = 'over'; msg = 'Above the limit · density cubes'; }
+    else if (x.want === 'density') { state = r >= .7 ? 'near' : 'ok'; msg = 'Density cubes'; }
+    else if (x.want === 'kernels') { state = r >= .7 ? 'near' : 'ok'; msg = 'Gaussian kernels'; }
+    else if (r >= .7) { state = 'near'; msg = 'Single points · close to the limit'; }
+    else { state = 'ok'; msg = (c <= KERNEL_MIN ? 'Every detection' : 'Single points') + (c <= TIP_MAX ? ' · hover for details' : ''); }
+    el.classList.add(state); sub.textContent = msg + (x.cnt.whole_months ? ' · whole months' : '');
     el.setAttribute('aria-valuetext', `${txt.textContent}. ${msg}`);
     el._cnt = x.cnt;
   }
@@ -1304,12 +1340,12 @@ class FireMap {
 }
 
 /* ---------- the main map ---------- */
-const mainSpan = () => S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+const mainSpan = () => S.mapRange ? S.mapRange : S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
 const modeOf = m => m === 'heat' ? 'density' : m;
 const fm = new FireMap('map', {
   name: 'main', attribution: true, budgetEl: 'budget', span: mainSpan, region: () => S.region, dark: () => isDarkMap(),
   filters: () => mapF(F()),
-  settings: () => ({ mode: modeOf(S.mapMode), style: S.dstyle, colorBy: S.colorBy, scale: S.heatMax, view: S.view, metric: S.metric }),
+  settings: () => ({ mode: modeOf(S.mapMode), style: S.dstyle, colorBy: S.colorBy, scale: S.heatMax, view: S.view, metric: S.metric, timeColor: S.timeColor }),
   onRender: () => renderMapLegend(), onPerf: m => showPerf(m),
   onBaseError: () => { failedBases.add(M.base); const next = ['satellite', 'light', 'streets', 'dark'].find(x => !failedBases.has(x));
     if (next) { toast(`${baseOf(M.base).name} tiles do not load, showing ${baseOf(next).name}`); setBasemap(next, false); } },
@@ -1328,7 +1364,7 @@ function setBasemap(id, persist = true) { M.base = baseOf(id).id;
   if (persist && PROJ.cur) { projMap(PROJ.cur).base = M.base; saveProjects(); } else if (persist) store.set('basemap', M.base); applyBases(); }
 function updatePlaces() { applyBases(); }
 function dailyDate() {   // day shown on the map: selected day, or the last day of the selected period
-  const [s0, e0] = S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+  const [s0, e0] = mainSpan();
   const today = new Date().toISOString().slice(0, 10);
   return (e0 || today) > today ? today : (e0 || today);
 }
@@ -1340,13 +1376,13 @@ function renderLayersPanel() {
   const thumb = u => tileUrl(u, 2, 2, 1);
   P.innerHTML = `<div class="lh">Background <button id="layersClose" title="Close">×</button></div>` +
     BASEMAPS.map(b => `<div class="opt ${M.base === b.id ? 'on' : ''}" data-base="${b.id}"><img alt="" loading="lazy" src="${thumb(b.url)}"><div class="t">${b.name}<small>${b.note}</small></div><span class="ck">${M.base === b.id ? '✓' : ''}</span></div>`).join('') +
-    `<div class="lh">Daily satellite imagery</div><div class="sub">True colour of the day shown on the map: <b>${date}</b>. Click a bar in the timeline or a calendar cell to change the day.</div>` +
+    `<div class="lh">Daily satellite imagery</div><div class="sub"><b>${date}</b></div>` +
     `<div class="opt ${!M.daily ? 'on' : ''}" data-daily=""><img alt="" src="${thumb(baseOf(M.base).url)}"><div class="t">None<small>only the background above</small></div><span class="ck">${!M.daily ? '✓' : ''}</span></div>` +
     DAILY.map(d => { const na = date < d.from || (d.to && date > d.to);
       return `<div class="opt ${M.daily === d.id ? 'on' : ''} ${na ? 'na' : ''}" data-daily="${d.id}"><img alt="" loading="lazy" src="${GIBS}${d.id}/default/${date}/GoogleMapsCompatible_Level9/2/1/2.jpg"><div class="t">${d.name}<small>${d.sat}${d.to ? ` · ${d.from} to ${d.to}` : ` · since ${d.from}`}</small></div><span class="ck">${M.daily === d.id ? '✓' : ''}</span></div>` +
         (na && M.daily === d.id ? `<div class="warnna">NO DATA FOR ${date} · available ${d.from}${d.to ? ' to ' + d.to : ' onward'}</div>` : ''); }).join('') +
     (M.daily ? `<div class="sub">Opacity <input type="range" id="dailyOp" min="0.2" max="1" step="0.05" value="${M.dailyOpacity}"></div>` : '') +
-    `<div class="lh">Overlays</div><label class="opt" style="cursor:pointer"><input type="checkbox" id="placesCk" ${M.places ? 'checked' : ''}><div class="t">Borders and place names<small>on imagery backgrounds</small></div></label>`;
+    `<div class="lh">Overlays</div><label class="opt" style="cursor:pointer"><input type="checkbox" id="placesCk" ${M.places ? 'checked' : ''}><div class="t">Borders and place names</div></label>`;
 }
 $('layersPanel').addEventListener('click', e => {
   if (e.target.id === 'layersClose') { $('layersPanel').classList.remove('open'); return; }
@@ -1472,7 +1508,7 @@ async function refresh() {
   try {
     const f = F(), [rows, sat] = await Promise.all([p.series(f, S.gran), p.satellites(f, S.gran)]);
     if (id !== S.req) return;
-    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange(); if (S.cmp) cmpLoad();
+    S.rows = rows; S.sat = sat; computeRange(); renderTimeline(); renderRange(); if (S.cmp) cmpLoad(); loadForecast();
   } catch (e) { console.error(e); toast('Could not load data'); }
   finally { if (id === S.req) busy(false); }
 }
@@ -1486,7 +1522,7 @@ function computeRange() {
   const last = S.meta.last_date, first = S.gran === 'day' ? dayWindow().start : S.meta.first_date;
   let a = S.from < first ? first : S.from, b = S.to > last ? last : S.to; if (a > b) [a, b] = [b, a];
   if (S.gran === 'day' && dayDiff(a, b) > 366) { a = addDays(b, -365); S.from = a; toast('Daily view: limited to 1 year'); }
-  S.rangeStart = a; S.rangeEnd = b; $('from').value = a; $('to').value = b;
+  S.rangeStart = a; S.rangeEnd = b; $('from').value = a; $('to').value = b; S.mapRange = null;
   S.periods = periodsBetween(first, last, S.gran); S.rangeP = periodsBetween(a, b, S.gran);
   if (S.mapPeriod && !S.rangeP.includes(S.mapPeriod)) S.mapPeriod = null;
   $('rangeLabel').textContent = `${a} → ${b} · ${S.rangeP.length} ${S.gran === 'day' ? 'days' : 'months'}`;
@@ -1556,6 +1592,7 @@ $('from').addEventListener('change', e => { if (e.target.value) { S.from = e.tar
 $('to').addEventListener('change', e => { if (e.target.value) { S.to = e.target.value; onRange(); } });
 
 function selectPeriod(p) {
+  S.mapRange = null;
   S.mapPeriod = (S.mapPeriod === p) ? null : p;
   document.querySelectorAll('.cell.sel').forEach(c => c.classList.remove('sel'));
   if (S.mapPeriod) { const c = document.querySelector(`.cell[data-p="${S.mapPeriod}"]`); if (c) c.classList.add('sel'); }
@@ -1572,7 +1609,7 @@ function renderTimeBadges() {
   if (!S.meta || !S.rangeStart) return;
   const set = (id, t, tip) => { const e = $('tb_' + id); if (e) { e.textContent = t; if (tip) e.title = tip; } };
   const all = span(S.meta.first_date, S.meta.last_date), sel = span(S.rangeStart, S.rangeEnd);
-  const [ms, me] = S.mapPeriod ? pRange(S.mapPeriod, S.gran) : [S.rangeStart, S.rangeEnd];
+  const [ms, me] = mainSpan();
   const loaded = S.periods.length ? span(pRange(S.periods[0], S.gran)[0], pRange(S.periods[S.periods.length - 1], S.gran)[1]) : all;
   set('tl', `🕒 ${loaded}`, 'Time span shown in the timeline; the handles choose the selection for all views');
   set('map', `🕒 ${span(ms, me)}`, S.mapPeriod ? 'Period clicked in the timeline or calendar' : 'Timeline selection');
@@ -1615,13 +1652,22 @@ function renderKPIs() {
     <div class="kpi"><div class="l">Raw detections</div><div class="v">${fmt(raw)}</div><div class="s"><span class="dot" style="background:var(--modis)"></span>MODIS ${fmt(mN)} · <span class="dot" style="background:var(--viirs)"></span>VIIRS ${fmt(vN)}</div></div>
     <div class="kpi"><div class="l">${plabel(last)} vs ${S.gran === 'month' ? 'same month, other years' : 'other days'}</div><div class="v ${d === null ? '' : d >= 0 ? 'up' : 'down'}">${d === null ? 'n/a' : `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(0)} %`}</div><div class="s">${ok ? `${fmt(lv)} vs median ${fmt(b.med)} (${b.n} ${S.gran === 'month' ? 'yrs' : 'days'})` : 'needs ≥ 3 years of history'}</div></div>
     <div class="kpi"><div class="l">Night share</div><div class="v">${raw ? (night / raw * 100).toFixed(0) : '–'} %</div><div class="s">of raw detections</div></div>
-    <div class="kpi"><div class="l">High confidence</div><div class="v">${raw ? (high / raw * 100).toFixed(0) : '–'} %</div><div class="s">of raw detections</div></div>`;
+    <div class="kpi"><div class="l">High confidence</div><div class="v">${raw ? (high / raw * 100).toFixed(0) : '–'} %</div><div class="s">of raw detections</div></div>${fcKpi()}`;
   $('hits').innerHTML = `<b>${fmt(raw)}</b> raw · <b>${fmt(hN)}</b> harmonized`;
   const perPeriod = hN / Math.max(1, S.rangeP.length), w = [];
   if (S.meta.data_version === 'demo') w.push('Demo data: synthetic numbers for testing the layout, not real fires.');
   if (perPeriod < 30) w.push(`Few hotspots (${fmt(perPeriod)} per ${S.gran === 'day' ? 'day' : 'month'}): the MODIS → VIIRS conversion is uncertain here.`);
   if ((S.meta.harmonization || {}).status !== 'final') w.push('Harmonization is a placeholder until the team’s calibration is delivered.');
   $('warnBox').innerHTML = w.map(x => `<div class="warn" style="margin-top:4px">${x}</div>`).join('');
+}
+function fcKpi() {   // expected value of the coming month (forecast, clearly marked)
+  if (!S.fc || !S.fc.months || !S.meta) return '';
+  const lm = S.meta.last_date.slice(0, 7), next = monthsBetween(lm, addDays(lastDay(lm), 1).slice(0, 7))[1], f = S.fc.months[next] || S.fc.months[Object.keys(S.fc.months)[0]];
+  if (!f) return ''; const k = Object.keys(S.fc.months).find(x => S.fc.months[x] === f), cur = S.fc.months[lm], u = S.metric === 'count' ? 'hotspots' : 'MW';
+  const rest = Object.entries(S.fc.months).filter(([x]) => x > lm);
+  return `<div class="kpi fc"><div class="l">Forecast · ${plabel(k)} · harmonized</div><div class="v">≈ ${S.metric === 'count' ? fmt(f.mean) : short(f.mean)} ${S.metric === 'frp' ? 'MW' : ''}</div>
+    <div class="s">${S.fc.band || '80 %'}: ${fmt(f.lo)}–${fmt(f.hi)} ${u}${cur ? ` · ${plabel(lm)} in total ≈ ${fmt(cur.mean)}` : ''}${rest.length > 1 ? ` · rest of ${k.slice(0, 4)} ≈ ${fmt(rest.reduce((a, [, x]) => a + x.mean, 0))}` : ''}</div>
+    <div class="s">${S.fc.model}${S.fc.backtest_mape_pct ? ` · error over the last 12 months ${S.fc.backtest_mape_pct} %` : ''}</div></div>`;
 }
 function renderInsights() {
   const ps = S.rangeP, u = unit(), out = [];
@@ -1651,34 +1697,108 @@ function renderInsights() {
 }
 
 /* ---------- calendar ---------- */
-function cellHtml(p, v, ref) {
+function cellHtml(p, v, ref, label, extra = '') {
   const t = v / ref, bg = v > 0 ? viridis(t) : (DARK() ? '#262a31' : '#efeee9'), fg = v > 0 && lumOf(bg) < 0.55 ? '#fff' : '#1f1f1d', cal = S.view === 'harm' && calShare(p) > .5;
-  return `<button class="cell${cal ? ' cal' : ''}${S.mapPeriod === p ? ' sel' : ''}" data-p="${p}" style="background:${bg};color:${fg}" data-tip="${plabel(p)}: ${fmt(v)} ${unit()}${cal ? ' · converted from MODIS' : ''}">${short(v)}</button>`;
+  return `<button class="cell${cal ? ' cal' : ''}${S.mapPeriod === p ? ' sel' : ''}" data-p="${p}" ${extra} style="background:${bg};color:${fg}" data-tip="${label || plabel(p)}: ${fmt(v)} ${unit()}${cal ? ' · converted from MODIS' : ''}">${short(v)}</button>`;
 }
+/* forecast cells: dashed frame + "≈", clearly apart from measured values */
+function fcCellHtml(key, f, ref, label, observed, range) {
+  const bg = f.mean > 0 ? viridis(f.mean / ref) : (DARK() ? '#262a31' : '#efeee9'), fg = f.mean > 0 && lumOf(bg) < 0.55 ? '#fff' : '#1f1f1d';
+  const tip = `FORECAST ${label}: ≈ ${fmt(f.mean)} ${unit()} (${S.fc.band || '80 %'}: ${fmt(f.lo)}–${fmt(f.hi)}) · ${S.fc.model}${observed !== null && observed !== undefined ? ` · measured so far: ${fmt(observed)}` : ''}`;
+  return `<button class="cell fc" data-range="${range}" data-label="${label}" style="background:${bg};color:${fg}" data-tip="${tip}">≈${short(f.mean)}</button>`;
+}
+const daysOfMonth = mk => +lastDay(mk).slice(8, 10);
+// forecast of the harmonized monthly value (per day if "per day" is on); only for the harmonized view
+function fcMonth(mk) {
+  if (!S.fc || !S.fc.months || S.view !== 'harm') return null;
+  const f = S.fc.months[mk]; if (!f) return null; const k = S.perDay ? daysOfMonth(mk) : 1;
+  return { mean: f.mean / k, lo: f.lo / k, hi: f.hi / k };
+}
+const fcShown = () => !!(S.fc && S.fc.fit_to && S.view === 'harm' && S.rangeEnd && S.rangeEnd.slice(0, 7) >= S.fc.fit_to);
+function isoWeek(d) { const t = toDate(d), day = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - day + 3);
+  const y = t.getUTCFullYear(), f = new Date(Date.UTC(y, 0, 4)); return [y, 1 + Math.round(((t - f) / 864e5 - 3 + ((f.getUTCDay() + 6) % 7)) / 7)]; }
 function renderCalendar() {
-  const ps = S.rangeP, inR = new Set(ps), ref = quantile(ps.map(p => val(p)).filter(v => v > 0), .95) || 1, cal = $('cal'); let h = '';
-  if (S.gran === 'month') {
+  const ps = S.rangeP, inR = new Set(ps), cal = $('cal'), mode = S.calMode || S.gran, fcOn = fcShown();
+  let h = '', ref = 1;
+  const legend = (r, per) => { $('calLegendMax').textContent = `≥ ${short(r)} ${unit()}`; $('calNote').textContent = per; };
+  if (mode === 'month') {
+    const fcKeys = fcOn ? Object.keys(S.fc.months) : [];
+    ref = quantile([...ps.map(p => val(p)), ...fcKeys.map(k => fcMonth(k).mean)].filter(v => v > 0), .95) || 1;
     cal.style.gridTemplateColumns = '40px repeat(12,minmax(0,1fr)) 50px';
     h = '<div></div>' + MONTHS.map(m => `<div class="h">${m}</div>`).join('') + '<div class="h" style="text-align:right">Year</div>';
-    for (const y of [...new Set(ps.map(p => +p.slice(0, 4)))]) { let ys = 0; h += `<div class="y">${y}</div>`;
-      for (let m = 1; m <= 12; m++) { const p = `${y}-${pad(m)}`; if (!inR.has(p)) { h += '<div class="cell off"></div>'; continue; } const v = val(p); ys += v; h += cellHtml(p, v, ref); }
+    const years = [...new Set([...ps, ...fcKeys].map(p => +p.slice(0, 4)))].sort((a, b) => a - b);
+    for (const y of years) { let ys = 0, yf = false; h += `<div class="y">${y}</div>`;
+      for (let m = 1; m <= 12; m++) { const p = `${y}-${pad(m)}`;
+        if (fcOn && S.fc.months[p]) { const f = fcMonth(p); ys += f.mean; yf = true; h += fcCellHtml(p, f, ref, plabel(p), inR.has(p) ? val(p) : null, `${p}-01,${lastDay(p)}`); continue; }
+        if (!inR.has(p)) { h += '<div class="cell off"></div>'; continue; } const v = val(p); ys += v; h += cellHtml(p, v, ref); }
+      h += `<div class="t">${yf ? '≈' : ''}${short(ys)}</div>`; }
+    legend(ref, 'rows = years, columns = months');
+  } else if (mode === 'quarter') {
+    const q = {}, add = (k, v, f, lo = v, hi = v) => { const o = q[k] || (q[k] = { v: 0, lo: 0, hi: 0, f: false, fc: 0 }); o.v += v; o.lo += lo; o.hi += hi; if (f) { o.f = true; o.fc += v; } };
+    for (const p of ps) { if (fcOn && S.fc.months[p]) continue; add(`${p.slice(0, 4)}-Q${Math.ceil(+p.slice(5, 7) / 3)}`, val(p, S.view, false), false); }
+    if (fcOn) for (const [k, f] of Object.entries(S.fc.months)) add(`${k.slice(0, 4)}-Q${Math.ceil(+k.slice(5, 7) / 3)}`, f.mean, true, f.lo, f.hi);
+    const qDays = k => { const [y, qq] = [+k.slice(0, 4), +k.slice(6)]; return dayDiff(`${y}-${pad(qq * 3 - 2)}-01`, lastDay(`${y}-${pad(qq * 3)}`)) + 1; };
+    const qv = (k, x = 'v') => S.perDay ? q[k][x] / qDays(k) : q[k][x];
+    ref = quantile(Object.keys(q).map(qv).filter(v => v > 0), .95) || 1;
+    cal.style.gridTemplateColumns = '40px repeat(4,minmax(0,1fr)) 60px';
+    h = '<div></div>' + ['Q1 Jan–Mar', 'Q2 Apr–Jun', 'Q3 Jul–Sep', 'Q4 Oct–Dec'].map(m => `<div class="h">${m}</div>`).join('') + '<div class="h" style="text-align:right">Year</div>';
+    for (const y of [...new Set(Object.keys(q).map(k => +k.slice(0, 4)))].sort((a, b) => a - b)) { let ys = 0, yf = false; h += `<div class="y">${y}</div>`;
+      for (let i = 1; i <= 4; i++) { const k = `${y}-Q${i}`, o = q[k], rng = `${y}-${pad(i * 3 - 2)}-01,${lastDay(`${y}-${pad(i * 3)}`)}`;
+        if (!o) { h += '<div class="cell off"></div>'; continue; } const v = qv(k); ys += o.v; yf = yf || o.f;
+        h += o.f ? fcCellHtml(k, { mean: v, lo: qv(k, 'lo'), hi: qv(k, 'hi') }, ref, `${y} Q${i} (incl. forecast months)`, S.perDay ? (o.v - o.fc) / qDays(k) : o.v - o.fc, rng)
+                 : cellHtml(k, v, ref, `${y} Q${i}`, `data-range="${rng}"`).replace(/ data-p="[^"]*"/, ''); }
+      h += `<div class="t">${yf ? '≈' : ''}${short(ys)}</div>`; }
+    legend(ref, 'rows = years, columns = quarters');
+  } else if (mode === 'week') {
+    const w = {};
+    for (const p of ps) { const [y, n] = isoWeek(p), k = `${y}-W${pad(n)}`, o = w[k] || (w[k] = { v: 0, d: 0, a: p, b: p }); o.v += val(p, S.view, false); o.d++; if (p < o.a) o.a = p; if (p > o.b) o.b = p; }
+    const wv = k => S.perDay ? w[k].v / w[k].d : w[k].v;
+    ref = quantile(Object.keys(w).map(wv).filter(v => v > 0), .95) || 1;
+    cal.style.gridTemplateColumns = '40px repeat(53,minmax(0,1fr)) 50px'; cal.classList.add('wk');
+    h = '<div></div>' + Array.from({ length: 53 }, (_, i) => `<div class="h">${(i + 1) % 4 === 1 ? i + 1 : ''}</div>`).join('') + '<div class="h" style="text-align:right">Year</div>';
+    for (const y of [...new Set(Object.keys(w).map(k => +k.slice(0, 4)))].sort((a, b) => a - b)) { let ys = 0; h += `<div class="y">${y}</div>`;
+      for (let i = 1; i <= 53; i++) { const k = `${y}-W${pad(i)}`, o = w[k]; if (!o) { h += '<div class="cell off"></div>'; continue; }
+        const v = wv(k); ys += o.v; h += cellHtml(k, v, ref, `Week ${i}, ${y} (${o.a} → ${o.b})`, `data-range="${o.a},${o.b}"`).replace(/ data-p="[^"]*"/, '').replace(/>[^<]*<\/button>$/, '></button>'); }
       h += `<div class="t">${short(ys)}</div>`; }
+    legend(ref, 'rows = years, columns = ISO weeks');
   } else {
+    ref = quantile(ps.map(p => val(p)).filter(v => v > 0), .95) || 1;
     cal.style.gridTemplateColumns = '86px repeat(7,minmax(0,1fr)) 50px';
     h = '<div></div>' + WD.map(d => `<div class="h">${d}</div>`).join('') + '<div class="h" style="text-align:right">Week</div>';
     const s0 = toDate(ps[0]), mon = addDays(ps[0], -((s0.getUTCDay() + 6) % 7));
-    for (let w = mon; w <= ps[ps.length - 1]; w = addDays(w, 7)) { let ws = 0; h += `<div class="y">${plabel(w)}</div>`;
-      for (let i = 0; i < 7; i++) { const p = addDays(w, i); if (!inR.has(p)) { h += '<div class="cell off"></div>'; continue; } const v = val(p); ws += v; h += cellHtml(p, v, ref); }
+    for (let wk = mon; wk <= ps[ps.length - 1]; wk = addDays(wk, 7)) { let ws = 0; h += `<div class="y">${plabel(wk)}</div>`;
+      for (let i = 0; i < 7; i++) { const p = addDays(wk, i); if (!inR.has(p)) { h += '<div class="cell off"></div>'; continue; } const v = val(p); ws += v; h += cellHtml(p, v, ref); }
       h += `<div class="t">${short(ws)}</div>`; }
+    legend(ref, 'rows = weeks');
   }
+  if (mode !== 'week') cal.classList.remove('wk');
   cal.innerHTML = h;
-  $('calLegendMax').textContent = `≥ ${short(ref)} ${unit()} (95th pct.)`;
-  $('calHow').textContent = `${viewName()}, ${unit()} per ${S.gran === 'day' ? 'day' : 'month'} in the selected area. Hover for values, click to show a ${S.gran === 'day' ? 'day' : 'month'} on the map.`;
-  $('calNote').textContent = S.gran === 'month' ? 'rows = years, columns = months' : 'rows = weeks';
+  $('calFcLegend').style.display = fcOn && (mode === 'month' || mode === 'quarter') ? '' : 'none';
 }
-$('cal').addEventListener('click', e => { const b = e.target.closest('.cell[data-p]'); if (b) { stopPlay(); selectPeriod(b.dataset.p); } });
+$('cal').addEventListener('click', e => {
+  const b = e.target.closest('.cell[data-p],.cell[data-range]'); if (!b) return; stopPlay();
+  if (b.dataset.p) return selectPeriod(b.dataset.p);
+  const [a, z] = b.dataset.range.split(','); selectRange(a, z > S.meta.last_date ? S.meta.last_date : z, b.dataset.label || b.dataset.tip.split(':')[0]);
+});
 $('cal').addEventListener('mousemove', e => { const b = e.target.closest('[data-tip]'); if (b) showTip(e, b.dataset.tip); else hideTip(); });
 $('cal').addEventListener('mouseleave', hideTip);
+// a week or quarter clicked in the calendar: shown on the map (like a clicked month or day)
+function selectRange(a, b, label) {
+  if (a > S.meta.last_date) { toast('Forecast only: no detections to show on the map yet'); return; }
+  const same = S.mapRange && S.mapRange[0] === a && S.mapRange[1] === b;
+  S.mapPeriod = null; S.mapRange = same ? null : [a, b]; S.mapRangeLabel = label;
+  document.querySelectorAll('.cell.sel').forEach(c => c.classList.remove('sel'));
+  renderTimeBadges(); refreshMap();
+}
+
+/* ---------- forecast: harmonized monthly series until the end of the year ---------- */
+async function loadForecast() {
+  const p = S.provider; if (!p || !p.forecast) return;
+  const id = ++S.fcReq;
+  try { const fc = await p.forecast(F(), S.metric); if (id !== S.fcReq) return; S.fc = fc && fc.months && Object.keys(fc.months).length ? fc : null; $('calFcLegend').lastChild.textContent = S.fc ? `≈ forecast (${S.fc.model.split(' (')[0].replace('Seasonal ARIMA (1,0,1)(0,1,1)12 on log(1 + x)', 'seasonal ARIMA')})` : ''; }
+  catch (e) { console.error(e); if (id === S.fcReq) S.fc = null; }
+  renderCalendar(); renderKPIs();
+}
 
 /* ---------- anomaly ---------- */
 function renderAnomaly() {
@@ -1863,30 +1983,35 @@ function renderCalib() {
 /* ---------- map: refresh, legend, performance readout ---------- */
 function refreshMap() {
   if (!S.provider || !S.rangeStart) return;
-  $('mapLabel').textContent = S.mapPeriod ? plabel(S.mapPeriod) : 'full range';
-  $('mapReset').style.display = S.mapPeriod ? '' : 'none';
+  $('mapLabel').textContent = S.mapRange ? S.mapRangeLabel : S.mapPeriod ? plabel(S.mapPeriod) : 'full range';
+  $('mapReset').style.display = S.mapPeriod || S.mapRange ? '' : 'none';
   syncDailyDate(); fm.schedule(0);
 }
 function renderMapLegend() {
   const st = fm.st, dark = isDarkMap();
   if (false) { $('mapLegend').innerHTML = `<div>Team cells · ${viewName()}${S.perDay ? ' per day' : ''}</div><div class="bar" style="background:${seqCss()}"></div><div style="display:flex;justify-content:space-between"><span>low</span><span id="teamLegMax">${st.teamMax || 'high'}</span></div><div>Log colour. Values as delivered by the data team.</div>`; return; }
+  if (S.timeColor && st.pts && (st.mode === 'kernels' || st.mode === 'points')) {
+    const [a, b] = mainSpan();
+    $('mapLegend').innerHTML = `<div>${st.mode === 'kernels' ? 'Kernels' : 'Points'} by time · ${fmt(st.viewN ?? st.pts.n)} in view</div><div class="bar" style="background:linear-gradient(90deg,${C.timeA},${C.timeB})"></div><div style="display:flex;justify-content:space-between"><span>${a}</span><span>${b}</span></div>`;
+    return;
+  }
   if (st.mode === 'kernels' && st.pts) {
     $('mapLegend').innerHTML = `<div>Gaussian kernels · ${fmt(st.viewN ?? st.pts.n)} single hotspots in view (raw)${S.metric === 'frp' ? ', weighted by FRP' : ''}</div><div class="bar" style="background:${heatCss(dark)}"></div>
-      <div style="display:flex;justify-content:space-between"><span>few</span><span>many ${S.metric === 'frp' ? '(MW)' : 'detections'} nearby</span></div><div>Kernel radius 20 px. Fewer than ${fmt(KERNEL_MIN)} in view: every point; Points button: always.</div>`;
+      <div style="display:flex;justify-content:space-between"><span>low</span><span>high</span></div>`;
     return;
   }
   if (st.mode === 'points' && st.pts) {
     $('mapLegend').innerHTML = (S.colorBy === 'sensor' ? `<div><span class="dot" style="background:${C.modis}"></span>MODIS (1 km pixel) &nbsp;<span class="dot" style="background:${C.viirs}"></span>VIIRS (375 m)</div>`
       : S.colorBy === 'conf' ? `<div>${CONF.map(c => `<span class="dot" style="background:${C[c]}"></span>${c}`).join(' &nbsp;')}</div>`
       : `<div>FRP</div><div class="bar" style="background:${heatCss(dark)}"></div><div style="display:flex;justify-content:space-between"><span>1 MW</span><span>1000 MW</span></div>`) +
-      `<div style="margin-top:3px">${fmt(st.viewN ?? st.pts.n)} single hotspots in view (raw) · size = FRP · ${(st.viewN ?? st.pts.n) <= TIP_MAX ? 'hover a point for details' : `details on hover from ${TIP_MAX} points in view`}</div>`;
+      `<div style="margin-top:3px">${fmt(st.viewN ?? st.pts.n)} single hotspots in view (raw) · size = FRP</div>`;
     return;
   }
   const d = st.cells; if (!d) { $('mapLegend').innerHTML = ''; return; }
   const vmax = fm.vmax() / (S.heatMax || 1), u = S.metric === 'frp' ? 'MW' : 'hotspots';
   $('mapLegend').innerHTML = `<div>Density · ${viewName()} · ${S.dstyle === 'glow' ? 'glow' : `cells of ${d.resolution_deg}° (~${Math.round(d.resolution_deg * 111)} km)`}</div>
     <div class="bar" style="background:${heatCss(dark)}"></div><div style="display:flex;justify-content:space-between"><span>&lt; 1</span><span>≥ ${fmt(vmax)} ${u}/day per cell</span></div>
-    <div>Log colour${d.whole_months ? ' · density uses whole months (' + d.period + ')' : ''}${d.approx_classes ? ' · confidence classes estimated per cell' : ''}</div>`;
+    ${d.whole_months ? `<div>whole months (${d.period})</div>` : ''}`;
 }
 function showPerf(m) {
   const p = m.perf, parts = [];
@@ -1898,7 +2023,7 @@ function showPerf(m) {
   $('mapNote').textContent = parts.join(' · ');
   $('mapNote').title = 'Measured in this browser: ' + JSON.stringify(p);
 }
-$('mapReset').addEventListener('click', () => { stopPlay(); selectPeriod(S.mapPeriod); });
+$('mapReset').addEventListener('click', () => { stopPlay(); if (S.mapRange) { S.mapRange = null; renderTimeBadges(); refreshMap(); } else selectPeriod(S.mapPeriod); });
 $('heatMax').addEventListener('input', e => { S.heatMax = +e.target.value; fm.render(); });   // density cubes and kernels
 
 
@@ -2078,7 +2203,7 @@ function initCmpMaps() {
     SC.conf = S.mapConf ? new Set(S.mapConf) : null; setSeg('cmpModeSeg', SC.mode); setSeg('cmpColorSeg', SC.colorBy); setSeg('cmpStyleSeg', SC.style); }
   const mk = (el, k, budget) => new FireMap(el, { name: 'compare ' + 'AB'[k], budgetEl: budget, span: () => cmpSpans()[k], region: () => S.region, dark: () => cmpDark(),
     filters: cmpFilters, vmax: cmpShared,
-    settings: () => ({ mode: modeOf(SC.mode), style: SC.style, colorBy: SC.colorBy, scale: SC.scale, view: S.view, metric: S.metric }),
+    settings: () => ({ mode: modeOf(SC.mode), style: SC.style, colorBy: SC.colorBy, scale: SC.scale, view: S.view, metric: S.metric, timeColor: S.timeColor }),
     onRender: m => { if (m.st.cells !== m._seen) { m._seen = m.st.cells; const o = cmpMaps[1 - k]; if (o && o.st.cells) o.render(); } renderCmpLegend(); } });
   cmpMaps = [mk('cmpMapA', 0, 'budgetA'), mk('cmpMapB', 1, 'budgetB')];
   cmpMaps.forEach((m, i) => {
@@ -2167,13 +2292,19 @@ $('playBtn').addEventListener('click', async () => {
 /* ---------- controls ---------- */
 function seg(id, fn) { $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(b.dataset.v); }); }
 function setSeg(id, v) { $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === v)); }
-function setGran(g, doRefresh = true) { S.gran = g; setSeg('granSeg', g); S.mapPeriod = null; if (doRefresh) refresh(); }
+// calendar: monthly / quarterly use the monthly data, weekly / daily the daily data (all other views follow those two)
+const BASE = { month: 'month', quarter: 'month', week: 'day', day: 'day' };
+function setGran(g, doRefresh = true) {
+  if (BASE[g] !== g) { S.calMode = g; g = BASE[g]; } else if (BASE[S.calMode] !== g) S.calMode = g;
+  S.gran = g; setSeg('granSeg', S.calMode); S.mapPeriod = null; S.mapRange = null; if (doRefresh) refresh();
+}
 const rerender = () => { renderTimeline(); renderRange(); };
-seg('granSeg', v => { if (v !== S.gran) setGran(v); });
-seg('metricSeg', v => { S.metric = v; rerender(); if (S.cmp) cmpLoad(); });
+seg('granSeg', v => { if (BASE[v] !== S.gran) setGran(v); else { S.calMode = v; renderCalendar(); renderTimeBadges(); } });
+seg('metricSeg', v => { S.metric = v; rerender(); if (S.cmp) cmpLoad(); loadForecast(); });
 seg('viewSeg', v => { S.view = v; rerender(); if (S.cmp) cmpLoad(); });
 seg('dnSeg', v => { S.dn = v; refresh(); });
 seg('mapModeSeg', v => { S.mapMode = v; if (PROJ.cur) { projMap(PROJ.cur).mode = v; saveProjects(); } refreshMap(true); });
+$('timeCk').addEventListener('change', e => { S.timeColor = e.target.checked; if (PROJ.cur) { projMap(PROJ.cur).timeColor = S.timeColor; saveProjects(); } fm.render(); cmpMaps.forEach(m => m && m.render()); renderMapLegend(); });
 seg('colorSeg', v => { S.colorBy = v; if (PROJ.cur) { projMap(PROJ.cur).colorBy = v; saveProjects(); } fm.render(); });
 seg('styleSeg', v => { S.dstyle = v; store.set('dstyle', v); fm.render(); });
 seg('anomSeg', v => { S.anomMode = v; renderAnomaly(); });
@@ -2205,7 +2336,7 @@ function serverNote(sd) {
 function renderFooter() {
   const m = S.meta, h = m.harmonization || {};
   const rb = m.rebuilding && m.rebuilding.running ? ` · <b>updating the data in the background since ${m.rebuilding.started} UTC</b> (reload later)` : '';
-  $('footer').innerHTML = `Data: NASA LANCE FIRMS (MODIS C6.1 1 km, VIIRS 375 m) · ${m.first_date} → ${m.last_date} · version ${m.data_version || '–'}${h.dropped_partial_day ? ` · incomplete day ${h.dropped_partial_day} removed` : ''} · harmonization: ${h.name || '?'} v${h.version || '?'} (${h.status || '?'}) · map points are raw detections${serverNote(m.server_data)} ${rb} · Phnx team, NASA Space Apps Challenge 2026 · <a href="api-docs.html">API</a> · <a href="https://github.com/Putskev/firecal">GitHub</a>`;
+  $('footer').innerHTML = `Data: NASA LANCE FIRMS (MODIS C6.1 1 km, VIIRS 375 m) · ${m.first_date} → ${m.last_date} · version ${m.data_version || '–'}${h.dropped_partial_day ? ` · incomplete day ${h.dropped_partial_day} removed` : ''} · harmonization: ${h.name || '?'} v${h.version || '?'}${rb} · Phnx · NASA Space Apps Challenge 2026 · <a href="https://github.com/Putskev/firecal">GitHub</a>`;
 }
 (async () => {
   try { const r = await fetch('content/methodology.md', { cache: 'no-store' }); if (!r.ok) throw 0; const md = await r.text();
@@ -2224,7 +2355,7 @@ function setPalette(id, save = true) {
   P.ui.forEach((c, i) => r.setProperty('--p' + (i + 1), c));
   r.setProperty('--accent', P.accent); r.setProperty('--hdr', P.hdr);
   ['modis', 'viirs', 'warm', 'cool'].forEach(k => r.setProperty('--' + k, P[k]));
-  Object.assign(C, { modis: P.modis, viirs: P.viirs, warm: P.warm, cool: P.cool, low: P.low, nominal: P.nominal, high: P.high, bar: P.bar, barLight: P.barLight });
+  Object.assign(C, { modis: P.modis, viirs: P.viirs, warm: P.warm, cool: P.cool, low: P.low, nominal: P.nominal, high: P.high, bar: P.bar, barLight: P.barLight, timeA: P.timeA, timeB: P.timeB });
   VIRIDIS.splice(0, VIRIDIS.length, ...P.seq); FIRE.splice(0, FIRE.length, ...P.map);
   $('palSel').value = S.pal; if (save) store.set('palette', S.pal);
   $('calLegendBar').style.background = seqCss();
@@ -2251,12 +2382,12 @@ const REGIONS = { world: { name: 'Whole world' }, Afrika: { name: 'Africa', box:
   place: { name: 'Place (with its borders)' }, map: { name: 'Area drawn on the map' } };
 const CONTINENTS = ['Afrika', 'Amerika', 'Asien', 'Europa/Westasien', 'Ozeanien'];
 // map settings of a project (background, borders and names, level, colour of the points)
-const projMap = p => p.map || (p.map = { base: null, places: true, mode: 'auto', colorBy: 'sensor' });
+const projMap = p => p.map || (p.map = { base: null, places: true, mode: 'auto', colorBy: 'sensor', timeColor: false });
 const ALL_WD = [1, 2, 3, 4, 5, 6, 7], ALL_HR = Array.from({ length: 24 }, (_, i) => i);
 const today = () => new Date().toISOString().slice(0, 10);
 function newProject() {
   return { id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: '', desc: '', created: today(), updated: today(), palette: null,
-    widgets: [...W_PRESET.essentials], charts: [], map: { base: null, places: true, mode: 'auto', colorBy: 'sensor' },
+    widgets: [...W_PRESET.essentials], charts: [], map: { base: null, places: true, mode: 'auto', colorBy: 'sensor', timeColor: false },
     filters: { region: { kind: 'world' }, range: { kind: 'all', days: 365, from: null, to: null }, weekdays: [...ALL_WD], hours: [...ALL_HR],
       sats: null, dn: 'all', conf: ['nominal', 'high'], metric: 'count', view: 'harm', gran: 'auto' } };
 }
@@ -2361,6 +2492,7 @@ function applyProject(p) {
   const mp = p ? projMap(p) : null;   // map settings: the project's, or the ones of this browser in the explorer
   M.base = baseOf(mp && mp.base ? mp.base : store.get('basemap', 'firefly')).id; M.places = mp ? mp.places !== false : store.get('places', '1') === '1'; applyBases();
   S.mapMode = mp ? mp.mode || 'auto' : 'auto'; S.colorBy = mp ? mp.colorBy || 'sensor' : 'sensor'; setSeg('mapModeSeg', S.mapMode); setSeg('colorSeg', S.colorBy);
+  S.timeColor = !!(mp && mp.timeColor); $('timeCk').checked = S.timeColor;
   if (p) { $('cmpA1').value = a; $('cmpA2').value = b; setCompare(p.widgets.includes('compare'), false); }
   renderProjBar(); renderCharts(); refresh(); relayout();
 }
@@ -2387,9 +2519,9 @@ $('pbSave').addEventListener('click', () => {
   const p = PROJ.cur; if (!p) return; const fl = p.filters, R = S.region;
   fl.range = { kind: 'fixed', from: S.rangeStart, to: S.rangeEnd, days: dayDiff(S.rangeStart, S.rangeEnd) + 1 };
   fl.region = R ? { kind: R.name ? 'place' : R.poly ? 'map' : 'box', name: R.name || null, minLat: R.minLat, maxLat: R.maxLat, minLon: R.minLon, maxLon: R.maxLon, poly: R.poly || null, rings: R.rings || null } : { kind: 'world' };
-  Object.assign(projMap(p), { base: M.base, places: M.places, mode: S.mapMode, colorBy: S.colorBy });
+  Object.assign(projMap(p), { base: M.base, places: M.places, mode: S.mapMode, colorBy: S.colorBy, timeColor: S.timeColor });
   fl.sats = availSats().every(x => S.sats.has(x)) ? null : availSats().filter(x => S.sats.has(x));
-  fl.dn = S.dn; fl.metric = S.metric; fl.view = S.view; fl.gran = S.gran;
+  fl.dn = S.dn; fl.metric = S.metric; fl.view = S.view; fl.gran = S.calMode || S.gran;
   fl.conf = S.mapConf ? CONF.filter(c => S.mapConf.has(c)) : (S.incLow ? [...CONF] : ['nominal', 'high']);
   p.updated = today(); PROJ.applied = p.id + ':' + p.updated + ':' + JSON.stringify(p.filters) + p.widgets.join();
   saveProjects(); renderProjBar(); toast('Saved: period, area, satellites, switches and map settings are now the project’s');
@@ -2447,13 +2579,13 @@ f<sub>region</sub> = Σ VIIRS / Σ MODIS   over ${esc(String(hp.cell_deg || 2))}
       <div class="hfeat"><div class="k">Filters</div><p>Area, period, weekdays, local time of day, satellites, day or night, confidence. Saved per project.</p></div>
       <div class="hfeat"><div class="k">Statistics</div><p>Fire intensity (FRP), local time, confidence, satellites, space × time matrix, calibration factors, harmonization check.</p></div>
       <div class="hfeat"><div class="k">Own charts</div><p>Build simple charts yourself: choose x-axis, value and chart type. Saved with the project.</p></div>
-      <div class="hfeat"><div class="k">Colours</div><p>Palette presets, two of them safe for colour-blind people (red-green and all types). Dark mode.</p></div>
-      <div class="hfeat"><div class="k">Open</div><p>Download hotspots and statistics as CSV. Everything also via the API (FastAPI, DuckDB over Parquet).</p></div>
+      <div class="hfeat"><div class="k">Colours</div><p>Palette presets, two of them safe for colour-blind people (red-green and all types). Dark mode. Points and kernels can be coloured by time to see how fires move.</p></div>
+      <div class="hfeat"><div class="k">Forecast</div><p>The calendar continues to the end of the year with a seasonal ARIMA forecast, clearly marked, and the key figures give the expected value of the coming month. Download hotspots and statistics as CSV.</p></div>
     </div>
     <div class="hsteps"><div><b>1</b>Create a project: name and description.</div><div><b>2</b>Tick the views you need.</div><div><b>3</b>Set the filters: area, period, weekdays, hours.</div><div><b>4</b>Check the number of hotspots, then open the project.</div></div>
     <p class="hlead" style="margin-top:22px;font-size:15px">In the dashboard: drag the handles below the timeline to choose the period. Click a bar or a calendar cell to show it on the map. Draw an area on the map to analyse it. “Save current view” stores period, area and switches in the project. Press S for the statistics panel.</p>
   </div></div>
-  <div class="hfoot"><span>Phnx · NASA Space Apps Challenge 2026</span><span>Data: NASA LANCE FIRMS</span><a href="api-docs.html">API</a><a href="https://github.com/Putskev/firecal">GitHub</a></div>
+  <div class="hfoot"><span>Phnx · NASA Space Apps Challenge 2026</span><span>Data: NASA LANCE FIRMS</span><a href="https://github.com/Putskev/firecal">GitHub</a></div>
 </div>`;
 }
 $('home').addEventListener('click', e => {
@@ -2519,6 +2651,7 @@ function renderWizard() {
       <label class="note" style="display:flex;gap:5px;align-items:center"><input type="checkbox" id="wzPlaces" ${projMap(p).places !== false ? 'checked' : ''}> borders and place names</label>
       ${togHtml('wzMode', [['auto', 'Auto'], ['heat', 'Cubes'], ['kernels', 'Kernels'], ['points', 'Points']], [projMap(p).mode || 'auto'])}
       ${togHtml('wzColor', [['sensor', 'Sensor'], ['conf', 'Confidence'], ['frp', 'FRP']], [projMap(p).colorBy || 'sensor'])}
+      <label class="note" style="display:flex;gap:5px;align-items:center"><input type="checkbox" id="wzTime" ${projMap(p).timeColor ? 'checked' : ''}> colour by time (first → last day of the period)</label>
       <div class="hint" style="flex-basis:100%">Background of the map (satellite, streets, topographic …), the map level (Auto: points, kernels or cubes by the number of hotspots in view) and the colour of single points.</div></div></div>
     <div class="wzrow"><div class="lb">Period</div><div>${togHtml('wzRange', [['all', 'All data'], ['last', 'Last days'], ['fixed', 'From – to']], [fl.range.kind])}
       <span id="wzLast" style="display:${fl.range.kind === 'last' ? 'inline-flex' : 'none'};gap:6px;margin-left:8px;align-items:center"><input type="number" id="wzDays" min="1" value="${fl.range.days || 365}" style="width:80px"> days
@@ -2534,7 +2667,7 @@ function renderWizard() {
     <div class="wzrow"><div class="lb">Satellites</div><div>${togHtml('wzSat', av.map(x => [x, x]), fl.sats ? fl.sats : av)}<div class="hint">Raw values and the map. Harmonized values always use all satellites.</div></div></div>
     <div class="wzrow"><div class="lb">Day / night</div><div>${togHtml('wzDn', [['all', 'All'], ['D', 'Day'], ['N', 'Night']], [fl.dn])}</div></div>
     <div class="wzrow"><div class="lb">Confidence</div><div>${togHtml('wzConf', CONF.map(c => [c, c]), fl.conf)}<div class="hint">Statistics: low in or out. The map also separates nominal and high.</div></div></div>
-    <div class="wzrow"><div class="lb">Start with</div><div style="display:flex;gap:10px;flex-wrap:wrap">${togHtml('wzMetric', [['count', 'Hotspots'], ['frp', 'FRP (MW)']], [fl.metric])} ${togHtml('wzView', [['harm', 'Harmonized'], ['raw', 'Raw all'], ['modis', 'MODIS'], ['viirs', 'VIIRS']], [fl.view])} ${togHtml('wzGran', [['auto', 'Calendar auto'], ['month', 'Monthly'], ['day', 'Daily']], [fl.gran || 'auto'])}</div></div>`;
+    <div class="wzrow"><div class="lb">Start with</div><div style="display:flex;gap:10px;flex-wrap:wrap">${togHtml('wzMetric', [['count', 'Hotspots'], ['frp', 'FRP (MW)']], [fl.metric])} ${togHtml('wzView', [['harm', 'Harmonized'], ['raw', 'Raw all'], ['modis', 'MODIS'], ['viirs', 'VIIRS']], [fl.view])} ${togHtml('wzGran', [['auto', 'Calendar auto'], ['month', 'Monthly'], ['quarter', 'Quarterly'], ['week', 'Weekly'], ['day', 'Daily']], [fl.gran || 'auto'])}</div></div>`;
   }
   if (st === 3) {
     const [a, b] = projRange(fl), c = WZ.cnt;
@@ -2552,7 +2685,7 @@ function renderWizard() {
         <tr><td>Weekdays</td><td>${wdLabel(fl.weekdays)}</td></tr><tr><td>Local time</td><td>${hrLabel(fl.hours)}</td></tr>
         <tr><td>Satellites</td><td>${satLabel(fl.sats)}</td></tr><tr><td>Day / night</td><td>${fl.dn === 'all' ? 'both' : fl.dn === 'D' ? 'day' : 'night'}</td></tr>
         <tr><td>Confidence</td><td>${confLabel(fl.conf)}</td></tr>
-        <tr><td>Map</td><td>${projMap(p).base ? baseOf(projMap(p).base).name : 'app background'} · ${({ auto: 'Auto', heat: 'Cubes', kernels: 'Kernels', points: 'Points' })[projMap(p).mode || 'auto']} · colour by ${projMap(p).colorBy || 'sensor'}</td></tr></table></div></div>`;
+        <tr><td>Map</td><td>${projMap(p).base ? baseOf(projMap(p).base).name : 'app background'} · ${({ auto: 'Auto', heat: 'Cubes', kernels: 'Kernels', points: 'Points' })[projMap(p).mode || 'auto']} · colour by ${projMap(p).timeColor ? 'time' : projMap(p).colorBy || 'sensor'}</td></tr></table></div></div>`;
   }
   $('wizard').innerHTML = `<div class="wz">
     <div class="wzhead"><h2>${WZ.isNew ? 'New project' : 'Edit project'}</h2><button class="btn small x" id="wzX" title="Close (Esc)">✕</button></div>
@@ -2580,7 +2713,7 @@ function wizRead() {   // read the inputs of the current step into WZ.p
     else if (ak === 'continent') fl.region = { kind: v('wzCont') || 'Afrika' };
     else if (ak === 'place' && fl.region.kind !== 'place') fl.region = { kind: 'place' };
     else if (ak === 'draw' && fl.region.kind !== 'map') fl.region = { kind: 'map' };
-    const mp = projMap(p); mp.base = v('wzBase') || null; mp.places = $('wzPlaces').checked; mp.mode = onv('wzMode')[0] || 'auto'; mp.colorBy = onv('wzColor')[0] || 'sensor';
+    const mp = projMap(p); mp.base = v('wzBase') || null; mp.places = $('wzPlaces').checked; mp.mode = onv('wzMode')[0] || 'auto'; mp.colorBy = onv('wzColor')[0] || 'sensor'; mp.timeColor = $('wzTime').checked;
     const rk = onv('wzRange')[0] || 'all'; fl.range = { kind: rk, days: Math.max(1, parseInt(v('wzDays')) || 365), from: v('wzFrom'), to: v('wzTo') };
     fl.weekdays = onv('wzWd').map(Number); fl.hours = onv('wzHr').map(Number);
     const sa = onv('wzSat'); fl.sats = sa.length === availSats().length ? null : sa;

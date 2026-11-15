@@ -40,6 +40,7 @@ from typing import Literal
 
 import duckdb
 import numpy as np
+import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -648,6 +649,81 @@ def satellites_timeline(granularity: Literal["month", "day"] = "month",
     for period, sat, n in c.execute(f"SELECT period, satellite, sum(n) FROM {rel} GROUP BY 1, 2 ORDER BY 1").fetchall():
         out.setdefault(sat, {})[period] = int(n)
     return {"granularity": granularity, "satellites": out, "timeline": _meta.get("satellites")}
+
+
+# ---------------------------------------------------------------- forecast of the harmonized monthly series
+FORECAST_FROM = "2002-07"      # from here MODIS has Terra and Aqua (the calibration assumes both)
+_fc_cache: dict = {}
+
+
+def _sarima(y: np.ndarray, h: int):
+    """Seasonal ARIMA (1,0,1)(0,1,1)12 on log(1 + x): the standard model for monthly series with a yearly cycle.
+    Returns median forecast and 80 % interval (back-transformed)."""
+    import warnings
+    from statsmodels.tsa.statespace.sarimax import SARIMAX
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        res = SARIMAX(np.log1p(y), order=(1, 0, 1), seasonal_order=(0, 1, 1, 12)).fit(disp=False)
+        f = res.get_forecast(h)
+        mean, ci = f.predicted_mean, f.conf_int(alpha=0.2)
+    ci = np.asarray(ci)
+    return np.clip(np.expm1(np.asarray(mean)), 0, None), np.clip(np.expm1(ci[:, 0]), 0, None), np.clip(np.expm1(ci[:, 1]), 0, None)
+
+
+@app.get("/api/forecast")
+def forecast(metric: Literal["count", "frp"] = "count",
+             bbox: str | None = Q["bbox"], polygon: str | None = Q["polygon"],
+             exclude_low: bool = Q["exclude_low"], vegetation_only: bool = Q["vegetation_only"]):
+    """Forecast of the HARMONIZED monthly values in the area until the end of the year (at least the month after
+    the current one). Model: seasonal ARIMA (1,0,1)(0,1,1)12 on log(1 + value), fitted on the complete months from
+    2002-07 (Terra + Aqua) to the last complete month. months: {YYYY-MM: {mean, lo, hi}} (80 % interval).
+    backtest: the same model fitted without the last 12 months, error of those 12 months (median absolute % error)."""
+    wd, hr = time_filter()
+    key = (metric, bbox, polygon, exclude_low, vegetation_only, str(wd), str(hr), _meta.get("data_version"))
+    if key in _fc_cache:
+        return _fc_cache[key]
+    rows = timeseries(granularity="month", bbox=bbox, polygon=polygon, start=None, end=None, exclude_low=exclude_low,
+                      vegetation_only=vegetation_only, satellites=None, daynight="all")["rows"]
+    last = _meta.get("last_date")
+    if not last or not rows:
+        return {"months": {}, "model": None}
+    y0, m0, d0 = (int(x) for x in last.split("-"))
+    complete = f"{y0:04d}-{m0:02d}" if d0 == calendar.monthrange(y0, m0)[1] else (
+        f"{y0 - 1:04d}-12" if m0 == 1 else f"{y0:04d}-{m0 - 1:02d}")
+    field = "harm_n" if metric == "count" else "harm_frp"
+    months = pd.period_range(FORECAST_FROM, complete, freq="M")
+    y = np.array([float(rows.get(str(p), {}).get(field, 0.0)) for p in months])
+    end = max(pd.Period(f"{y0:04d}-12", freq="M"), pd.Period(f"{y0:04d}-{m0:02d}", freq="M") + 1)
+    fut = pd.period_range(pd.Period(complete, freq="M") + 1, end, freq="M")
+    out = {"metric": metric, "fit_from": FORECAST_FROM, "fit_to": complete, "last_date": last, "months": {}}
+    if len(y) >= 48 and y.sum() > 0:
+        try:
+            mean, lo, hi = _sarima(y, len(fut))
+            out["model"] = "Seasonal ARIMA (1,0,1)(0,1,1)12 on log(1 + x)"
+            bt = None
+            if len(y) >= 72:
+                bm, _, _ = _sarima(y[:-12], 12)
+                actual = y[-12:]
+                ok = actual > 0
+                bt = round(float(np.median(np.abs(bm[ok] - actual[ok]) / actual[ok]) * 100), 1) if ok.any() else None
+            out["backtest_mape_pct"] = bt
+        except Exception as ex:          # numerical trouble: fall back to the seasonal mean of the last 3 years
+            mean = lo = hi = None
+            out["error"] = str(ex)[:200]
+    else:
+        mean = lo = hi = None
+    if mean is None and y.sum() <= 0:
+        return out                       # no history in this area: no forecast
+    if mean is None:
+        out["model"] = "Seasonal mean of the last 3 years (too little history for the ARIMA model)"
+        mean = np.array([np.mean([float(rows.get(str(p - 12 * k), {}).get(field, 0.0)) for k in (1, 2, 3)]) for p in fut])
+        lo, hi = mean * 0.7, mean * 1.3
+    for p, a, b, c in zip(fut, mean, lo, hi):
+        out["months"][str(p)] = {"mean": round(float(a), 2), "lo": round(float(b), 2), "hi": round(float(c), 2)}
+    if len(_fc_cache) > 200:
+        _fc_cache.clear()
+    _fc_cache[key] = out
+    return out
 
 
 # ---------------------------------------------------------------- map: count / density / binary points
