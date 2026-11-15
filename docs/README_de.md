@@ -131,7 +131,7 @@ Mio. Hotspots. Für die volle Historie also auf einem Rechner mit genug RAM baue
 Auf dem Server (per SSH, als Benutzer mit sudo) **ein** Befehl, Pfad = Ordner mit euren Parquet-Dateien:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_server.sh | sudo bash -s -- /pfad/zu/parquet --domain reicht.anohji.dev
+curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_server.sh | sudo bash -s -- /pfad/zu/parquet --domain phnx.anohji.dev
 ```
 
 `--link-only` verbindet den Ordner nur: Die App zeigt, was drin ist (Dateien, Zeilen, Zeitraum aus den

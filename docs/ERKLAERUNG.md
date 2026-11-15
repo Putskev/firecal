@@ -309,7 +309,7 @@ Die Karte zoomt höchstens so weit, dass die Maßstabsleiste mindestens **200 m*
 
 Umschalten auf dem Server:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_server.sh | bash -s -- /root/spacechallenge/firms_data/parquet --domain reicht.anohji.dev --load
+curl -fsSL https://raw.githubusercontent.com/Putskev/firecal/main/deploy/setup_server.sh | bash -s -- /root/spacechallenge/firms_data/parquet --domain phnx.anohji.dev --load
 ```
 
 ---

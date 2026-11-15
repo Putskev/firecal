@@ -4,7 +4,7 @@
 
 Phnx is a web application that turns 26 years of satellite fire detections from two different sensors, MODIS and VIIRS, into one consistent **burning activity calendar**. Users pick any area (draw it, or type a country, region or city and the area follows its real borders) and any period, and see when and where it burned, how a month compares with the same month in all other years, what to expect for the rest of the year, and the single detections on a WebGL map.
 
-* **Live app:** https://reicht.anohji.dev
+* **Live app:** https://phnx.anohji.dev
 * **Data:** about 363 million NASA FIRMS active fire detections, November 2000 to today
 * **Calibration report:** [`docs/calibration/calibration_report.md`](docs/calibration/calibration_report.md)
 * **Methodology (shown in the app):** [`content/methodology.md`](content/methodology.md)

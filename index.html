@@ -622,7 +622,7 @@ body.dark .tog button.on{border-right-color:rgba(0,0,0,.35)}
 window.type = window.type || '';
 const qp = new URLSearchParams(location.search);
 // on GitHub Pages the app talks to the team server; ?api=... overrides, ?api= (empty) forces the demo
-const TEAM_SERVER = 'https://reicht.anohji.dev';
+const TEAM_SERVER = 'https://phnx.anohji.dev';
 const API = (qp.get('api') ?? window.FIRECAL_API ?? (location.hostname.endsWith('github.io') ? TEAM_SERVER : '')).replace(/\/$/, '');
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
